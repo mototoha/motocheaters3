@@ -20,3 +20,47 @@ bot_params_template = {
         'cheaters_filename': '',  # From DB
         'vk_admin_id': [],  # From DB
     }
+
+# DB template
+db_tables = {
+    "vk_id": {
+        "pk": "int",
+        "id": "str",
+        "fifty": "bool"
+    },
+    "shortnames": {
+        "pk": "int",
+        "shortname": "str",
+        "id": "str"
+    },
+    "telephones": {
+        "pk": "int",
+        "telephone": "str",
+        "id": "str"
+    },
+    "cards": {
+        "pk": "int",
+        "card": "str",
+        "id": "str"
+    },
+    "parameters": {
+        "param": "str",
+        "value": "str"
+    },
+    "admins": {
+        "pk": "int",
+        "vk_id": "str"
+    },
+    "user_dialogs": {
+        "pk": "int",
+        "vk_id": "str",
+        "dialog_position": "str"
+    },
+}
+
+# These parameters must be in table
+db_table_config_params = [
+    'vk_token',
+    'vk_group_id',
+    'cheaters_filename',
+]

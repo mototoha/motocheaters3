@@ -6,6 +6,7 @@ import json
 from sys import argv
 
 import config
+import database
 
 
 def main():
@@ -77,6 +78,9 @@ def start_check(config_file) -> 'Dict or False':
         else:
             # If all correct
             result[param] = params_json[param]
+
+    db_filename = result['cheaters_filename']
+    db = database.DBCheaters(db_filename)
 
     return result
 
