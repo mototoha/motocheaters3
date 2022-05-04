@@ -21,6 +21,13 @@ bot_params_template = {
         'vk_admin_id': [],  # From DB
     }
 
+# From where get bot parameters
+get_bot_params = {
+    'json': ['db_filename'],
+    'DB_params': ['vk_token', 'vk_group_id', 'cheaters_filename'],
+    'DB_admins': ['vk_admin_id']
+    }
+
 # DB template
 db_tables = {
     "vk_id": {

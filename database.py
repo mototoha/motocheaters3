@@ -26,6 +26,29 @@ def _construct_insert(table: str, values_dict: dict) -> str:
     result += '(' + columns + ') values (' + values + ')'
     return result
 
+def _construct_select(table: str, what_select: list, where_select: dict= None, operator: str ='and') -> str:
+    """
+    Construct SELECT queue.
+
+    :param table: str
+    :param what_select: * or [list]
+    :param where_select: dict
+    :param operator: and/or
+    :return: SELECT str
+    """
+    result = 'SELECT '
+    for count, value in enumerate(what_select):
+        if count:
+            result += ', '
+        result+= value
+    result += ' from ' + table
+    if where_select:
+        result += ' where '
+        for count, value in enumerate(where_select):
+            if count:
+                result += ' ' + operator + ' '
+            result += value + '=' + where_select[value]
+    return result
 
 class DBCheaters:
     """
@@ -78,3 +101,15 @@ class DBCheaters:
             value = input('Enter admin id: ')
         self._cursor.execute(_construct_insert('admins', {'id': value}))
         self._connection.commit()
+
+
+    def get_param(self, param):
+        """
+        Return parameter from table 'parameters'
+        :param param:
+        """
+        # TODO Check parameter exist
+        self._cursor.execute(_construct_select('parameters', ['value'], {'parameter': param}))
+        result = self._cursor.fetchone()
+        result = result[0]
+        return result

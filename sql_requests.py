@@ -28,7 +28,7 @@ create table cards(
 );
 create table parameters(
   pk integer primary key,
-  param text,
+  parameter text,
   value text
 );
 create table admins(
