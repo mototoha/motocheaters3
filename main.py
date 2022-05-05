@@ -123,6 +123,7 @@ def start_bot(bot_params: dict) -> None:
     bot.labeler.vbml_ignore_case = True
     db = database.DBCheaters(bot_params['db_filename'])
 
+
     print('Запускаю бота')
     bot.run_forever()
 

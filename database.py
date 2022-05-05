@@ -160,3 +160,22 @@ class DBCheaters:
         :param vk_id: admin id
         """
         pass
+
+    def get_dialog_position(self, vk_id: int) -> str:
+        """
+        Get current dialog position for user
+
+        :param vk_id: ID
+        :return: str with position name
+        """
+        pass
+
+    def set_dialog_position(self, vk_id: int, dialog_position: str):
+        """
+        Set dialog position for user
+        If new position is '', then remove him from table
+
+        :param vk_id: ID
+        :param dialog_position: STR
+        """
+        pass
