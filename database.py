@@ -152,3 +152,11 @@ class DBCheaters:
         sql_query = _construct_insert('admins', {'id': int(vk_id)})
         self._cursor.execute(sql_query)
         self._connection.commit()
+
+    def del_admin(self, vk_id: str):
+        """
+        Deleting admin from DB.
+
+        :param vk_id: admin id
+        """
+        pass

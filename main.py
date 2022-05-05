@@ -6,6 +6,8 @@ import json
 from pprint import pprint
 from sys import argv
 
+from vkbottle.bot import Bot
+
 import config
 import database
 
@@ -109,10 +111,20 @@ def start_bot(bot_params: dict) -> None:
     """
     This functions starts bot with current parameters.
 
-    :param bot_params: Dictionary.
+    :param bot_params: {
+        'db_filename': '',
+        'vk_token': '',
+        'vk_group_id': '',
+        'cheaters_filename': '',
+        'vk_admin_id': [],
+    }.
     """
-    print('Типа запустил бота')
-    pass
+    bot = Bot(bot_params['vk_token'])
+    bot.labeler.vbml_ignore_case = True
+    db = database.DBCheaters(bot_params['db_filename'])
+
+    print('Запускаю бота')
+    bot.run_forever()
 
 
 if __name__ == '__main__':
