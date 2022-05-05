@@ -5,7 +5,6 @@ Now work with sqlite3.
 import os
 import sqlite3
 
-import config
 import sql_requests
 
 
@@ -14,19 +13,27 @@ def _construct_insert(table: str, values_dict: dict) -> str:
     Construct INSERT queue.
 
     :param table:
-    :param values: {column: value}
+    :param values_dict: {column: value}
     :return: INSERT str
     """
     columns = ''
     values = ''
     result = 'INSERT into ' + table + ' '
-    for value in values:
-        columns += ', ' + value
-        values += ', ' + values_dict[value]
+    for count, value in enumerate(values_dict):
+        if count:
+            columns += ', '
+            values += ', '
+        columns += value
+        # strings must be with "
+        if type(values_dict[value]) == str:
+            values += '"' + values_dict[value] + '"'
+        else:
+            values += str(values_dict[value])
     result += '(' + columns + ') values (' + values + ')'
     return result
 
-def _construct_select(table: str, what_select: list, where_select: dict= None, operator: str ='and') -> str:
+
+def _construct_select(table: str, what_select: list, where_select: dict = None, operator: str = 'and') -> str:
     """
     Construct SELECT queue.
 
@@ -40,20 +47,27 @@ def _construct_select(table: str, what_select: list, where_select: dict= None, o
     for count, value in enumerate(what_select):
         if count:
             result += ', '
-        result+= value
+        result += value
     result += ' from ' + table
     if where_select:
         result += ' where '
         for count, value in enumerate(where_select):
             if count:
                 result += ' ' + operator + ' '
-            result += value + '=' + where_select[value]
+            result += value + '='
+            # strings must be with "
+            if type(where_select[value]) == str:
+                result += '"' + where_select[value] + '"'
+            else:
+                result += where_select[value]
     return result
+
 
 class DBCheaters:
     """
     Class to work with db.
     """
+
     def __init__(self, db_filename: str):
         self.db_filename = db_filename
         # Check file existence
@@ -76,40 +90,65 @@ class DBCheaters:
             print(self._cursor.execute(sql_requests.select_table_names).fetchall())
         else:
             print('No database file, create new.')
-            self._create_database()
+            self._cursor.executescript(sql_requests.create_tables)
+            self._connection.commit()
 
     def __del__(self):
         self._cursor.close()
         self._connection.close()
 
     def _create_database(self):
-        """
-        This function create tables in file.
-        """
-        # Создаем новый файл и таблицы в нём
-        self._cursor.executescript(sql_requests.create_tables)
-
-        # В параметры добавляем нужные параметры
-        for param in config.db_table_config_params:
-            value = input('Enter ' + param + ': ')
-            self._cursor.execute(_construct_insert('parameters', {param: value}))
 
         # Добавляем одного админа
         value = ''
         while not value.isdigit():
             print('Enter vk_id numbers, without letters.')
             value = input('Enter admin id: ')
-        self._cursor.execute(_construct_insert('admins', {'id': value}))
+        sql_query = _construct_insert('admins', {'id': value})
+        self._cursor.execute(sql_query)
         self._connection.commit()
-
 
     def get_param(self, param):
         """
-        Return parameter from table 'parameters'
-        :param param:
+        Return parameter from table 'parameters'.
         """
         # TODO Check parameter exist
-        self._cursor.execute(_construct_select('parameters', ['value'], {'parameter': param}))
+        sql_query = _construct_select('parameters', ['value'], {'parameter': param})
+        self._cursor.execute(sql_query)
         result = self._cursor.fetchone()
-        result = result[0]
+        if result is None:
+            return result
+        else:
+            result = result[0]
+            return result
+
+    def add_param(self, dict_params):
+        """
+        Set parameter to table 'parameters'
+        """
+        # TODO Make exception check
+        for param in dict_params:
+            sql_query = _construct_insert('parameters', {'parameter': param, 'value': dict_params[param]})
+            self._cursor.execute(sql_query)
+        self._connection.commit()
+        return None
+
+    def get_admins(self) -> list:
+        """
+        Return all users from table admins
+
+        :return: list of id
+        """
+        result = []
+        sql_query = _construct_select('admins', ['id'])
+        for line in self._cursor.execute(sql_query).fetchall():
+            result.append(int(line[0]))
         return result
+
+    def add_admin(self, vk_id: str):
+        """
+        Add new admin id
+        """
+        sql_query = _construct_insert('admins', {'id': int(vk_id)})
+        self._cursor.execute(sql_query)
+        self._connection.commit()

@@ -3,6 +3,7 @@ Main bot file.
 python3 main.py [config_filename.json]
 """
 import json
+from pprint import pprint
 from sys import argv
 
 import config
@@ -23,6 +24,8 @@ def main():
 
     # Checking start parameters.
     bot_params = start_check(config_file)
+
+    pprint(bot_params)
 
     start_bot(bot_params)
 
@@ -69,6 +72,7 @@ def start_check(config_file) -> 'Dict or False':
         return False
     else:
         print('Correct json')
+        f.close()
 
     # If correct json format check file's variables
     result = {}
@@ -82,11 +86,23 @@ def start_check(config_file) -> 'Dict or False':
 
     db_filename = result['db_filename']
     db = database.DBCheaters(db_filename)
+    # Set/Get parameters from table 'parameters'
     for param in config.get_bot_params['DB_params']:
         result[param] = db.get_param(param)
+        if not result[param]:
+            value = input('Enter ' + param + ': ')
+            db.add_param({param: value})
+
+    # Set/get admins
+    result['vk_admin_id'] = db.get_admins()
+    if not result['vk_admin_id']:
+        value = ''
+        while not value.isdigit():
+            value = input('Enter admin id (numbers only): ')
+        result['vk_admin_id'].append(value)
+        db.add_admin(value)
 
     return result
-
 
 
 def start_bot(bot_params: dict) -> None:
@@ -95,6 +111,7 @@ def start_bot(bot_params: dict) -> None:
 
     :param bot_params: Dictionary.
     """
+    print('Типа запустил бота')
     pass
 
 

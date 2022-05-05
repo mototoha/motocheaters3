@@ -14,19 +14,19 @@ json_template = {
 
 # What must contain bot_param dict to start bot
 bot_params_template = {
-        'db_filename': '',  # From json
-        'vk_token': '',  # From DB
-        'vk_group_id': '',  # From DB
-        'cheaters_filename': '',  # From DB
-        'vk_admin_id': [],  # From DB
-    }
+    'db_filename': '',  # From json
+    'vk_token': '',  # From DB table 'parameters'
+    'vk_group_id': '',  # From DB table 'parameters'
+    'cheaters_filename': '',  # From DB table 'parameters'
+    'vk_admin_id': [],  # From DB table 'admins'
+}
 
 # From where get bot parameters
 get_bot_params = {
     'json': ['db_filename'],
     'DB_params': ['vk_token', 'vk_group_id', 'cheaters_filename'],
     'DB_admins': ['vk_admin_id']
-    }
+}
 
 # DB template
 db_tables = {
