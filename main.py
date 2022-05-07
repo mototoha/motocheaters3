@@ -16,6 +16,15 @@ import dialogs
 import vk_keyboards
 
 
+class DialogStates(BaseStateGroup):
+    """
+    Dialog levels.
+    """
+    MAIN_STATE = 0
+    TELL_ABOUT_CHEATER = 1
+    ADMIN_MENU = 10
+
+
 def main():
     """
     Main function.
@@ -135,18 +144,20 @@ def start_bot(bot_params: dict) -> None:
         Tell about cheater
         """
         users_info = await bot.api.users.get(message.from_id)
-        state = await bot.state_dispenser.set(message.peer_id, 1)
+        state = await bot.state_dispenser.set(message.from_id, DialogStates.TELL_ABOUT_CHEATER)
         answer_message = dialogs.tell_about_cheater
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_return_to_main,
         )
 
-    @bot.on.message(state='1')
+    @bot.on.message(state = DialogStates.TELL_ABOUT_CHEATER)
     async def cheater_story_handler(message: Message):
         """
         Рассказ про кидалу
         """
+        users_info = await bot.api.users.get(message.from_id)
+        await bot.state_dispenser.delete(message.peer_id)
         message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' хочет поделиться кидалой\n'
         answer_text = 'Спасибо!'
         vk_admin_ids = db.get_admins()
