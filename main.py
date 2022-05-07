@@ -155,9 +155,44 @@ def start_bot(bot_params: dict) -> None:
             keyboard=vk_keyboards.keyboard_return_to_main,
         )
 
+    # Press 'Помочь нам'
+    @bot.on.message(text="помочь нам")
+    @bot.on.message(payload={"main": "help_us"})
+    async def help_us_handler(message: Message):
+        """
+        Tell about cheater
+        """
+        users_info = await bot.api.users.get(message.from_id)
+        state = await bot.state_dispenser.set(message.from_id, DialogStates.TELL_ABOUT_CHEATER)
+        answer_message = dialogs.help_us
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+
+    # Press 'Как проверить'
+    @bot.on.message(text="как проверить")
+    @bot.on.message(payload={"main": "how_check"})
+    async def help_us_handler(message: Message):
+        """
+        Tell about cheater
+        """
+        users_info = await bot.api.users.get(message.from_id)
+        state = await bot.state_dispenser.set(message.from_id, DialogStates.TELL_ABOUT_CHEATER)
+        answer_message = dialogs.how_check
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+
+    # Кнопка "Передумал"
     @bot.on.message(
         state=DialogStates.TELL_ABOUT_CHEATER,
         payload={"tell_about_cheater": "main"}
+    )
+    @bot.on.message(
+        state=DialogStates.TELL_ABOUT_CHEATER,
+        text='передумал'
     )
     async def cheater_story_handler(message: Message):
         """
@@ -209,3 +244,8 @@ def start_bot(bot_params: dict) -> None:
 
 if __name__ == '__main__':
     main()
+
+# Global TO DO
+# TODO Админское меню
+# TODO Рассылка
+# TODO добавить/удалить админа
