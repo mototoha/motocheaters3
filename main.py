@@ -9,6 +9,10 @@ from sys import argv
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.bot import Message
+from vkbottle.dispatch.rules.base import (
+    AttachmentTypeRule,
+    FromUserRule,
+)
 
 import config
 import database
@@ -151,7 +155,20 @@ def start_bot(bot_params: dict) -> None:
             keyboard=vk_keyboards.keyboard_return_to_main,
         )
 
-    @bot.on.message(state = DialogStates.TELL_ABOUT_CHEATER)
+    @bot.on.message(
+        state=DialogStates.TELL_ABOUT_CHEATER,
+        payload={"tell_about_cheater": "main"}
+    )
+    async def cheater_story_handler(message: Message):
+        """
+        Change mind
+        """
+        users_info = await bot.api.users.get(message.from_id)
+        await bot.state_dispenser.delete(message.peer_id)
+        answer_text = 'Если захочешь рассказать - ждем!'
+        await message.answer(answer_text, keyboard=vk_keyboards.keyboard_main)
+
+    @bot.on.message(state=DialogStates.TELL_ABOUT_CHEATER)
     async def cheater_story_handler(message: Message):
         """
         Рассказ про кидалу
