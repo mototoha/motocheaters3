@@ -7,9 +7,12 @@ from pprint import pprint
 from sys import argv
 
 from vkbottle.bot import Bot
+from vkbottle.bot import Message
 
 import config
 import database
+import dialogs
+import vk_keyboards
 
 
 def main():
@@ -122,6 +125,19 @@ def start_bot(bot_params: dict) -> None:
     bot = Bot(bot_params['vk_token'])
     bot.labeler.vbml_ignore_case = True
     db = database.DBCheaters(bot_params['db_filename'])
+
+    # Привет!
+    @bot.on.message(text="Привет<!>")
+    @bot.on.message(text="ghbdtn<!>")
+    async def hi_handler(message: Message):
+        """
+        Привет!
+        """
+        users_info = await bot.api.users.get(message.from_id)
+        await message.answer(
+            dialogs.hello.format(users_info[0].first_name) + str(message.payload),
+            keyboard=vk_keyboards.keyboard_main,
+        )
 
 
     print('Запускаю бота')
