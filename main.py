@@ -6,6 +6,7 @@ import json
 from pprint import pprint
 from sys import argv
 
+from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.bot import Message
 
@@ -126,19 +127,35 @@ def start_bot(bot_params: dict) -> None:
     bot.labeler.vbml_ignore_case = True
     db = database.DBCheaters(bot_params['db_filename'])
 
-    # Привет!
+    # Press 'Tell about cheater'
+    @bot.on.message(text="рассказать про кидалу")
+    @bot.on.message(payload={"main": "tell_about_cheater"})
+    async def tell_about_cheater_handler(message: Message):
+        """
+        Tell about cheater
+        """
+        users_info = await bot.api.users.get(message.from_id)
+        state = await bot.state_dispenser.get(message.peer_id)
+        answer_message = dialogs.tell_about_cheater
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_return_to_main,
+        )
+
+    # Hi!
     @bot.on.message(text="Привет<!>")
     @bot.on.message(text="ghbdtn<!>")
     async def hi_handler(message: Message):
         """
-        Привет!
+        Hi!
         """
         users_info = await bot.api.users.get(message.from_id)
+        state = await bot.state_dispenser.get(message.peer_id)
+        answer_message = dialogs.hello.format(users_info[0].first_name)
         await message.answer(
-            dialogs.hello.format(users_info[0].first_name) + str(message.payload),
+            answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
-
 
     print('Запускаю бота')
     bot.run_forever()
