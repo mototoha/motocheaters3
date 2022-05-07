@@ -135,12 +135,30 @@ def start_bot(bot_params: dict) -> None:
         Tell about cheater
         """
         users_info = await bot.api.users.get(message.from_id)
-        state = await bot.state_dispenser.get(message.peer_id)
+        state = await bot.state_dispenser.set(message.peer_id, 1)
         answer_message = dialogs.tell_about_cheater
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_return_to_main,
         )
+
+    @bot.on.message(state='1')
+    async def cheater_story_handler(message: Message):
+        """
+        Рассказ про кидалу
+        """
+        message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' хочет поделиться кидалой\n'
+        answer_text = 'Спасибо!'
+        vk_admin_ids = db.get_admins()
+        await bot.api.messages.send(
+            message=message_text,
+            user_ids=vk_admin_ids,
+            forward_messages=message.id,
+            random_id=0,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+        # отвечаем вопрошающему
+        await message.answer(answer_text)
 
     # Hi!
     @bot.on.message(text="Привет<!>")
