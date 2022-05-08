@@ -2,23 +2,26 @@
 Classes for VKBot
 """
 import re
+import requests
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
-from vkbottle.bot import Message
-from vkbottle.dispatch.rules.base import (
-    AttachmentTypeRule,
-    FromPeerRule,
-)
 from vkbottle.exception_factory import VKAPIError
 
-import config
+import database
 
 
 class VKBot(Bot):
     """
     Main bot class.
     """
+    regexp_main = (
+        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
+        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
+        r'|(?P<card>\d{16})'
+        r'|\+?(?P<telephone>\d{10,15})'
+    )
+
     def __init__(self, vk_token: str, db_filename: str, vk_group_id: str, cheaters_filename: str, vk_admin_id: str):
         self.vk_token = vk_token
         self.db_filename = db_filename
@@ -29,20 +32,30 @@ class VKBot(Bot):
         super().__init__(vk_token)
         self.labeler.vbml_ignore_case = True
 
-        self.regexp_main = (
-            r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
-            r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
-            r'|(?P<card>\d{16})'
-            r'|\+?(?P<telephone>\d{10,15})'
-        )
+        self.db = database.DBCheaters(self.db_filename)
 
-    async def get_cheaters_list_from_file(self, content):
+    async def cheaters_file_parsing(self, url: str):
+        """
+        Функция возьмет текстовый файл по ссылке, распарсит его, перенесет все данные в БД.
+        :param url: ссылка на файл ВК
+        :return: Ответ
+        """
+        print('Сейчас начнем парсить файл', url)
+        content = requests.get(url).content.decode()
+        cheaters_list = await self._get_cheaters_list_from_file(content)  # Список кидал
+        if type(cheaters_list) == str:  # если результат - строка, её необходимо отправить юзеру
+            return cheaters_list
+        else:
+            result = await self._update_database(cheaters_list)  # Update DB
+            return result
+
+    async def _get_cheaters_list_from_file(self, content):
         """
         Функция получает на вход текст из файла и возвращает списком кидал.
         Если по дороге возникает исключение, не позволяющее нормально продолжить работу - возвращает текст.
 
         :param content: Текст из файла.
-        :return: List кидал.
+        :return: List кидал или str  с ответом юзеру
         """
         fifty = False  # Идентификатор "Полтинников" - кто ингода кидает
         cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
@@ -117,13 +130,74 @@ class VKBot(Bot):
         print('Вот итоговый список:', cheaters_list, '\n')
         return cheaters_list
 
+    async def _update_database(self, cheaters_list: str):
+        """
+        Принимает на вход список кидал, обновляет базу и возвращает ответ строкой.
+        :return: Ответ для пользователя
+        """
+        for cheater in cheaters_list:
+            print('Разбираем запись ', cheater, sep='\n')
+
+            if cheater['vk_id']:
+                # TODO Сделать методы для проверки наличия кидал
+                if self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id'], 'fifty': cheater['fifty']}):
+                    print('Такой vk_id есть!')
+                elif self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id']}):
+                    print('Поменялся fifty на', cheater['fifty'])
+                    self.db.update_table('vk_id', 'fifty', cheater['fifty'], 'vk_id', cheater['vk_id'])
+                else:
+                    print('Добавляем нового кидалу')
+                    self.db.add_cheater(cheater['vk_id'], cheater['fifty'])
+
+                if cheater['shortname']:
+                    if self.db.check_the_existence('shortnames',
+                                                   {'shortname': cheater['shortname'],
+                                                    'vk_id': cheater['vk_id']
+                                                    }
+                                                   ):
+                        print('Такой shortname-id есть!')
+                    else:
+                        print('Добавляем новый shortname-id')
+                        self.db.add_shortname(cheater['shortname'], cheater['vk_id'])
+
+                if cheater['telephone']:
+                    for tel in cheater['telephone']:
+                        if self.db.check_the_existence('telephones', {'telephone': tel, 'vk_id': cheater['vk_id']}):
+                            print('Связка телефон-id уже есть')
+                        else:
+                            print('Добавляем новый tel-id')
+                            self.db.add_telephones([tel], cheater['vk_id'])
+
+                if cheater['card']:
+                    for card in cheater['card']:
+                        if self.db.check_the_existence('cards', {'card': card, 'vk_id': cheater['vk_id']}):
+                            print('Связка card-id уже есть')
+                        else:
+                            print('Добавляем новый card-id')
+                            self.db.add_cards([card], cheater['vk_id'])
+            else:
+                # Пока таких не рассматриваем
+                # TODO Обдумать формат записи без vk_id
+                print('Запись без vk_id')
+                if cheater['shortname']:
+                    if self.db.check_the_existence('shortnames', {'shortname': cheater['shortname']}):
+                        print('Такое имя уже есть')
+                    else:
+                        self.db.add_shortname(cheater['shortname'])
+                if cheater['telephone']:
+                    pass
+                if cheater['card']:
+                    pass
+            print()
+        return 'Я обновил БД!'
+
 
 regexp_main = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
-        r'|(?P<card>\d{16})'
-        r'|\+?(?P<telephone>\d{10,15})'
-    )
+    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
+    r'|(?P<card>\d{16})'
+    r'|\+?(?P<telephone>\d{10,15})'
+)
 
 
 class DialogStates(BaseStateGroup):

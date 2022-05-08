@@ -51,6 +51,7 @@ def check(config_file) -> 'Dict or False':
 
     # If correct json format check file's variables
     result = {}
+    # TODO привести к единому виду - либо через config.get_bot_params, либо через много переменных
     for param in config.json_template:
         if not params_json.get(param):
             print('There is no variable', param, 'in config file', config_file)

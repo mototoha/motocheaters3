@@ -2,13 +2,12 @@
 Main bot file.
 python3 main.py [config_filename.json]
 """
-import json
+
 import re
 from pprint import pprint
 from sys import argv
 
 import requests
-from vkbottle.bot import Bot
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
@@ -16,7 +15,6 @@ from vkbottle.dispatch.rules.base import (
 )
 
 import config
-import database
 import startup_check
 import dialogs
 import vk_keyboards
@@ -63,14 +61,6 @@ def start_bot(bot_params: dict) -> None:
         bot_params['vk_group_id'],
         bot_params['cheaters_filename'],
         bot_params['vk_admin_id'],
-    )
-
-    db = database.DBCheaters(bot_params['db_filename'])
-    regexp_main = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
-        r'|(?P<card>\d{16})'
-        r'|\+?(?P<telephone>\d{10,15})'
     )
 
     # Press 'Tell about cheater'
@@ -130,17 +120,17 @@ def start_bot(bot_params: dict) -> None:
         answer_message = 'Если захочешь рассказать - ждем!'
         await message.answer(answer_message, keyboard=vk_keyboards.keyboard_main)
 
-    # Tell about cheater
+    # Telling about cheater
     @bot.on.message(state=vkbot.DialogStates.TELL_ABOUT_CHEATER)
     async def cheater_story_handler(message: Message):
         """
-        Tell about cheater
+        Telling about cheater
         """
         users_info = await bot.api.users.get(message.from_id)
         await bot.state_dispenser.delete(message.peer_id)
         message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' хочет поделиться кидалой\n'
         answer_message = 'Спасибо!'
-        vk_admin_ids = db.get_admins()
+        vk_admin_ids = bot.vk_admin_id
         await bot.api.messages.send(
             message=message_text,
             user_ids=vk_admin_ids,
@@ -168,7 +158,7 @@ def start_bot(bot_params: dict) -> None:
     # File with cheaters
     @bot.on.message(
         AttachmentTypeRule('doc'),
-        FromPeerRule(db.get_admins()),
+        FromPeerRule(bot.vk_admin_id),
         func=(lambda message: message.attachments[0].doc.title == bot_params['cheaters_filename']),
         state=None
     )
@@ -178,8 +168,7 @@ def start_bot(bot_params: dict) -> None:
         """
         await message.answer('Ты решил обновить БД через файл. Жди, пожалуйста.')
         attachments_url = message.attachments[0].doc.url
-        content = requests.get(attachments_url).content.decode()
-        answer_message = ''
+        answer_message = await bot.cheaters_file_parsing(attachments_url)
         await message.answer(answer_message)
 
     @bot.on.message(state=None)
@@ -187,7 +176,7 @@ def start_bot(bot_params: dict) -> None:
         """
         Common message.
         """
-        match = re.match(regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
+        match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
         if match:
             answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
             await message.answer(
@@ -202,7 +191,7 @@ def start_bot(bot_params: dict) -> None:
                 answer_message,
                 keyboard=vk_keyboards.keyboard_main,
             )
-            vk_admin_ids = db.get_admins()
+            vk_admin_ids = bot.vk_admin_id
             message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' написал что-то непонятное\n'
             await bot.api.messages.send(
                 message=message_text,
@@ -223,3 +212,4 @@ if __name__ == '__main__':
 # TODO Админское меню
 # TODO Рассылка
 # TODO добавить/удалить админа
+# TODO Удалить запись из БД
