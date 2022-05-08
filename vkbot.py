@@ -190,16 +190,8 @@ class VKBot(Bot):
                     pass
                 if cheater['card']:
                     pass
-            print()
+            print('Я обновил БД!')
         return 'Я обновил БД!'
-
-
-regexp_main = (
-    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
-    r'|(?P<card>\d{16})'
-    r'|\+?(?P<telephone>\d{10,15})'
-)
 
 
 class DialogStates(BaseStateGroup):

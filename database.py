@@ -95,6 +95,8 @@ class DBCheaters:
                 # strings must be with "
                 if type(where_select[value]) == str:
                     result += '"' + where_select[value] + '"'
+                elif type(where_select[value]) == bool:
+                    result += str(where_select[value])
                 else:
                     result += where_select[value]
         return result
@@ -164,7 +166,10 @@ class DBCheaters:
 
         :return: True or False
         """
-        sql_query = self._construct_select(table=table, what_select=parameter_list)
+        what_select = []
+        for param in parameter_list:
+            what_select.append(param)
+        sql_query = self._construct_select(table=table, what_select=what_select, where_select=parameter_list)
         self._cursor.execute(sql_query)
         result = bool(self._cursor.fetchall())
         return result
@@ -244,7 +249,7 @@ class DBCheaters:
         """
         for tel in telephones:
             sql_query = self._construct_insert(
-                table='shortnames',
+                table='telephones',
                 values_dict={
                     'telephone': tel,
                     'vk_id': vk_id,
@@ -254,15 +259,15 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_cards(self,cards: list, vk_id: str = ''):
+    def add_cards(self, cards: list, vk_id: str = ''):
         """
         Добавляем телефоны.
         """
         for card in cards:
             sql_query = self._construct_insert(
-                table='shortnames',
+                table='cards',
                 values_dict={
-                    'telephone': card,
+                    'card': card,
                     'vk_id': vk_id,
                 }
             )
