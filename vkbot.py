@@ -3,6 +3,7 @@ Classes for VKBot
 """
 import re
 import requests
+import time
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -122,6 +123,7 @@ class VKBot(Bot):
                 print('Далее идут полтиники')
             else:
                 print('Непонятная строка \n')
+            time.sleep(0.1)
         # Последний в списке
         if cheater.get('vk_id'):
             print('Добавляю кидалу в список. \n', cheater)

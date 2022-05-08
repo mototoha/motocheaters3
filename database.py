@@ -164,7 +164,7 @@ class DBCheaters:
 
         :return: True or False
         """
-        sql_query = 'SELECT EXIST(' + self._construct_select(table=table, what_select=parameter_list) + ')'
+        sql_query = self._construct_select(table=table, what_select=parameter_list)
         self._cursor.execute(sql_query)
         result = bool(self._cursor.fetchall())
         return result
@@ -174,13 +174,7 @@ class DBCheaters:
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
         """
-        sql_query = self._construct_insert(table=table, {set_param: set_value})
-        sql_query = sql_requests.update_table.format(table=table,
-                                                     set_param=set_param,
-                                                     set_value=set_value,
-                                                     where_param=where_param,
-                                                     where_value=where_value
-                                                     )
+        sql_query = self._construct_insert(table=table, values_dict={set_param: set_value})
         self._cursor.execute(sql_query
                              )
         self._connection.commit()
