@@ -193,6 +193,11 @@ class VKBot(Bot):
             print('Я обновил БД!')
         return 'Я обновил БД!'
 
+    def check_cheater(self, parameter: str, value: str):
+        """
+        Проверяем наличие кидалы в БД
+        """
+        pass
 
 class DialogStates(BaseStateGroup):
     """

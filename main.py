@@ -178,6 +178,8 @@ def start_bot(bot_params: dict) -> None:
         """
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
         if match:
+            # TODO CHeck cheater
+            bot.check_cheater(match.lastgroup, match[match.lastgroup])
             answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
             await message.answer(
                 answer_message,
