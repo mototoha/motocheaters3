@@ -204,17 +204,19 @@ class VKBot(Bot):
             print('Я обновил БД!')
         return 'Я обновил БД!'
 
-    def check_cheater(self, parameter: str, value: str):
+    async def check_cheater(self, parameter: str, value: str):
         """
         Проверяем наличие кидалы в БД
+
+        :return vk_id, False.
         """
         if parameter == 'vk_id':
-            pass
+            check_result = self.db.check_the_existence('vk_id', {parameter: value})
         elif parameter == 'shortname':
-            pass
+            check_result = self.db.check_the_existence('shortnames', {parameter: value})
         elif parameter == 'card':
-            pass
+            check_result = self.db.check_the_existence('cards', {parameter: value})
         elif parameter == 'telephone':
-            pass
+            check_result = self.db.check_the_existence('telephones', {parameter: value})
         else:
-            return None
+            return False

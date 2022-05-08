@@ -129,13 +129,11 @@ def start_bot(bot_params: dict) -> None:
         await bot.state_dispenser.delete(message.peer_id)
         message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' хочет поделиться кидалой\n'
         answer_message = 'Спасибо!'
-        vk_admin_ids = bot.vk_admin_id
         await bot.api.messages.send(
             message=message_text,
-            user_ids=vk_admin_ids,
+            user_ids=bot.vk_admin_id,
             forward_messages=message.id,
             random_id=0,
-            keyboard=vk_keyboards.keyboard_main
         )
         # отвечаем вопрошающему
         await message.answer(answer_message)
@@ -185,9 +183,65 @@ def start_bot(bot_params: dict) -> None:
             answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
-        result = bot.check_cheater(match.lastgroup, match[match.lastgroup])
-        if result is None:
-            result = dialogs.none_check[match.lastgroup].format(match[match.lastgroup])
+        result_check = await bot.check_cheater(match.lastgroup, match[match.lastgroup])
+        if result_check:  # found
+            if match.lastgroup == 'card':
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='acc')
+                result = """
+                Карта {card} принадлежит пользователю {vk_id} {firstname} {lastname}.
+                Он есть в наших базах. Не доверяй ему.
+                """.format(
+                    card=match[match.lastgroup],
+                    vk_id=result_check,
+                    firstname=users_info[0].first_name,
+                    lastname=users_info[0].last_name
+                )
+            elif match.lastgroup == 'telephone':
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='acc')
+                result = """
+                Телефон {tel} принадлежит пользователю {vk_id} {firstname} {lastname}.
+                Он есть в наших базах. Не доверяй ему.
+                """.format(
+                    tel=match[match.lastgroup],
+                    vk_id=result_check,
+                    firstname=users_info[0].first_name,
+                    lastname=users_info[0].last_name
+                )
+            elif match.lastgroup == 'shortname':
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='nom')
+                result = """
+                                Пользователь vk.com/{shortname} (vk.vom/{vk_id}) {firstname} {lastname}\
+                                 есть в наших базах.
+                                Не доверяй ему.
+                                """.format(
+                    shortname=match[match.lastgroup],
+                    vk_id=result_check,
+                    firstname=users_info[0].first_name,
+                    lastname=users_info[0].last_name
+                )
+            elif match.lastgroup == 'vk_id':
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='nom')
+                result = """
+                                Пользователь vk.vom/{vk_id} {firstname} {lastname}\
+                                 есть в наших базах.
+                                Не доверяй ему.
+                                """.format(
+                    vk_id=result_check,
+                    firstname=users_info[0].first_name,
+                    lastname=users_info[0].last_name
+                )
+            else:
+                result = 'Ничего не найдено.'
+                message_text = 'Запрос, который некорректно отработал'
+                await bot.api.messages.send(
+                    message=message_text,
+                    user_ids=bot.vk_admin_id,
+                    forward_messages=message.id,
+                    random_id=0,
+                )
+        else:  # not found
+            result = dialogs.none_check.get(match.lastgroup)
+
         return result
 
     @bot.on.message(state=None)
