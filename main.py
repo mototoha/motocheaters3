@@ -177,16 +177,11 @@ def start_bot(bot_params: dict) -> None:
         Ловим кидалу
         """
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
-        # TODO УБРАТЬ Служебный ответ, потом убрать
-        answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
-        await message.answer(
-            answer_message,
-            keyboard=vk_keyboards.keyboard_main,
-        )
         result_check = await bot.check_cheater(match.lastgroup, match[match.lastgroup])
+        # TODO Сделать парсинг групп
         if result_check:  # found
             if match.lastgroup == 'card':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='acc')
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='dat')
                 result = """
                 Карта {card} принадлежит пользователю {vk_id} {firstname} {lastname}.
                 Он есть в наших базах. Не доверяй ему.
@@ -197,7 +192,7 @@ def start_bot(bot_params: dict) -> None:
                     lastname=users_info[0].last_name
                 )
             elif match.lastgroup == 'telephone':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='acc')
+                users_info = await bot.api.users.get(user_ids=result_check, name_case='dat')
                 result = """
                 Телефон {tel} принадлежит пользователю {vk_id} {firstname} {lastname}.
                 Он есть в наших базах. Не доверяй ему.
@@ -241,6 +236,17 @@ def start_bot(bot_params: dict) -> None:
                 )
         else:  # not found
             result = dialogs.none_check.get(match.lastgroup)
+            if result:
+                result = result.format(match[match.lastgroup])
+            else:
+                result = 'Ничего не найдено.'
+                message_text = 'Запрос, который некорректно отработал'
+                await bot.api.messages.send(
+                    message=message_text,
+                    user_ids=bot.vk_admin_id,
+                    forward_messages=message.id,
+                    random_id=0,
+                )
 
         return result
 

@@ -69,6 +69,7 @@ class VKBot(Bot):
         :param content: Текст из файла.
         :return: List кидал или str  с ответом юзеру
         """
+        # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто ингода кидает
         cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
         cheaters_list = []  # Список кидал
@@ -152,7 +153,7 @@ class VKBot(Bot):
             print('Разбираем запись ', cheater, sep='\n')
 
             if cheater['vk_id']:
-                # TODO Сделать методы для проверки наличия кидал
+                # TODO Сделать отдельные методы для проверки наличия кидал
                 if self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id'], 'fifty': cheater['fifty']}):
                     print('Такой vk_id есть!')
                 elif self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id']}):
@@ -211,12 +212,16 @@ class VKBot(Bot):
         :return vk_id, False.
         """
         if parameter == 'vk_id':
-            check_result = self.db.check_the_existence('vk_id', {parameter: value})
+            check_result = self.db.get_cheater_id('vk_id', {parameter: value})
         elif parameter == 'shortname':
-            check_result = self.db.check_the_existence('shortnames', {parameter: value})
+            check_result = self.db.get_cheater_id('shortnames', {parameter: value})
         elif parameter == 'card':
-            check_result = self.db.check_the_existence('cards', {parameter: value})
+            check_result = self.db.get_cheater_id('cards', {parameter: value})
         elif parameter == 'telephone':
-            check_result = self.db.check_the_existence('telephones', {parameter: value})
+            check_result = self.db.get_cheater_id('telephones', {parameter: value})
+        else:
+            check_result = False
+        if check_result:
+            return check_result[0]
         else:
             return False

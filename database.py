@@ -230,7 +230,7 @@ class DBCheaters:
 
     def add_shortname(self, shortname: str, vk_id: str = ''):
         """
-        Добавляем shortname
+        Добавляем shortname.
         """
         sql_query = self._construct_insert(
             table='shortnames',
@@ -274,3 +274,22 @@ class DBCheaters:
             self._cursor.execute(sql_query)
         self._connection.commit()
         return None
+
+    def get_cheater_id(self, table: str, params: dict) -> str:
+        """
+        Get cheater ID.
+
+        :return: ID / 0 if nothing
+        """
+        what_select = []
+        for par in params:
+            what_select.append(par)
+        sql_query = self._construct_select(
+            table=table,
+            what_select=['vk_id'],
+            where_select=params
+        )
+        self._cursor.execute(sql_query)
+        # TODO что делать, если результатов много
+        result = self._cursor.fetchone()
+        return result
