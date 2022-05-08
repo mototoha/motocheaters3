@@ -179,12 +179,16 @@ def start_bot(bot_params: dict) -> None:
         Ловим кидалу
         """
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
+        # TODO УБРАТЬ Служебный ответ, потом убрать
         answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
         result = bot.check_cheater(match.lastgroup, match[match.lastgroup])
+        if result is None:
+            result = dialogs.none_check[match.lastgroup].format(match[match.lastgroup])
+        return result
 
     @bot.on.message(state=None)
     async def common_handler(message: Message):
