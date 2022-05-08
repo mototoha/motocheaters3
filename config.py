@@ -1,6 +1,5 @@
 """
 Global variables.
-Config file check
 """
 
 # Parameters of config file
@@ -18,3 +17,15 @@ get_bot_params = {
     'DB_params': ['vk_token', 'vk_group_id', 'cheaters_filename'],
     'DB_admins': ['vk_admin_id']
 }
+
+
+class BotParams:
+    """
+    Parameters class. Better for usage, than dict.
+    """
+    db_filename = ''
+    vk_token = ''
+    vk_group_id = ''
+    cheaters_filename = ''
+    vk_admin_id = []
+
