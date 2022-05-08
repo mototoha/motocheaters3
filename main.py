@@ -7,7 +7,6 @@ import re
 from pprint import pprint
 from sys import argv
 
-import requests
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
@@ -71,7 +70,7 @@ def start_bot(bot_params: dict) -> None:
         Tell about cheater
         """
         answer_message = dialogs.tell_about_cheater
-        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.TELL_ABOUT_CHEATER)
+        await bot.state_dispenser.set(message.from_id, bot.dialog_states.TELL_ABOUT_CHEATER)
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_return_to_main,
@@ -105,11 +104,11 @@ def start_bot(bot_params: dict) -> None:
 
     # Кнопка "Передумал"
     @bot.on.message(
-        state=vkbot.DialogStates.TELL_ABOUT_CHEATER,
+        state=bot.dialog_states.TELL_ABOUT_CHEATER,
         payload={"tell_about_cheater": "main"},
     )
     @bot.on.message(
-        state=vkbot.DialogStates.TELL_ABOUT_CHEATER,
+        state=bot.dialog_states.TELL_ABOUT_CHEATER,
         text='передумал',
     )
     async def cheater_story_handler(message: Message):
@@ -121,7 +120,7 @@ def start_bot(bot_params: dict) -> None:
         await message.answer(answer_message, keyboard=vk_keyboards.keyboard_main)
 
     # Telling about cheater
-    @bot.on.message(state=vkbot.DialogStates.TELL_ABOUT_CHEATER)
+    @bot.on.message(state=bot.dialog_states.TELL_ABOUT_CHEATER)
     async def cheater_story_handler(message: Message):
         """
         Telling about cheater
@@ -171,36 +170,42 @@ def start_bot(bot_params: dict) -> None:
         answer_message = await bot.cheaters_file_parsing(attachments_url)
         await message.answer(answer_message)
 
+    @bot.on.message(func=lambda message: bool(re.match(
+        bot.regexp_main,
+        message.text.lower().lstrip('+').replace(' ', '')
+    )))
+    async def check_cheater_handler(message: Message):
+        """
+        Ловим кидалу
+        """
+        match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
+        answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+        result = bot.check_cheater(match.lastgroup, match[match.lastgroup])
+
     @bot.on.message(state=None)
     async def common_handler(message: Message):
         """
         Common message.
         """
-        match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
-        if match:
-            # TODO CHeck cheater
-            bot.check_cheater(match.lastgroup, match[match.lastgroup])
-            answer_message = "Ты хочешь проверить параметр", match.lastgroup, 'со значением', match[match.lastgroup]
-            await message.answer(
-                answer_message,
-                keyboard=vk_keyboards.keyboard_main,
-            )
-        else:
-            users_info = await bot.api.users.get(message.from_id)
-            answer_message = "Извини, я тебя не понял. Напиши адрес страницы, телефон или номер банковской карты. \n"
-            answer_message += dialogs.samples
-            await message.answer(
-                answer_message,
-                keyboard=vk_keyboards.keyboard_main,
-            )
-            vk_admin_ids = bot.vk_admin_id
-            message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' написал что-то непонятное\n'
-            await bot.api.messages.send(
-                message=message_text,
-                user_ids=vk_admin_ids,
-                forward_messages=message.id,
-                random_id=0,
-            )
+        users_info = await bot.api.users.get(message.from_id)
+        answer_message = "Извини, я тебя не понял. Напиши адрес страницы, телефон или номер банковской карты. \n"
+        answer_message += dialogs.samples
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+        vk_admin_ids = bot.vk_admin_id
+        message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' написал что-то непонятное\n'
+        await bot.api.messages.send(
+            message=message_text,
+            user_ids=vk_admin_ids,
+            forward_messages=message.id,
+            random_id=0,
+        )
 
     print('Запускаю бота')
     bot.run_forever()
@@ -215,3 +220,4 @@ if __name__ == '__main__':
 # TODO Рассылка
 # TODO добавить/удалить админа
 # TODO Удалить запись из БД
+# TODO перенести все диалоги в dialogs

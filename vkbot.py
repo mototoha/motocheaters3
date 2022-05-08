@@ -12,6 +12,15 @@ from vkbottle.exception_factory import VKAPIError
 import database
 
 
+class DialogStates(BaseStateGroup):
+    """
+    Dialog levels.
+    """
+    MAIN_STATE = 0
+    TELL_ABOUT_CHEATER = 1
+    ADMIN_MENU = 10
+
+
 class VKBot(Bot):
     """
     Main bot class.
@@ -22,6 +31,8 @@ class VKBot(Bot):
         r'|(?P<card>\d{16})'
         r'|\+?(?P<telephone>\d{10,15})'
     )
+
+    dialog_states = DialogStates
 
     def __init__(self, vk_token: str, db_filename: str, vk_group_id: str, cheaters_filename: str, vk_admin_id: str):
         self.vk_token = vk_token
@@ -197,12 +208,13 @@ class VKBot(Bot):
         """
         Проверяем наличие кидалы в БД
         """
-        pass
-
-class DialogStates(BaseStateGroup):
-    """
-    Dialog levels.
-    """
-    MAIN_STATE = 0
-    TELL_ABOUT_CHEATER = 1
-    ADMIN_MENU = 10
+        if parameter == 'vk_id':
+            pass
+        elif parameter == 'shortname':
+            pass
+        elif parameter == 'card':
+            pass
+        elif parameter == 'telephone':
+            pass
+        else:
+            return None
