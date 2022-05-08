@@ -19,8 +19,16 @@ class VKBot(Bot):
     """
     Main bot class.
     """
-    def __init__(self, bot_params: config.BotParams):
-        super().__init__(bot_params.vk_token)
+    def __init__(self, vk_token: str, db_filename: str, vk_group_id: str, cheaters_filename: str, vk_admin_id: str):
+        self.vk_token = vk_token
+        self.db_filename = db_filename
+        self.vk_group_id = vk_group_id
+        self.cheaters_filename = cheaters_filename
+        self.vk_admin_id = vk_admin_id
+
+        super().__init__(vk_token)
+        self.labeler.vbml_ignore_case = True
+
         self.regexp_main = (
             r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
             r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'

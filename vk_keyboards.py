@@ -1,6 +1,6 @@
-'''
+"""
 JSON для клавиатур
-'''
+"""
 
 from vkbottle import Keyboard, KeyboardButtonColor, Text
 

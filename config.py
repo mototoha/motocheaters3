@@ -28,4 +28,3 @@ class BotParams:
     vk_group_id = ''
     cheaters_filename = ''
     vk_admin_id = []
-

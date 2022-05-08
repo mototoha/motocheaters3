@@ -57,8 +57,14 @@ def start_bot(bot_params: dict) -> None:
         'vk_admin_id': [],
     }.
     """
-    bot = Bot(bot_params['vk_token'])
-    bot.labeler.vbml_ignore_case = True
+    bot = vkbot.VKBot(
+        bot_params['vk_token'],
+        bot_params['db_filename'],
+        bot_params['vk_group_id'],
+        bot_params['cheaters_filename'],
+        bot_params['vk_admin_id'],
+    )
+
     db = database.DBCheaters(bot_params['db_filename'])
     regexp_main = (
         r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
