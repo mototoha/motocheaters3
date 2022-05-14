@@ -134,6 +134,7 @@ def start_bot(bot_params: dict) -> None:
             user_ids=bot.vk_admin_id,
             forward_messages=message.id,
             random_id=0,
+            keyboard=vk_keyboards.keyboard_main,
         )
         # отвечаем вопрошающему
         await message.answer(answer_message)
