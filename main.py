@@ -142,6 +142,7 @@ def start_bot(bot_params: dict) -> None:
     # Hi!
     @bot.on.message(text="Привет<!>", state=None)
     @bot.on.message(text="ghbdtn<!>", state=None)
+    @bot.on.message(text="начать", state=None)
     async def hi_handler(message: Message):
         """
         Hi!
@@ -169,10 +170,11 @@ def start_bot(bot_params: dict) -> None:
         answer_message = await bot.cheaters_file_parsing(attachments_url)
         await message.answer(answer_message)
 
-    @bot.on.message(func=lambda message: bool(re.match(
-        bot.regexp_main,
-        message.text.lower().lstrip('+').replace(' ', '')
-    )))
+    @bot.on.message(
+        func=lambda message: bool(re.match(bot.regexp_main,
+                                           message.text.lower().lstrip('+').replace(' ', ''))),
+        state=None
+    )
     async def check_cheater_handler(message: Message):
         """
         Ловим кидалу
@@ -217,15 +219,22 @@ def start_bot(bot_params: dict) -> None:
                 )
             elif match.lastgroup == 'vk_id':
                 users_info = await bot.api.users.get(user_ids=result_check, name_case='nom')
-                result = """
-                                Пользователь vk.vom/{vk_id} {firstname} {lastname}\
-                                 есть в наших базах.
-                                Не доверяй ему.
-                                """.format(
-                    vk_id=result_check,
-                    firstname=users_info[0].first_name,
-                    lastname=users_info[0].last_name
-                )
+                if users_info:
+                    result = """
+                                    Пользователь vk.vom/{vk_id} {firstname} {lastname}\
+                                     есть в наших базах.
+                                    Не доверяй ему.
+                                    """.format(
+                        vk_id=result_check,
+                        firstname=users_info[0].first_name,
+                        lastname=users_info[0].last_name
+                    )
+                else:
+                    group_info = await bot.api.groups.get_by_id(group_ids=result_check)
+                    if group_info:
+                        result = """
+                        Группа vk.com/{group} есть в наших базах. Не доверяй ей!
+                        """.format(group=group_info[0].screen_name)
             else:
                 result = 'Ничего не найдено.'
                 message_text = 'Запрос, который некорректно отработал'

@@ -76,7 +76,7 @@ class VKBot(Bot):
         for line in content.split('\n'):
             print('Строка : \n', line)
             subline = re.sub(r'[ +-]', '', str(line).replace('\r', ''))  # Обрезаем строку от лишних символов
-            match = re.search(regexp_main, subline)  # Поиск по регулярке
+            match = re.search(self.regexp_main, subline)  # Поиск по регулярке
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
                 if match.lastgroup in ['vk_id', 'shortname']:
