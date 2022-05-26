@@ -19,6 +19,8 @@ import dialogs
 import vk_keyboards
 import vkbot
 
+DEFAULT_CONFIG_FILE = config.config_json
+
 
 def main():
     """
@@ -30,7 +32,7 @@ def main():
     if len(argv) > 1:
         config_file = argv[1]
     else:
-        config_file = config.config_json
+        config_file = DEFAULT_CONFIG_FILE
 
     # Checking start parameters.
     bot_params = startup_check.check(config_file)
