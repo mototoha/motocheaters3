@@ -36,12 +36,22 @@ def main():
 
     pprint(bot_params)
 
+    start_bot(
+        startup_parameters['db_filename'],
+        startup_parameters['vk_token'],
+        startup_parameters['cheaters_filename']
+    )
+
+
+def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
+
+    db = database.DBCheaters(db_filename)
+    admin_list = db.get_admins()
+
     bot = vkbot.VKBot(
-        bot_params['vk_token'],
-        bot_params['db_filename'],
-        bot_params['vk_group_id'],
-        bot_params['cheaters_filename'],
-        bot_params['vk_admin_id'],
+        vk_token,
+        db_filename,
+        cheaters_filename,
     )
 
     # Press 'Tell about cheater'

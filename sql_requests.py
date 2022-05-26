@@ -26,20 +26,21 @@ create table cards(
   vk_id text,
   foreign key (vk_id) references vk_id(id)
 );
-create table parameters(
-  pk integer primary key,
-  parameter text,
-  value text
-);
+
 create table admins(
   pk integer primary key,
   id integer
 );
-create table users(
+
+create table moderators(
   pk integer primary key,
-  id integer,
-  dialog_position text,
-  admin bool
+  id integer
+);
+
+create table parameters(
+  pk integer primary key,
+  parameter text,
+  value text
 )
 """
 

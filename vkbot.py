@@ -34,17 +34,16 @@ class VKBot(Bot):
 
     dialog_states = DialogStates
 
-    def __init__(self, vk_token: str, db_filename: str, vk_group_id: str, cheaters_filename: str, vk_admin_id: str):
+    def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
         self.vk_token = vk_token
         self.db_filename = db_filename
-        self.vk_group_id = vk_group_id
         self.cheaters_filename = cheaters_filename
-        self.vk_admin_id = vk_admin_id
 
         super().__init__(vk_token)
         self.labeler.vbml_ignore_case = True
 
         self.db = database.DBCheaters(self.db_filename)
+        self.vk_admin_id = self.db.get_admins()
 
     async def cheaters_file_parsing(self, url: str):
         """

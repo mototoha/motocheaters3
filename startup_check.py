@@ -26,42 +26,9 @@ def check(config_file) -> 'Dict or False':
     """
     print('Startup check')
 
-    print('Checking config file')
-    # Try to open file
-    try:
-        f = open(config_file, 'r')
-    except PermissionError:
-        print("Can't open config json. Permission deny.")
-        return False
-    except FileNotFoundError:
-        print("No such file", config_file)
-        return False
-    else:
-        print('Found file', config_file)
-
-    # If file exist, checking json format
-    try:
-        params_json = json.load(f)
-    except json.decoder.JSONDecodeError:
-        print("This file not correct json.")
-        return False
-    else:
-        print('Correct json')
-        f.close()
-
-    # If correct json format check file's variables
     result = {}
-    # TODO привести к единому виду - либо через config.get_bot_params, либо через много переменных
-    for param in startup.parameters_from_json:
-        if not params_json.get(param):
-            print('There is no variable', param, 'in config file', config_file)
-            return False
-        else:
-            # If all correct
-            result[param] = params_json[param]
 
-    db_filename = result['db_filename']
-    db = database.DBCheaters(db_filename)
+    db = database.DBCheaters('cheaters.db')
     # Set/Get parameters from table 'parameters'
     for param in startup.get_bot_params['DB_params']:
         result[param] = db.get_param(param)
