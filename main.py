@@ -38,6 +38,14 @@ def main():
 
 
 def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
+    """
+    Запускает бота. Ничего не возвращает.
+
+    :param db_filename: имя файла БД.
+    :param vk_token: Токен.
+    :param cheaters_filename: Имя файла для парсинга кидал.
+    :return: None
+    """
 
     db = database.DBCheaters(db_filename)
     admin_list = db.get_admins()
@@ -144,7 +152,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AttachmentTypeRule('doc'),
         FromPeerRule(bot.vk_admin_id),
-        func=(lambda message: message.attachments[0].doc.title == bot_params['cheaters_filename']),
+        func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
         state=None
     )
     async def cheaters_file_handler(message: Message):

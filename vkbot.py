@@ -21,6 +21,21 @@ class DialogStates(BaseStateGroup):
     ADMIN_MENU = 10
 
 
+class IsAdmin(BaseStateGroup):
+    """
+    Маркер админа. Может добавлять и удалять админов.
+    Также является модератором.
+    """
+    ADMIN = 1
+
+
+class IsModerator(BaseStateGroup):
+    """
+    Маркер модератора. Может получать сообщения о кидалах.
+    """
+    MODERATOR = 1
+
+
 class VKBot(Bot):
     """
     Main bot class.
