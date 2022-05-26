@@ -5,7 +5,6 @@ python3 main.py [config_filename.json]
 
 import re
 from pprint import pprint
-from sys import argv
 
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
@@ -13,29 +12,27 @@ from vkbottle.dispatch.rules.base import (
     FromPeerRule,
 )
 
-import config
+import database
+import startup
 import startup_check
 import dialogs
 import vk_keyboards
 import vkbot
 
-DEFAULT_CONFIG_FILE = config.config_json
-
 
 def main():
     """
     Main function.
-    """
-    # Set the config file in json format. Use default or custom.
-    # Config file contain:
-    # - DB FILENAME. Now work only with sqlite3.
-    if len(argv) > 1:
-        config_file = argv[1]
-    else:
-        config_file = DEFAULT_CONFIG_FILE
 
-    # Checking start parameters.
-    bot_params = startup_check.check(config_file)
+    :return: None.
+    """
+
+    startup_parameters = startup.get_parameters_from_json()
+    if not startup_parameters:
+        return None
+    print(startup_parameters)
+
+    bot_params = startup_check.check(startup.config_json)
 
     pprint(bot_params)
 
@@ -184,6 +181,7 @@ def start_bot(bot_params: dict) -> None:
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
         result_check = await bot.check_cheater(match.lastgroup, match[match.lastgroup])
         # TODO Сделать парсинг групп
+        result = ''
         if result_check:  # found
             if match.lastgroup == 'card':
                 users_info = await bot.api.users.get(user_ids=result_check, name_case='dat')

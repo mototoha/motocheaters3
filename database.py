@@ -135,7 +135,7 @@ class DBCheaters:
 
         return result
 
-    def get_param(self, param):
+    def get_param(self, param: str):
         """
         Return parameter from table 'parameters'.
         """

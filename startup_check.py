@@ -1,9 +1,9 @@
 """
 Startup check
 """
-
 import json
-import config
+
+import startup
 import database
 
 
@@ -52,7 +52,7 @@ def check(config_file) -> 'Dict or False':
     # If correct json format check file's variables
     result = {}
     # TODO привести к единому виду - либо через config.get_bot_params, либо через много переменных
-    for param in config.json_template:
+    for param in startup.parameters_from_json:
         if not params_json.get(param):
             print('There is no variable', param, 'in config file', config_file)
             return False
@@ -63,7 +63,7 @@ def check(config_file) -> 'Dict or False':
     db_filename = result['db_filename']
     db = database.DBCheaters(db_filename)
     # Set/Get parameters from table 'parameters'
-    for param in config.get_bot_params['DB_params']:
+    for param in startup.get_bot_params['DB_params']:
         result[param] = db.get_param(param)
         if not result[param]:
             value = input('Enter ' + param + ': ')
