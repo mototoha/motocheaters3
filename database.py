@@ -36,6 +36,8 @@ class DBCheaters:
         else:
             print('No database file, create new.')
             self._cursor.executescript(sql_requests.create_tables)
+            admin_id = input('Enter one admin id: ')
+            self.add_admin(admin_id)
             self._connection.commit()
 
     def __del__(self):

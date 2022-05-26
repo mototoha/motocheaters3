@@ -4,7 +4,6 @@ python3 main.py [config_filename.json]
 """
 
 import re
-from pprint import pprint
 
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
@@ -14,7 +13,6 @@ from vkbottle.dispatch.rules.base import (
 
 import database
 import startup
-import startup_check
 import dialogs
 import vk_keyboards
 import vkbot
@@ -31,10 +29,6 @@ def main():
     if not startup_parameters:
         return None
     print(startup_parameters)
-
-    bot_params = startup_check.check(startup.config_json)
-
-    pprint(bot_params)
 
     start_bot(
         startup_parameters['db_filename'],
