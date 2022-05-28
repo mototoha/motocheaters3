@@ -21,3 +21,11 @@ keyboard_return_to_main = Keyboard(one_time=False, inline=False)
 keyboard_return_to_main.add(Text("Передумал", payload='{"tell_about_cheater": "main"}'),
                             color=KeyboardButtonColor.NEGATIVE)
 keyboard_return_to_main.get_json()
+
+# ADMIN KB
+keyboard_admin = Keyboard(one_time=False, inline=False)
+keyboard_main.add(Text("Разослать всем чо-то", payload='{"admin": "mass_sending"}'),
+                  color=KeyboardButtonColor.POSITIVE)
+keyboard_return_to_main.add(Text("Вернуться на главную", payload='{"tell_about_cheater": "main"}'),
+                            color=KeyboardButtonColor.NEGATIVE)
+keyboard_admin.get_json()
