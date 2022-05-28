@@ -219,9 +219,10 @@ class VKBot(Bot):
             print('Я обновил БД!')
         return 'Я обновил БД!'
 
-    async def check_cheater(self, parameter: str, value: str):
+    def check_cheater(self, parameter: str, value: str):
         """
-        Проверяем наличие кидалы в БД
+        Проверяем наличие кидалы в БД.
+        Если возвращается пустая строка, то запрос некорректно отработал.
 
         :return vk_id, False.
         """

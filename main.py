@@ -110,7 +110,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Change mind
         """
         await bot.state_dispenser.delete(message.peer_id)
-        answer_message = 'Если захочешь рассказать - ждем!'
+        answer_message = dialogs.change_mind
         await message.answer(answer_message, keyboard=vk_keyboards.keyboard_main)
 
     # Telling about cheater
@@ -121,13 +121,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         users_info = await bot.api.users.get(message.from_id)
         await bot.state_dispenser.delete(message.peer_id)
-        message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' хочет поделиться кидалой\n'
-        answer_message = 'Спасибо!'
+        message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].id))
+        answer_message = dialogs.thanks
         await bot.api.messages.send(
             message=message_text,
             user_ids=bot.vk_admin_id,
             forward_messages=message.id,
-            random_id=0,
             keyboard=vk_keyboards.keyboard_main,
         )
         # отвечаем вопрошающему
@@ -159,12 +158,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Parsing cheater file
         """
-        await message.answer('Ты решил обновить БД через файл. Жди, пожалуйста.')
+        await message.answer(dialogs.update_db_from_file)
         attachments_url = message.attachments[0].doc.url
         answer_message = await bot.cheaters_file_parsing(attachments_url)
         await message.answer(answer_message)
 
-    # Ловим кидал
+    # Ловим кидал.
     @bot.on.message(
         func=lambda message: bool(re.match(bot.regexp_main,
                                            message.text.lower().lstrip('+').replace(' ', ''))),
@@ -175,76 +174,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Ловим кидалу
         """
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
-        result_check = await bot.check_cheater(match.lastgroup, match[match.lastgroup])
+        result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         # TODO Сделать парсинг групп
         result = ''
         if result_check:  # found
-            if match.lastgroup == 'card':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='dat')
-                result = """
-                Карта {card} принадлежит пользователю {vk_id} {firstname} {lastname}.
-                Он есть в наших базах. Не доверяй ему.
-                """.format(
-                    card=match[match.lastgroup],
-                    vk_id=result_check,
-                    firstname=users_info[0].first_name,
-                    lastname=users_info[0].last_name
-                )
-            elif match.lastgroup == 'telephone':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='dat')
-                result = """
-                Телефон {tel} принадлежит пользователю {vk_id} {firstname} {lastname}.
-                Он есть в наших базах. Не доверяй ему.
-                """.format(
-                    tel=match[match.lastgroup],
-                    vk_id=result_check,
-                    firstname=users_info[0].first_name,
-                    lastname=users_info[0].last_name
-                )
-            elif match.lastgroup == 'shortname':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='nom')
-                result = """
-                                Пользователь vk.com/{shortname} (vk.vom/{vk_id}) {firstname} {lastname}\
-                                 есть в наших базах.
-                                Не доверяй ему.
-                                """.format(
-                    shortname=match[match.lastgroup],
-                    vk_id=result_check,
-                    firstname=users_info[0].first_name,
-                    lastname=users_info[0].last_name
-                )
-            elif match.lastgroup == 'vk_id':
-                users_info = await bot.api.users.get(user_ids=result_check, name_case='nom')
-                if users_info:
-                    result = """
-                                    Пользователь vk.vom/{vk_id} {firstname} {lastname}\
-                                     есть в наших базах.
-                                    Не доверяй ему.
-                                    """.format(
-                        vk_id=result_check,
-                        firstname=users_info[0].first_name,
-                        lastname=users_info[0].last_name
-                    )
-                else:
-                    group_info = await bot.api.groups.get_by_id(group_ids=result_check)
-                    if group_info:
-                        result = """
-                        Группа vk.com/{group} есть в наших базах. Не доверяй ей!
-                        """.format(group=group_info[0].screen_name)
-            else:
-                result = 'Ничего не найдено.'
-                message_text = 'Запрос, который некорректно отработал'
-                await bot.api.messages.send(
-                    message=message_text,
-                    user_ids=bot.vk_admin_id,
-                    forward_messages=message.id,
-                    random_id=0,
-                )
+            result = dialogs.is_cheater
         else:  # not found
-            result = dialogs.none_check.get(match.lastgroup)
+            result = dialogs.not_cheater
             if result:
                 result = result.format(match[match.lastgroup])
             else:
+                # Not correct sql.
                 result = 'Ничего не найдено.'
                 message_text = 'Запрос, который некорректно отработал'
                 await bot.api.messages.send(
@@ -253,28 +193,27 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     forward_messages=message.id,
                     random_id=0,
                 )
-
         return result
 
+    # All others.
     @bot.on.message(state=None)
     async def common_handler(message: Message):
         """
         Common message.
         """
         users_info = await bot.api.users.get(message.from_id)
-        answer_message = "Извини, я тебя не понял. Напиши адрес страницы, телефон или номер банковской карты. \n"
+        answer_message = dialogs.dont_understand
         answer_message += dialogs.samples
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
         vk_admin_ids = bot.vk_admin_id
-        message_text = 'Пользователь vk.com/id' + str(users_info[0].id) + ' написал что-то непонятное\n'
+        message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].id))
         await bot.api.messages.send(
             message=message_text,
             user_ids=vk_admin_ids,
             forward_messages=message.id,
-            random_id=0,
         )
 
     print('Запускаю бота')
