@@ -9,6 +9,7 @@ from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
     FromPeerRule,
+    FromUserRule,
 )
 
 import database
@@ -192,6 +193,28 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     random_id=0,
                 )
         return result
+
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), text='admin')
+    async def admin_menu_handler(message: Message):
+        """
+        Переход в админское меню.
+        """
+        keyboard = vk_keyboards.keyboard_admin
+        await message.answer(
+            message=dialogs.admin_menu,
+            keyboard=keyboard,
+            )
+
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), payload={"tell_about_cheater": "main"})
+    async def return_to_main_handler(message: Message):
+        """
+        Return to main menu.
+        """
+        keyboard = vk_keyboards.keyboard_main
+        await message.answer(
+            keyboard=keyboard,
+            message=
+        )
 
     # All others.
     @bot.on.message(state=None)

@@ -27,13 +27,14 @@ class IsAdmin(BaseStateGroup):
     Маркер админа. Может добавлять и удалять админов.
     Также является модератором.
     """
+    NOT_ADMIN = 0
     ADMIN = 1
-
 
 class IsModerator(BaseStateGroup):
     """
     Маркер модератора. Может получать сообщения о кидалах.
     """
+    NOT_MODERATOR = 0
     MODERATOR = 1
 
 
@@ -49,6 +50,8 @@ class VKBot(Bot):
     )
 
     dialog_states = DialogStates
+    is_admin = IsAdmin
+    is_moderator = IsModerator
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
         self.vk_token = vk_token
