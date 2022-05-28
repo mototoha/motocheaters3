@@ -86,7 +86,7 @@ class VKBot(Bot):
         """
         # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
-        cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
+        cheater = {'vk_id': None, 'fifty': fifty, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
         cheaters_list = []  # Список кидал
         for line in content.split('\n'):
             print('Строка : \n', line)
@@ -99,13 +99,13 @@ class VKBot(Bot):
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
                 if match.lastgroup in ['vk_id', 'shortname']:
-                    if cheater.get('vk_id'):
+                    if cheater.get('vk_id') or cheater.get('shortname'):
                         # Запись добавляется в список, когда встречается следующая запись про кидалу.
                         # Сделано, чтобы можно было добавлять телефоны и карты конкретного кидалы.
                         # Последняя запись добавляется после цикла.
                         print('Добавляю кидалу в список. \n', cheater)
                         cheaters_list.append(cheater)
-                        cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}
+                        cheater = {'vk_id': None, 'fifty': fifty, 'shortname': None, 'telephone': [], 'card': []}
                     if match.lastgroup == 'vk_id':
                         # Если это vk_id - добавляем id в cheater.
                         cheater['vk_id'] = match[match.lastgroup]
@@ -152,7 +152,7 @@ class VKBot(Bot):
                         if not user and not group:
                             print('В файле попался неправильный идентификатор, не могу понять, кто это: ', line)
                             print('Возможно, страница удалена \n ')
-                        cheater['fifty'] = fifty
+                            cheater['shortname'] = match[match.lastgroup]
                 else:
                     # Если найдена карта или телефон - добавляем их в cheater с предыдущим vk_id.
                     print(cheater)
