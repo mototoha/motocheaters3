@@ -56,6 +56,7 @@ def get_parameters_from_json(json_filename=config_json) -> dict:
             return False
     else:
         file_need_to_rewrite = True
+        print('No config file', json_filename)
 
     result = {}
     for param in parameters_from_json:
@@ -67,6 +68,7 @@ def get_parameters_from_json(json_filename=config_json) -> dict:
         result[param] = json_parameters[param]
 
     if file_need_to_rewrite:
+        print('Creating config file', json_filename)
         with open(json_filename, 'w') as f:
             json.dump(json_parameters, f, indent=2)
 
