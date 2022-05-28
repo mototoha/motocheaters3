@@ -10,6 +10,7 @@ from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
 import database
+import dialogs
 
 
 class DialogStates(BaseStateGroup):
@@ -60,7 +61,7 @@ class VKBot(Bot):
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
 
-    async def cheaters_file_parsing(self, url: str):
+    async def update_cheaters_from_file(self, url: str):
         """
         Функция возьмет текстовый файл по ссылке, распарсит его, перенесет все данные в БД.
 
@@ -70,8 +71,8 @@ class VKBot(Bot):
         print('Сейчас начнем парсить файл', url)
         content = requests.get(url).content.decode()
         cheaters_list = await self._get_cheaters_list_from_file(content)  # Список кидал
-        if type(cheaters_list) == str:  # если результат - строка, её необходимо отправить юзеру
-            return cheaters_list
+        if not cheaters_list:  # если результат пустой
+            return dialogs.no_data_in_file
         else:
             result = await self._update_database(cheaters_list)  # Update DB
             return result
@@ -144,7 +145,7 @@ class VKBot(Bot):
                                 if group[0].screen_name != cheater['vk_id']:
                                     cheater['shortname'] = group[0].screen_name
                             except VKAPIError[100]:
-                                print('Группа не найдена')
+                                print('Группа', match[match.lastgroup], 'не найдена')
                             except VKAPIError[6]:
                                 print('Слишком много запросов, повтори через полчаса')
                                 return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
@@ -152,7 +153,7 @@ class VKBot(Bot):
                         if not user and not group:
                             print('В файле попался неправильный идентификатор, не могу понять, кто это: ', line)
                             print('Возможно, страница удалена \n ')
-                            cheater['shortname'] = match[match.lastgroup]
+                            cheater[match.lastgroup] = match[match.lastgroup]
                 else:
                     # Если найдена карта или телефон - добавляем их в cheater с предыдущим vk_id.
                     print(cheater)
@@ -179,7 +180,6 @@ class VKBot(Bot):
         """
         for cheater in cheaters_list:
             print('Разбираем запись ', cheater, sep='\n')
-
             if cheater['vk_id']:
                 # TODO Сделать отдельные методы для проверки наличия кидал
                 if self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id'], 'fifty': cheater['fifty']}):

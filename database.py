@@ -295,3 +295,17 @@ class DBCheaters:
         # TODO что делать, если результатов много
         result = self._cursor.fetchone()
         return result
+
+    def get_dict_from_table(self, table: str, parameter_list: dict) -> dict:
+        """
+        Возвращаем значения из таблицы.
+
+        :return: Dict of result sql.
+        """
+        what_select = []
+        for param in parameter_list:
+            what_select.append(param)
+        sql_query = self._construct_select(table=table, what_select=what_select, where_select=parameter_list)
+        self._cursor.execute(sql_query)
+        result = bool(self._cursor.fetchall())
+        return result

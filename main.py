@@ -158,7 +158,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         await message.answer(dialogs.update_db_from_file)
         attachments_url = message.attachments[0].doc.url
-        answer_message = await bot.cheaters_file_parsing(attachments_url)
+        answer_message = await bot.update_cheaters_from_file(attachments_url)
         await message.answer(answer_message)
 
     # Ловим кидал.
