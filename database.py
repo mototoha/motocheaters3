@@ -168,10 +168,7 @@ class DBCheaters:
 
         :return: True or False
         """
-        what_select = []
-        for param in parameter_list:
-            what_select.append(param)
-        sql_query = self._construct_select(table=table, what_select=what_select, where_select=parameter_list)
+        sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
         self._cursor.execute(sql_query)
         result = bool(self._cursor.fetchall())
         return result
@@ -283,9 +280,6 @@ class DBCheaters:
 
         :return: ID / 0 if nothing
         """
-        what_select = []
-        for par in params:
-            what_select.append(par)
         sql_query = self._construct_select(
             table=table,
             what_select=['vk_id'],
@@ -302,10 +296,8 @@ class DBCheaters:
 
         :return: Dict of result sql.
         """
-        what_select = []
-        for param in parameter_list:
-            what_select.append(param)
-        sql_query = self._construct_select(table=table, what_select=what_select, where_select=parameter_list)
+        sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
         self._cursor.execute(sql_query)
-        result = bool(self._cursor.fetchall())
+        result_list = self._cursor.fetchall()
+
         return result

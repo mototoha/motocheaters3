@@ -164,7 +164,7 @@ class VKBot(Bot):
             else:
                 print('Непонятная строка \n')
             # Пауза, чтоб ВК не банил.
-            time.sleep(0.1)
+            time.sleep(0.05)
         # Последний в списке
         if cheater.get('vk_id'):
             print('Добавляю кидалу в список. \n', cheater)
