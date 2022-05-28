@@ -41,10 +41,10 @@ class VKBot(Bot):
     Main bot class.
     """
     regexp_main = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+)'
-        r'|(?P<card>\d{16})'
-        r'|\+?(?P<telephone>\d{10,15})'
+        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+        r'|(?P<card>\d{16}(\s\n)?)'
+        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     )
 
     dialog_states = DialogStates
@@ -63,6 +63,7 @@ class VKBot(Bot):
     async def cheaters_file_parsing(self, url: str):
         """
         Функция возьмет текстовый файл по ссылке, распарсит его, перенесет все данные в БД.
+
         :param url: ссылка на файл ВК
         :return: Ответ
         """
@@ -84,16 +85,24 @@ class VKBot(Bot):
         :return: List кидал или str  с ответом юзеру
         """
         # TODO Неправильно привязались карты, надо рассмотреть
-        fifty = False  # Идентификатор "Полтинников" - кто ингода кидает
+        fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
         cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
         cheaters_list = []  # Список кидал
         for line in content.split('\n'):
             print('Строка : \n', line)
-            subline = re.sub(r'[ +-]', '', str(line).replace('\r', ''))  # Обрезаем строку от лишних символов
+            if re.search(r'vk\.com', line):
+                subline = line
+            else:
+                # Если это не vk_id
+                subline = re.sub(r'[- +\r]', '', str(line))
             match = re.search(self.regexp_main, subline)  # Поиск по регулярке
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
-                if match.lastgroup in ['vk_id', 'shortname']:
+                if match.lastgroup == 'vk_id':
+                    print('Добавляю кидалу в список. \n', cheater)
+                    cheaters_list.append(cheater)
+                    cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}
+                elif match.lastgroup == 'shortname':
                     if cheater.get('vk_id'):  # Если новый кидала - записываем старого и делаем новую пустую запись
                         print('Добавляю кидалу в список. \n', cheater)
                         cheaters_list.append(cheater)

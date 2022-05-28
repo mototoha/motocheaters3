@@ -47,9 +47,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     :return: None
     """
 
-    db = database.DBCheaters(db_filename)
-    admin_list = db.get_admins()
-
     bot = vkbot.VKBot(
         vk_token,
         db_filename,
@@ -128,6 +125,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             user_ids=bot.vk_admin_id,
             forward_messages=message.id,
             keyboard=vk_keyboards.keyboard_main,
+            random_id=0,
         )
         # отвечаем вопрошающему
         await message.answer(answer_message)
@@ -214,6 +212,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             message=message_text,
             user_ids=vk_admin_ids,
             forward_messages=message.id,
+            random_id=0,
         )
 
     print('Запускаю бота')
