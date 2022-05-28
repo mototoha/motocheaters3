@@ -227,7 +227,7 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_shortname(self, shortname: str, vk_id: str = ''):
+    def add_shortname(self, shortname: str, vk_id=''):
         """
         Добавляем shortname.
         """
@@ -286,18 +286,23 @@ class DBCheaters:
             where_select=params
         )
         self._cursor.execute(sql_query)
-        # TODO что делать, если результатов много
         result = self._cursor.fetchone()
         return result
 
-    def get_dict_from_table(self, table: str, parameter_list: dict) -> dict:
+    def get_dict_from_table(self, table: str, rows: list, condition_dict: dict) -> dict:
         """
         Возвращаем значения из таблицы.
+        Из списка rows делаем словарь.
 
-        :return: Dict of result sql.
+        :return: Dict of result sql or None.
         """
-        sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
+        sql_query = self._construct_select(table=table, what_select=rows, where_select=condition_dict)
         self._cursor.execute(sql_query)
         result_list = self._cursor.fetchall()
-
+        if result_list:
+            result = {}
+            for count, value in enumerate(rows):
+                result[value] = result_list[0][count]
+        else:
+            result = None
         return result

@@ -71,11 +71,11 @@ class VKBot(Bot):
         print('Сейчас начнем парсить файл', url)
         content = requests.get(url).content.decode()
         cheaters_list = await self._get_cheaters_list_from_file(content)  # Список кидал
-        if not cheaters_list:  # если результат пустой
-            return dialogs.no_data_in_file
-        else:
-            result = await self._update_database(cheaters_list)  # Update DB
+        if cheaters_list:
+            result = await self._update_database_from_list(cheaters_list)  # Update DB
             return result
+        else:  # если результат пустой
+            return dialogs.no_data_in_file
 
     async def _get_cheaters_list_from_file(self, content: str) -> list:
         """
@@ -87,7 +87,7 @@ class VKBot(Bot):
         """
         # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
-        cheater = {'vk_id': None, 'fifty': fifty, 'shortname': None, 'telephone': [], 'card': []}  # Запись про кидалу
+        cheater = {'vk_id': '', 'fifty': fifty, 'shortname': '', 'telephone': [], 'card': []}  # Запись про кидалу
         cheaters_list = []  # Список кидал
         for line in content.split('\n'):
             print('Строка : \n', line)
@@ -106,10 +106,22 @@ class VKBot(Bot):
                         # Последняя запись добавляется после цикла.
                         print('Добавляю кидалу в список. \n', cheater)
                         cheaters_list.append(cheater)
-                        cheater = {'vk_id': None, 'fifty': fifty, 'shortname': None, 'telephone': [], 'card': []}
+                        cheater = {'vk_id': '', 'fifty': fifty, 'shortname': '', 'telephone': [], 'card': []}
                     if match.lastgroup == 'vk_id':
                         # Если это vk_id - добавляем id в cheater.
                         cheater['vk_id'] = match[match.lastgroup]
+                        user = None
+                        try:
+                            user = await self.api.users.get(user_ids=match[match.lastgroup],
+                                                            fields='screen_name'
+                                                            )
+                            print('Запрос юзера вернул:\n', user)
+                        except VKAPIError[6]:
+                            print('Слишком много запросов, повтори через полчаса')
+                            return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
+                        if user:
+                            if user[0].screen_name != cheater['vk_id']:
+                                cheater['shortname'] = user[0].screen_name
                     elif match.lastgroup == 'shortname':
                         # Если имя - ищем vk_id и добавляем id и shortname в cheater.
                         user = None
@@ -164,7 +176,7 @@ class VKBot(Bot):
             else:
                 print('Непонятная строка \n')
             # Пауза, чтоб ВК не банил.
-            time.sleep(0.05)
+            time.sleep(0.01)
         # Последний в списке
         if cheater.get('vk_id'):
             print('Добавляю кидалу в список. \n', cheater)
@@ -173,7 +185,7 @@ class VKBot(Bot):
         print('Вот итоговый список:', cheaters_list, '\n')
         return cheaters_list
 
-    async def _update_database(self, cheaters_list: str):
+    async def _update_database_from_list(self, cheaters_list: str):
         """
         Принимает на вход список кидал, обновляет базу и возвращает ответ строкой.
         :return: Ответ для пользователя
@@ -181,57 +193,58 @@ class VKBot(Bot):
         for cheater in cheaters_list:
             print('Разбираем запись ', cheater, sep='\n')
             if cheater['vk_id']:
-                # TODO Сделать отдельные методы для проверки наличия кидал
-                if self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id'], 'fifty': cheater['fifty']}):
+                db_record = self.db.get_dict_from_table('vk_id',
+                                                        ['vk_id', 'fifty'],
+                                                        {'vk_id': cheater['vk_id']})
+                if db_record:
                     print('Такой vk_id есть!')
-                elif self.db.check_the_existence('vk_id', {'vk_id': cheater['vk_id']}):
-                    print('Поменялся fifty на', cheater['fifty'])
-                    self.db.update_table('vk_id', 'fifty', cheater['fifty'], 'vk_id', cheater['vk_id'])
+                    if db_record['fifty'] != cheater['fifty']:
+                        print('Поменялся fifty на', cheater['fifty'])
+                        self.db.update_table('vk_id', 'fifty', cheater['fifty'], 'vk_id', cheater['vk_id'])
                 else:
-                    print('Добавляем нового кидалу')
+                    print('Добавляю кидалу')
                     self.db.add_cheater(cheater['vk_id'], cheater['fifty'])
 
-                if cheater['shortname']:
-                    if self.db.check_the_existence('shortnames',
-                                                   {'shortname': cheater['shortname'],
-                                                    'vk_id': cheater['vk_id']
-                                                    }
-                                                   ):
-                        print('Такой shortname-id есть!')
-                    else:
-                        print('Добавляем новый shortname-id')
-                        self.db.add_shortname(cheater['shortname'], cheater['vk_id'])
+            if cheater['shortname']:
+                if self.db.check_the_existence('shortnames',
+                                               {'shortname': cheater['shortname'],
+                                                'vk_id': cheater['vk_id']
+                                                }
+                                               ):
+                    print('Такой shortname-id есть!')
+                else:
+                    print('Добавляем новый shortname-id')
+                    self.db.add_shortname(cheater['shortname'], cheater['vk_id'])
 
-                if cheater['telephone']:
-                    for tel in cheater['telephone']:
-                        if self.db.check_the_existence('telephones', {'telephone': tel, 'vk_id': cheater['vk_id']}):
-                            print('Связка телефон-id уже есть')
-                        else:
-                            print('Добавляем новый tel-id')
-                            self.db.add_telephones([tel], cheater['vk_id'])
-
-                if cheater['card']:
-                    for card in cheater['card']:
-                        if self.db.check_the_existence('cards', {'card': card, 'vk_id': cheater['vk_id']}):
-                            print('Связка card-id уже есть')
-                        else:
-                            print('Добавляем новый card-id')
-                            self.db.add_cards([card], cheater['vk_id'])
-            else:
-                # Пока таких не рассматриваем
-                # TODO Обдумать формат записи без vk_id
-                print('Запись без vk_id')
-                if cheater['shortname']:
-                    if self.db.check_the_existence('shortnames', {'shortname': cheater['shortname']}):
-                        print('Такое имя уже есть')
+            if cheater['telephone']:
+                if cheater['vk_id']:
+                    id_tel = cheater['vk_id']
+                elif cheater['shortname']:
+                    id_tel = cheater['shortname']
+                else:
+                    id_tel = None
+                for tel in cheater['telephone']:
+                    if self.db.check_the_existence('telephones', {'telephone': tel, 'vk_id': id_tel}):
+                        print('Связка телефон-id уже есть')
                     else:
-                        self.db.add_shortname(cheater['shortname'])
-                if cheater['telephone']:
-                    pass
-                if cheater['card']:
-                    pass
-            print('Я обновил БД!')
-        return 'Я обновил БД!'
+                        print('Добавляем новый tel-id')
+                        self.db.add_telephones([tel], cheater['vk_id'])
+
+            if cheater['card']:
+                if cheater['vk_id']:
+                    id_card = cheater['vk_id']
+                elif cheater['shortname']:
+                    id_card = cheater['shortname']
+                else:
+                    id_card = None
+                for card in cheater['card']:
+                    if self.db.check_the_existence('cards', {'card': card, 'vk_id': id_card}):
+                        print('Связка card-id уже есть')
+                    else:
+                        print('Добавляем новый card-id')
+                        self.db.add_cards([card], cheater['vk_id'])
+
+        return 'Я закончил обновлять БД!'
 
     def check_cheater(self, parameter: str, value: str):
         """
