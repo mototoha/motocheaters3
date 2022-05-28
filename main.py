@@ -59,7 +59,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Press 'Tell about cheater'
     @bot.on.message(text="рассказать про кидалу", state=None)
     @bot.on.message(payload={"main": "tell_about_cheater"}, state=None)
-    async def tell_about_cheater_handler(message: Message):
+    async def press_tell_about_cheater_handler(message: Message):
         """
         Tell about cheater
         """
@@ -73,7 +73,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Press 'Помочь нам'
     @bot.on.message(text="помочь нам", state=None)
     @bot.on.message(payload={"main": "help_us"}, state=None)
-    async def help_us_handler(message: Message):
+    async def press_help_us_handler(message: Message):
         """
         Tell about cheater
         """
@@ -86,7 +86,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Press 'Как проверить'
     @bot.on.message(text="как проверить", state=None)
     @bot.on.message(payload={"main": "how_check"}, state=None)
-    async def help_us_handler(message: Message):
+    async def press_how_check_handler(message: Message):
         """
         Tell about cheater
         """
@@ -105,7 +105,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         state=bot.dialog_states.TELL_ABOUT_CHEATER,
         text='передумал',
     )
-    async def cheater_story_handler(message: Message):
+    async def press_change_mind_handler(message: Message):
         """
         Change mind
         """
@@ -155,7 +155,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
         state=None
     )
-    async def cheaters_file_handler(message: Message):
+    async def send_cheaters_file_handler(message: Message):
         """
         Parsing cheater file
         """
@@ -164,6 +164,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = await bot.cheaters_file_parsing(attachments_url)
         await message.answer(answer_message)
 
+    # Ловим кидал
     @bot.on.message(
         func=lambda message: bool(re.match(bot.regexp_main,
                                            message.text.lower().lstrip('+').replace(' ', ''))),
