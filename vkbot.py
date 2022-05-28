@@ -76,13 +76,13 @@ class VKBot(Bot):
             result = await self._update_database(cheaters_list)  # Update DB
             return result
 
-    async def _get_cheaters_list_from_file(self, content):
+    async def _get_cheaters_list_from_file(self, content: str) -> list:
         """
         Функция получает на вход текст из файла и возвращает списком кидал.
         Если по дороге возникает исключение, не позволяющее нормально продолжить работу - возвращает текст.
 
         :param content: Текст из файла.
-        :return: List кидал или str  с ответом юзеру
+        :return: List кидал.
         """
         # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
@@ -93,64 +93,68 @@ class VKBot(Bot):
             if re.search(r'vk\.com', line):
                 subline = line
             else:
-                # Если это не vk_id
+                # Если это не vk_id, все символы в строке делаем слитно, надеясь, что получится последовательность цифр.
                 subline = re.sub(r'[- +\r]', '', str(line))
-            match = re.search(self.regexp_main, subline)  # Поиск по регулярке
+            match = re.search(self.regexp_main, subline)
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
-                if match.lastgroup == 'vk_id':
-                    print('Добавляю кидалу в список. \n', cheater)
-                    cheaters_list.append(cheater)
-                    cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}
-                elif match.lastgroup == 'shortname':
-                    if cheater.get('vk_id'):  # Если новый кидала - записываем старого и делаем новую пустую запись
+                if match.lastgroup in ['vk_id', 'shortname']:
+                    if cheater.get('vk_id'):
+                        # Запись добавляется в список, когда встречается следующая запись про кидалу.
+                        # Сделано, чтобы можно было добавлять телефоны и карты конкретного кидалы.
+                        # Последняя запись добавляется после цикла.
                         print('Добавляю кидалу в список. \n', cheater)
                         cheaters_list.append(cheater)
                         cheater = {'vk_id': None, 'fifty': False, 'shortname': None, 'telephone': [], 'card': []}
-                    user = None
-                    group = None
-                    try:
-                        user = await self.api.users.get(user_ids=match[match.lastgroup],
-                                                        fields='screen_name'
-                                                        )
-                        print('Запрос юзера:\n', user)
-                    except VKAPIError[6]:
-                        print('Слишком много запросов, повтори через полчаса')
-                        return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
-
-                    if not user:
+                    if match.lastgroup == 'vk_id':
+                        # Если это vk_id - добавляем id в cheater.
+                        cheater['vk_id'] = match[match.lastgroup]
+                    elif match.lastgroup == 'shortname':
+                        # Если имя - ищем vk_id и добавляем id и shortname в cheater.
+                        user = None
+                        group = None
                         try:
-                            group = await self.api.groups.get_by_id(group_id=match[match.lastgroup],
-                                                                    fields='screen_name'
-                                                                    )
-                            print('Запрос группы:\n', group)
-                        except VKAPIError[100]:
-                            print('Группа не найдена')
+                            user = await self.api.users.get(user_ids=match[match.lastgroup],
+                                                            fields='screen_name'
+                                                            )
+                            print('Запрос юзера вернул:\n', user)
                         except VKAPIError[6]:
                             print('Слишком много запросов, повтори через полчаса')
                             return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
-
-                    if user:
-                        cheater['vk_id'] = 'id' + str(user[0].id)
-                        if user[0].screen_name != cheater['vk_id']:
-                            cheater['shortname'] = user[0].screen_name
-                    elif group:
-                        if group[0].type.value == 'group':
-                            group_type = 'club'
-                        elif group[0].type.value == 'page':
-                            group_type = 'public'
-                        elif group[0].type.value == 'event':
-                            group_type = 'event'
+                        if user:
+                            cheater['vk_id'] = 'id' + str(user[0].id)
+                            if user[0].screen_name != cheater['vk_id']:
+                                cheater['shortname'] = user[0].screen_name
                         else:
-                            group_type = 'club'
-                        cheater['vk_id'] = group_type + str(group[0].id)
-                        if group[0].screen_name != cheater['vk_id']:
-                            cheater['shortname'] = group[0].screen_name
-                    else:
-                        print('В файле попался неправильный идентификатор, не могу понять, кто это: ', line)
-                        print('Возможно, страница удалена \n ')
-                    cheater['fifty'] = fifty
+                            try:
+                                group = await self.api.groups.get_by_id(group_id=match[match.lastgroup],
+                                                                        fields='screen_name'
+                                                                        )
+                                print('Запрос группы:\n', group)
+                                if group[0].type.value == 'group':
+                                    group_type = 'club'
+                                elif group[0].type.value == 'page':
+                                    group_type = 'public'
+                                elif group[0].type.value == 'event':
+                                    group_type = 'event'
+                                else:
+                                    group_type = 'club'
+                                cheater['vk_id'] = group_type + str(group[0].id)
+                                # VK_API возвращает shortname=vk_id, если имени нет.
+                                if group[0].screen_name != cheater['vk_id']:
+                                    cheater['shortname'] = group[0].screen_name
+                            except VKAPIError[100]:
+                                print('Группа не найдена')
+                            except VKAPIError[6]:
+                                print('Слишком много запросов, повтори через полчаса')
+                                return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
+                        # Если не нашелся ни юзер, ни группа.
+                        if not user and not group:
+                            print('В файле попался неправильный идентификатор, не могу понять, кто это: ', line)
+                            print('Возможно, страница удалена \n ')
+                        cheater['fifty'] = fifty
                 else:
+                    # Если найдена карта или телефон - добавляем их в cheater с предыдущим vk_id.
                     print(cheater)
                     cheater.setdefault(match.lastgroup, []).append(match[match.lastgroup])
             elif subline == 'fifty':
@@ -158,6 +162,7 @@ class VKBot(Bot):
                 print('Далее идут полтиники')
             else:
                 print('Непонятная строка \n')
+            # Пауза, чтоб ВК не банил.
             time.sleep(0.1)
         # Последний в списке
         if cheater.get('vk_id'):
@@ -249,3 +254,8 @@ class VKBot(Bot):
             return check_result[0]
         else:
             return False
+
+
+if __name__ == '__main__':
+    #  Тут будет тест
+    pass
