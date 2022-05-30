@@ -4,6 +4,7 @@ Classes for VKBot
 import re
 import requests
 import time
+import logging
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -29,6 +30,7 @@ class IsAdmin(BaseStateGroup):
     """
     NOT_ADMIN = 0
     ADMIN = 1
+
 
 class IsModerator(BaseStateGroup):
     """
@@ -63,6 +65,10 @@ class VKBot(Bot):
 
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
+        self.group_id = self.get_my_group_id()
+
+    def get_my_group_id(self):
+        return self.api.groups.get_by_id()[0]['id']
 
     async def update_cheaters_from_file(self, url: str):
         """
