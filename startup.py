@@ -4,6 +4,7 @@ Methods for getting startup parameters.
 """
 import pathlib
 import json
+import logging
 
 config_json = 'config.json'
 
@@ -41,12 +42,12 @@ def get_parameters_from_json(json_filename=config_json) -> dict:
                 try:
                     json_parameters = json.load(f)
                 except json.decoder.JSONDecodeError:
-                    print('File', json_filename, 'is not correct json. Overwrite? (y/n)')
+                    print('File', json_filename, 'is not correct json. Overwrite? (y/n)(def: y)')
                     overwrite = input().lower()
-                    while not (overwrite in ['y', 'n']):
+                    while not (overwrite in ['y', 'n', '']):
                         print('Type "y" or "n"')
                         overwrite = input().lower()
-                    if overwrite == 'y':
+                    if overwrite in ['y', '']:
                         file_need_to_rewrite = True
                     else:
                         print('Bot need file', json_filename, 'as correct json.')

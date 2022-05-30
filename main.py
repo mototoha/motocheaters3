@@ -4,6 +4,7 @@ python3 main.py [config_filename.json]
 """
 
 import re
+import logging
 
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
@@ -12,7 +13,6 @@ from vkbottle.dispatch.rules.base import (
     FromUserRule,
 )
 
-import database
 import startup
 import dialogs
 import vk_keyboards
