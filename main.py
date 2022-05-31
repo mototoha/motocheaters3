@@ -274,6 +274,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 answer_message,
                 keyboard=vk_keyboards.keyboard_main,
             )
+
     # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(state=None)
     async def common_handler(message: Message):
