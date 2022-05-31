@@ -21,6 +21,7 @@ class DialogStates(BaseStateGroup):
     MAIN_STATE = 0
     TELL_ABOUT_CHEATER = 1
     ADMIN_MENU = 10
+    ADMIN_SPAM = 11
 
 
 class IsAdmin(BaseStateGroup):
@@ -65,10 +66,6 @@ class VKBot(Bot):
 
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
-        self.group_id = self.get_my_group_id()
-
-    def get_my_group_id(self):
-        return self.api.groups.get_by_id()[0]['id']
 
     async def update_cheaters_from_file(self, url: str):
         """

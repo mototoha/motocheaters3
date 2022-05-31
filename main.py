@@ -112,7 +112,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await message.answer(answer_message, keyboard=vk_keyboards.keyboard_main)
 
     # Telling about cheater
-    @bot.on.message(state=bot.dialog_states.TELL_ABOUT_CHEATER)
+    @bot.on.message(
+        state=bot.dialog_states.TELL_ABOUT_CHEATER
+    )
     async def cheater_story_handler(message: Message):
         """
         Telling about cheater
@@ -194,18 +196,28 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 )
         return result
 
-    @bot.on.message(FromPeerRule(bot.vk_admin_id), text='admin')
+    # Админское меню ---------------------------------------------------------------------------------------------------
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        text='admin',
+        state=None,
+    )
     async def admin_menu_handler(message: Message):
         """
         Переход в админское меню.
         """
         keyboard = vk_keyboards.keyboard_admin
+        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
         await message.answer(
             message=dialogs.admin_menu,
             keyboard=keyboard,
-            )
+        )
 
-    @bot.on.message(FromPeerRule(bot.vk_admin_id), payload={"tell_about_cheater": "main"})
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        payload={"admin": "return_to_main"},
+        state=vkbot.DialogStates.ADMIN_MENU,
+    )
     async def return_to_main_handler(message: Message):
         """
         Return to main menu.
@@ -213,10 +225,56 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         keyboard = vk_keyboards.keyboard_main
         await message.answer(
             keyboard=keyboard,
-            message=
+            message=dialogs.return_to_main
         )
 
-    # All others.
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        payload={"admin": "mass_sending"},
+        state=vkbot.DialogStates.ADMIN_MENU,
+    )
+    async def spam_handler(message: Message):
+        """
+        Header of SPAM to all members.
+        """
+        answer = dialogs.spam_header
+        keyboard = vk_keyboards.keyboard_admin_spam
+        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_SPAM)
+        await message.answer(
+            keyboard=keyboard,
+            message=answer,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        state=vkbot.DialogStates.ADMIN_SPAM,
+    )
+    async def spam_handler(message: Message):
+        """
+        Start SPAM to all members.
+        """
+        answer = dialogs.spam_send
+        keyboard = vk_keyboards.keyboard_admin
+        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
+        await message.answer(
+            keyboard=keyboard,
+            message=answer,
+        )
+
+    # Отладочные команды. ---------------------------------------------------------------------------------------
+        # Hi!
+        @bot.on.message(text="group_id", state=None)
+        async def get_my_group_id_handler(message: Message):
+            """
+            Hi!
+            """
+            users_info = await bot.api.users.get(message.from_id)
+            answer_message = dialogs.hello.format(users_info[0].first_name)
+            await message.answer(
+                answer_message,
+                keyboard=vk_keyboards.keyboard_main,
+            )
+    # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(state=None)
     async def common_handler(message: Message):
         """
@@ -251,4 +309,3 @@ if __name__ == '__main__':
 # TODO Рассылка
 # TODO добавить/удалить админа
 # TODO Удалить запись из БД
-# TODO перенести все диалоги в dialogs

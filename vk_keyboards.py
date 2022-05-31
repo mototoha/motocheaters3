@@ -26,6 +26,12 @@ keyboard_return_to_main.get_json()
 keyboard_admin = Keyboard(one_time=False, inline=False)
 keyboard_admin.add(Text("Разослать всем чо-то", payload='{"admin": "mass_sending"}'),
                   color=KeyboardButtonColor.POSITIVE)
-keyboard_admin.add(Text("Вернуться на главную", payload='{"tell_about_cheater": "main"}'),
+keyboard_admin.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
                             color=KeyboardButtonColor.NEGATIVE)
 keyboard_admin.get_json()
+
+keyboard_admin_spam = Keyboard(one_time=False, inline=False)
+keyboard_admin_spam.add(Text("Передумал", payload='{"admin": "main"}'),
+                            color=KeyboardButtonColor.NEGATIVE)
+keyboard_admin_spam.get_json()
+
