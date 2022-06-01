@@ -216,7 +216,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
         payload={"admin": "return_to_main"},
-        state=vkbot.DialogStates.ADMIN_MENU,
     )
     async def return_to_main_handler(message: Message):
         """
@@ -239,7 +238,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Header of SPAM to all members.
         """
         keyboard = vk_keyboards.keyboard_admin_spam
-        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_SPAM)
+        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_SPAM)
         await message.answer(
             keyboard=keyboard,
             message=dialogs.spam_header,
@@ -253,9 +252,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Start SPAM to all members.
         """
-        answer = dialogs.spam_send
+        answer = dialogs.spam_send + message.text
         keyboard = vk_keyboards.keyboard_admin
-        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
+        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
         await message.answer(
             keyboard=keyboard,
             message=answer,
@@ -268,9 +267,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Group_id
         """
         users_info = await bot.api.groups.get_by_id()
-        answer_message = bot.group_id
+        answer_message = await bot.group_id
         await message.answer(
-            answer_message,
+            answer_message[0].id,
             keyboard=vk_keyboards.keyboard_main,
         )
 
