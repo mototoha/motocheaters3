@@ -207,7 +207,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Переход в админское меню.
         """
         keyboard = vk_keyboards.keyboard_admin
-        bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
+        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
         await message.answer(
             message=dialogs.admin_menu,
             keyboard=keyboard,
@@ -223,6 +223,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Return to main menu.
         """
         keyboard = vk_keyboards.keyboard_main
+        await bot.state_dispenser.delete(message.peer_id)
         await message.answer(
             keyboard=keyboard,
             message=dialogs.return_to_main
@@ -237,12 +238,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Header of SPAM to all members.
         """
-        answer = dialogs.spam_header
         keyboard = vk_keyboards.keyboard_admin_spam
         bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_SPAM)
         await message.answer(
             keyboard=keyboard,
-            message=answer,
+            message=dialogs.spam_header,
         )
 
     @bot.on.message(
@@ -262,18 +262,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
-        # Hi!
-        @bot.on.message(text="group_id", state=None)
-        async def get_my_group_id_handler(message: Message):
-            """
-            Hi!
-            """
-            users_info = await bot.api.users.get(message.from_id)
-            answer_message = dialogs.hello.format(users_info[0].first_name)
-            await message.answer(
-                answer_message,
-                keyboard=vk_keyboards.keyboard_main,
-            )
+    @bot.on.message(text="group_id", state=None)
+    async def get_my_group_id_handler(message: Message):
+        """
+        Group_id
+        """
+        users_info = await bot.api.groups.get_by_id()
+        answer_message = bot.group_id
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
 
     # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(state=None)
