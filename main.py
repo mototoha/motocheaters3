@@ -252,7 +252,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Start SPAM to all members.
         """
-        answer = dialogs.spam_send + message.text
+        group_id = (await bot.group_id)[0].id
+        members = await bot.api.groups.get_members(group_id=group_id)
+        bot.
+        answer = dialogs.spam_send + message.text + '\n' + peer_ids
         keyboard = vk_keyboards.keyboard_admin
         await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
         await message.answer(
@@ -266,10 +269,24 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_id
         """
-        users_info = await bot.api.groups.get_by_id()
+        users_info = bot.api.groups.get_by_id()
         answer_message = await bot.group_id
         await message.answer(
             answer_message[0].id,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+
+    @bot.on.message(text="members", state=None)
+    async def get_members_handler(message: Message):
+        """
+        Group_members
+        """
+        group_id = (await bot.group_id)[0].id
+        members = await bot.api.groups.get_members(group_id=group_id)
+        answer_message = str(group_id)
+        answer_message += str(members.items)
+        await message.answer(
+            answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
 
