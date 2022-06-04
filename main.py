@@ -291,12 +291,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(text="dialogstate")
     async def get_members_handler(message: Message):
         """
-        Group_members
+        dialogstate
         """
         answer_message = await bot.state_dispenser.get(message.from_id)
+        print(type(answer_message))
+        print(answer_message)
+        print(answer_message.state)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
         )
 
     # All others. -----------------------------------------------------------------------------------------------

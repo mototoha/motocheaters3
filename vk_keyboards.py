@@ -17,11 +17,15 @@ def get_keyboard(menu_level: str, is_admin: bool) -> str:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"tell_about_cheater": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    if menu_level == 'admin' & is_admin:
+    elif menu_level == 'admin' & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Разослать всем чо-то", payload='{"admin": "mass_sending"}'),
                      color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
+                     color=KeyboardButtonColor.NEGATIVE)
+    elif menu_level == 'mass_sending' & is_admin:
+        keyboard = Keyboard(one_time=False, inline=False)
+        keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
     else:
         keyboard = Keyboard(one_time=False, inline=False)
