@@ -291,6 +291,19 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=vk_keyboards.keyboard_main,
         )
 
+    @bot.on.message(text="dialogstate")
+    async def get_members_handler(message: Message):
+        """
+        Group_members
+        """
+        group_id = (await bot.group_id)[0].id
+        members = await bot.api.groups.get_members(group_id=group_id)
+        answer_message = await bot.state_dispenser.get(message.from_id)
+        await message.answer(
+            answer_message,
+            keyboard=vk_keyboards.keyboard_main,
+        )
+
     # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(state=None)
     async def common_handler(message: Message):
