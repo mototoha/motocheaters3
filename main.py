@@ -199,7 +199,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        text='admin',
+        text='Админ меню',
+        state=None,
+    )
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        payload={"main": "admin"},
         state=None,
     )
     async def admin_menu_handler(message: Message):
@@ -310,9 +315,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         users_info = await bot.api.users.get(message.from_id)
         answer_message = dialogs.dont_understand
         answer_message += dialogs.samples
+        keyboard = vk_keyboards.get_keyboard(None, message.peer_id in bot.vk_admin_id)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
         vk_admin_ids = bot.vk_admin_id
         message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].id))

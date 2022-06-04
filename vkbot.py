@@ -53,7 +53,6 @@ class VKBot(Bot):
     )
 
     dialog_states = DialogStates
-    is_admin = IsAdmin
     is_moderator = IsModerator
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
@@ -272,6 +271,17 @@ class VKBot(Bot):
             check_result = False
         if check_result:
             return check_result[0]
+        else:
+            return False
+
+    def is_user_admin(self, peer_id: str) -> bool:
+        """
+        Определяет, является ли пользователь админом.
+        :param peer_id:
+        :return:
+        """
+        if peer_id in self.vk_admin_id:
+            return True
         else:
             return False
 
