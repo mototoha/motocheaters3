@@ -123,6 +123,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.state_dispenser.delete(message.peer_id)
         message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].id))
         answer_message = dialogs.thanks
+        # Отправляем историю админам
         await bot.api.messages.send(
             message=message_text,
             user_ids=bot.vk_admin_id,
@@ -196,7 +197,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 )
         return result
 
-    # Админское меню ---------------------------------------------------------------------------------------------------
+    # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
         text='admin',

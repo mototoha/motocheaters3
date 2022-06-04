@@ -4,6 +4,15 @@ JSON для клавиатур
 
 from vkbottle import Keyboard, KeyboardButtonColor, Text
 
+def get_keyboard(menu_level: str, is_admin: bool) -> str:
+    """
+    Возвращает json клавиатуры.
+    :param menu_level: для какого меню клавиатура.
+    :param is_admin: нужны ли админские кнопки.
+    :return: json клавиатуры.
+    """
+    pass
+
 # MAIN KB
 keyboard_main = Keyboard(one_time=False, inline=False)
 keyboard_main.add(Text("Рассказать про кидалу", payload='{"main": "tell_about_cheater"}'),
