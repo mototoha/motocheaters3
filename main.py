@@ -178,7 +178,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         # TODO Сделать парсинг групп
-        result = ''
         if result_check:  # found
             result = dialogs.is_cheater
         else:  # not found
@@ -255,7 +254,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         group_id = (await bot.group_id)[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
-        bot.
         answer = dialogs.spam_send + message.text + '\n' + peer_ids
         keyboard = vk_keyboards.keyboard_admin
         await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
@@ -270,7 +268,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_id
         """
-        users_info = bot.api.groups.get_by_id()
         answer_message = await bot.group_id
         await message.answer(
             answer_message[0].id,
@@ -296,8 +293,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_members
         """
-        group_id = (await bot.group_id)[0].id
-        members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = await bot.state_dispenser.get(message.from_id)
         await message.answer(
             answer_message,
