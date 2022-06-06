@@ -3,27 +3,28 @@ JSON для клавиатур
 """
 
 from vkbottle import Keyboard, KeyboardButtonColor, Text
+from vkbot import DialogStates
 
 
-def get_keyboard(menu_level: str, is_admin: bool) -> str:
+def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str:
     """
     Возвращает json клавиатуры.
     :param menu_level: для какого меню клавиатура.
     :param is_admin: нужны ли админские кнопки.
     :return: json клавиатуры.
     """
-    # Главная клавиатура в конце if'ов
-    if menu_level == 'tell_about_cheater':
+    # Клавиатура главного меню в конце
+    if menu_level == DialogStates.TELL_ABOUT_CHEATER_STATE:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"tell_about_cheater": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    elif (menu_level == 'admin') & is_admin:
+    elif (menu_level == DialogStates.ADMIN_MENU_STATE) & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Разослать всем чо-то", payload='{"admin": "mass_sending"}'),
                      color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    elif (menu_level == 'mass_sending') & is_admin:
+    elif (menu_level == DialogStates.ADMIN_SPAM_STATE) & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)

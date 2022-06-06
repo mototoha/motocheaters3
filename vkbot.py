@@ -18,10 +18,12 @@ class DialogStates(BaseStateGroup):
     """
     Dialog levels.
     """
-    MAIN_STATE = 0
-    TELL_ABOUT_CHEATER = 1
-    ADMIN_MENU = 10
-    ADMIN_SPAM = 11
+    MAIN_STATE = 'main'
+    TELL_ABOUT_CHEATER_STATE = 'tell_ablout_cheater'
+    ADMIN_MENU_STATE = 'admin'
+    ADMIN_SPAM_STATE = 'admin_spam'
+    ADMIN_ADD_STATE = 'admin_add'
+    ADMIN_DEL_STATE = 'admin_del'
 
 
 class IsAdmin(BaseStateGroup):

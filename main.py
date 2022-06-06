@@ -62,10 +62,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Tell about cheater
         """
         answer_message = dialogs.tell_about_cheater
-        await bot.state_dispenser.set(message.from_id, bot.dialog_states.TELL_ABOUT_CHEATER)
+        state = bot.dialog_states.TELL_ABOUT_CHEATER_STATE
+        is_admin = bot.is_user_admin(message.from_id)
+        await bot.state_dispenser.set(message.from_id, state)
+        keyboard = vk_keyboards.get_keyboard(bot.dialog_states.TELL_ABOUT_CHEATER_STATE, is_admin)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_return_to_main,
+            keyboard=keyboard,
         )
 
     # Press 'Помочь нам'
@@ -76,9 +79,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Tell about cheater
         """
         answer_message = dialogs.help_us
+        is_admin = bot.is_user_admin(message.from_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
 
     # Press 'Как проверить'
@@ -89,31 +94,38 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Tell about cheater
         """
         answer_message = dialogs.how_check
+        is_admin = bot.is_user_admin(message.from_id)
+        keyboard = vk_keyboards.get_keyboard(bot.dialog_states.TELL_ABOUT_CHEATER_STATE, is_admin)
+        await message.answer(
+            answer_message,
+            keyboard=keyboard,
+        )
+
+    # Кнопка "Передумал"
+    @bot.on.message(
+        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
+        payload={"tell_about_cheater": "main"},
+    )
+    @bot.on.message(
+        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
+        text='передумал',
+    )
+    async def press_change_mind_handler(message: Message):
+        """
+        Change mind about telling story
+        """
+        await bot.state_dispenser.delete(message.peer_id)
+        answer_message = dialogs.change_mind
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
             keyboard=vk_keyboards.keyboard_main,
         )
 
-    # Кнопка "Передумал"
-    @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER,
-        payload={"tell_about_cheater": "main"},
-    )
-    @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER,
-        text='передумал',
-    )
-    async def press_change_mind_handler(message: Message):
-        """
-        Change mind
-        """
-        await bot.state_dispenser.delete(message.peer_id)
-        answer_message = dialogs.change_mind
-        await message.answer(answer_message, keyboard=vk_keyboards.keyboard_main)
-
     # Telling about cheater
     @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER
+        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE
     )
     async def cheater_story_handler(message: Message):
         """
@@ -122,7 +134,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         users_info = await bot.api.users.get(message.from_id)
         await bot.state_dispenser.delete(message.peer_id)
         message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].id))
-        answer_message = dialogs.thanks
         # Отправляем историю админам
         await bot.api.messages.send(
             message=message_text,
@@ -132,7 +143,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             random_id=0,
         )
         # отвечаем вопрошающему
-        await message.answer(answer_message)
+        answer_message = dialogs.thanks
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
+        await message.answer(
+            answer_message,
+            keyboard=keyboard,
+        )
 
     # Hi!
     @bot.on.message(text="Привет<!>", state=None)
@@ -144,14 +161,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         users_info = await bot.api.users.get(message.from_id)
         answer_message = dialogs.hello.format(users_info[0].first_name)
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
 
     # File with cheaters
     @bot.on.message(
         AttachmentTypeRule('doc'),
+        # TODO Переделать парвило на метод is_user_admin
         FromPeerRule(bot.vk_admin_id),
         func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
         state=None
@@ -179,14 +199,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         # TODO Сделать парсинг групп
         if result_check:  # found
-            result = dialogs.is_cheater
+            answer_message = dialogs.is_cheater
         else:  # not found
-            result = dialogs.not_cheater
-            if result:
-                result = result.format(match[match.lastgroup])
+            answer_message = dialogs.not_cheater
+            if answer_message:
+                result = answer_message.format(match[match.lastgroup])
             else:
                 # Not correct sql.
-                result = 'Ничего не найдено.'
+                answer_message = 'Ничего не найдено.'
                 message_text = 'Запрос, который некорректно отработал'
                 await bot.api.messages.send(
                     message=message_text,
@@ -194,7 +214,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     forward_messages=message.id,
                     random_id=0,
                 )
-        return result
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
+        await message.answer(
+            answer_message,
+            keyboard=keyboard,
+        )
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
@@ -211,8 +236,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Переход в админское меню.
         """
-        keyboard = vk_keyboards.keyboard_admin
-        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
+        new_state = vkbot.DialogStates.ADMIN_MENU_STATE
+        await bot.state_dispenser.set(message.from_id, new_state)
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(new_state, is_admin)
         await message.answer(
             message=dialogs.admin_menu,
             keyboard=keyboard,
@@ -221,50 +248,58 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
         payload={"admin": "return_to_main"},
+        state=bot.dialog_states.ADMIN_MENU_STATE,
     )
     async def return_to_main_handler(message: Message):
         """
         Return to main menu.
         """
-        keyboard = vk_keyboards.keyboard_main
         await bot.state_dispenser.delete(message.peer_id)
+        answer_message = dialogs.return_to_main
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
+            answer_message,
             keyboard=keyboard,
-            message=dialogs.return_to_main
         )
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
         payload={"admin": "mass_sending"},
-        state=vkbot.DialogStates.ADMIN_MENU,
+        state=vkbot.DialogStates.ADMIN_MENU_STATE,
     )
     async def spam_handler(message: Message):
         """
         Header of SPAM to all members.
         """
-        keyboard = vk_keyboards.keyboard_admin_spam
-        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_SPAM)
+        new_state = vkbot.DialogStates.ADMIN_SPAM_STATE
+        await bot.state_dispenser.set(message.from_id, new_state)
+        answer_message = dialogs.spam_header
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(new_state, is_admin)
         await message.answer(
+            answer_message,
             keyboard=keyboard,
-            message=dialogs.spam_header,
         )
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        state=vkbot.DialogStates.ADMIN_SPAM,
+        state=vkbot.DialogStates.ADMIN_SPAM_STATE,
     )
     async def spam_handler(message: Message):
         """
         Start SPAM to all members.
         """
+        new_state = vkbot.DialogStates.ADMIN_MENU_STATE
         group_id = (await bot.group_id)[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
-        answer = dialogs.spam_send + message.text + '\n' + peer_ids
-        keyboard = vk_keyboards.keyboard_admin
-        await bot.state_dispenser.set(message.from_id, vkbot.DialogStates.ADMIN_MENU)
+        answer_message = dialogs.spam_send + message.text + '\n' + peer_ids
+        is_admin = bot.is_user_admin(message.peer_id)
+        keyboard = vk_keyboards.get_keyboard(new_state)
+        await bot.state_dispenser.set(message.from_id, new_state)
         await message.answer(
+            answer_message,
             keyboard=keyboard,
-            message=answer,
         )
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
@@ -301,7 +336,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = await bot.state_dispenser.get(message.from_id)
         print(type(answer_message))
         print(answer_message)
-        print(answer_message.state)
+        if answer_message:
+            print(answer_message.state)
         await message.answer(
             answer_message,
         )
