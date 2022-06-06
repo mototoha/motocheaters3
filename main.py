@@ -10,7 +10,6 @@ from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
     FromPeerRule,
-    FromUserRule,
 )
 
 import startup
