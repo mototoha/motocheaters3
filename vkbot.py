@@ -67,14 +67,7 @@ class VKBot(Bot):
 
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
-        self.group_id = self.api.groups.get_by_id()
-
-    async def get_admins(self):
-        group_managers_info = await self.api.groups.get_members(group_id=self.group_id,
-                                                                filter='manager')
-        group_managers = group_managers_info['items']
-        result = group_managers + self.db.get_admins()
-        return result
+        self.group_info = self.api.groups.get_by_id
 
     async def update_cheaters_from_file(self, url: str):
         """

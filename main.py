@@ -94,7 +94,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Как проверить
         """
         answer_message = dialogs.how_check
-        is_admin = bot.is_user_admin(message.from_id)
         await message.answer(
             answer_message,
         )
@@ -169,7 +168,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # File with cheaters
     @bot.on.message(
         AttachmentTypeRule('doc'),
-        # TODO Переделать парвило на метод is_user_admin
+        # TODO Переделать правило на метод is_user_admin
         FromPeerRule(bot.vk_admin_id),
         func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
         state=None
@@ -201,7 +200,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         else:  # not found
             answer_message = dialogs.not_cheater
             if answer_message:
-                result = answer_message.format(match[match.lastgroup])
+                answer_message = answer_message.format(match[match.lastgroup])
             else:
                 # Not correct sql.
                 answer_message = 'Ничего не найдено.'
@@ -289,7 +288,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Start SPAM to all members.
         """
         new_state = vkbot.DialogStates.ADMIN_MENU_STATE
-        group_info = await bot.group_id
+        group_info = await bot.group_info()
         group_id = group_info[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = dialogs.spam_send + message.text + '\n' + str(members)
@@ -307,7 +306,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_id
         """
-        answer_message = await bot.group_id
+        answer_message = await bot.group_info
         await message.answer(
             answer_message[0].id,
             keyboard=vk_keyboards.keyboard_main,
@@ -318,7 +317,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_members
         """
-        group_id = (await bot.group_id)[0].id
+        group_info = await bot.group_info()
+        group_id = group_info[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = str(group_id)
         answer_message += str(members.items)
