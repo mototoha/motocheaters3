@@ -91,14 +91,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(payload={"main": "how_check"}, state=None)
     async def press_how_check_handler(message: Message):
         """
-        Tell about cheater
+        Как проверить
         """
         answer_message = dialogs.how_check
         is_admin = bot.is_user_admin(message.from_id)
-        keyboard = vk_keyboards.get_keyboard(bot.dialog_states.TELL_ABOUT_CHEATER_STATE, is_admin)
         await message.answer(
             answer_message,
-            keyboard=keyboard,
         )
 
     # Кнопка "Передумал"
@@ -120,7 +118,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
 
     # Telling about cheater
@@ -291,11 +289,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Start SPAM to all members.
         """
         new_state = vkbot.DialogStates.ADMIN_MENU_STATE
-        group_id = (await bot.group_id)[0].id
+        group_info = await bot.group_id
+        group_id = group_info[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
-        answer_message = dialogs.spam_send + message.text + '\n' + peer_ids
+        answer_message = dialogs.spam_send + message.text + '\n' + str(members)
         is_admin = bot.is_user_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(new_state)
+        keyboard = vk_keyboards.get_keyboard(new_state, is_admin)
         await bot.state_dispenser.set(message.from_id, new_state)
         await message.answer(
             answer_message,
@@ -373,8 +372,9 @@ if __name__ == '__main__':
     main()
 
 # Global TO DO
-# TODO Список админов через текстовый файл
-# TODO Админское меню
 # TODO Рассылка
 # TODO добавить/удалить админа
 # TODO Удалить запись из БД
+
+# ADMIN MENU TO DO
+# TODO Парсинг непонятных сообщений
