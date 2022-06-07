@@ -85,7 +85,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    # Press 'Как проверить'
+    # Кнопка 'Как проверить'
     @bot.on.message(text="как проверить", state=None)
     @bot.on.message(payload={"main": "how_check"}, state=None)
     async def press_how_check_handler(message: Message):
@@ -130,13 +130,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         users_info = await bot.api.users.get(message.from_id)
         await bot.state_dispenser.delete(message.peer_id)
         message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].id))
+        keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         # Отправляем историю админам
         await bot.api.messages.send(
             message=message_text,
             user_ids=bot.vk_admin_id,
             forward_messages=message.id,
-            keyboard=vk_keyboards.keyboard_main,
-            random_id=0,
+            keyboard=keyboard,
         )
         # отвечаем вопрошающему
         answer_message = dialogs.thanks
@@ -228,6 +228,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         payload={"main": "admin"},
         state=None,
     )
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        payload={"main": "how_check"},
+        state=None,
+    )
     async def admin_menu_handler(message: Message):
         """
         Переход в админское меню.
@@ -306,9 +311,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Group_id
         """
         answer_message = await bot.group_info
+        keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message[0].id,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
 
     @bot.on.message(text="members", state=None)
@@ -321,9 +327,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = str(group_id)
         answer_message += str(members.items)
+        keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message,
-            keyboard=vk_keyboards.keyboard_main,
+            keyboard=keyboard,
         )
 
     @bot.on.message(text="dialogstate")
