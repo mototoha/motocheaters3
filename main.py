@@ -304,6 +304,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
+    @bot.on.message(state=vkbot.DialogStates.ADMIN_MENU_STATE)
+    async def common_admin_handler(message: Message):
+        return dialogs.admin_common
+
     # Отладочные команды. ---------------------------------------------------------------------------------------
     @bot.on.message(text="group_id", state=None)
     async def get_my_group_id_handler(message: Message):
@@ -334,7 +338,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     @bot.on.message(text="dialogstate")
-    async def get_members_handler(message: Message):
+    async def get_dialogstate_handler(message: Message):
         """
         dialogstate
         """
@@ -378,9 +382,5 @@ if __name__ == '__main__':
     main()
 
 # Global TO DO
-# TODO Рассылка
-# TODO добавить/удалить админа
+# TODO Рассылка (пока только заготовка)
 # TODO Удалить запись из БД
-
-# ADMIN MENU TO DO
-# TODO Парсинг непонятных сообщений
