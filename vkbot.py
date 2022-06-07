@@ -16,22 +16,26 @@ import dialogs
 
 class DialogStates(BaseStateGroup):
     """
-    Dialog levels.
+    Уровни диалога.
     """
     MAIN_STATE = 'main'
     TELL_ABOUT_CHEATER_STATE = 'tell_about_cheater'
     ADMIN_MENU_STATE = 'admin'
     ADMIN_SPAM_STATE = 'admin_spam'
     ADMIN_ADD_CHEATER = 'add_cheater'
+    ADMIN_DEL_CHEATER = 'del_cheater'
 
-
-class IsAdmin(BaseStateGroup):
+class AdminStates(BaseStateGroup):
     """
-    Маркер админа. Может добавлять и удалять админов.
-    Также является модератором.
+    Уровни админского меню.
     """
-    NOT_ADMIN = 0
-    ADMIN = 1
+    MAIN_STATE = 'admin'
+    SPAM_STATE = 'admin_spam'
+    ADD_CHEATER = 'add_cheater'
+    ADD_CHEATER_ID = 'add_cheater_id'
+    ADD_CHEATER_TEL = 'add_cheater_tel'
+    ADD_CHEATER_CARD = 'add_cheater_card'
+    ADMIN_DEL_CHEATER = 'del_cheater'
 
 
 class IsModerator(BaseStateGroup):
@@ -66,7 +70,6 @@ class VKBot(Bot):
 
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
-        # TODO сделать получение group_id однократно
         self.group_info = self.api.groups.get_by_id
 
     async def update_cheaters_from_file(self, url: str):

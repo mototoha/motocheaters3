@@ -10,6 +10,10 @@ from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
     FromPeerRule,
+    PayloadRule,
+    CommandRule,
+    StateRule,
+    StateGroupRule,
 )
 
 import startup
@@ -219,18 +223,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        text='Админ меню',
-        state=None,
-    )
-    @bot.on.message(
-        FromPeerRule(bot.vk_admin_id),
-        payload={"main": "admin"},
-        state=None,
-    )
-    @bot.on.message(
-        FromPeerRule(bot.vk_admin_id),
-        payload={"main": "how_check"},
-        state=None,
+        CommandRule('Админ меню') | PayloadRule({"main": "admin"}),
+        StateRule(),
     )
     async def admin_menu_handler(message: Message):
         """
@@ -246,12 +240,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        payload={"admin": "return_to_main"},
-        state=bot.dialog_states.ADMIN_MENU_STATE,
+        StateRule(bot.dialog_states.ADMIN_MENU_STATE),
+        PayloadRule({"admin": "return_to_main"}),
     )
     async def return_to_main_handler(message: Message):
         """
-        Return to main menu.
+        Возврат из админского меню.
         """
         await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.return_to_main
@@ -264,12 +258,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        payload={"admin": "mass_sending"},
-        state=vkbot.DialogStates.ADMIN_MENU_STATE,
+        PayloadRule({"admin": "mass_sending"}),
+        StateRule(vkbot.DialogStates.ADMIN_MENU_STATE),
     )
     async def spam_handler(message: Message):
         """
-        Header of SPAM to all members.
+        Перед рассылкой.
         """
         new_state = vkbot.DialogStates.ADMIN_SPAM_STATE
         await bot.state_dispenser.set(message.from_id, new_state)
@@ -283,11 +277,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        state=vkbot.DialogStates.ADMIN_SPAM_STATE,
+        StateRule(vkbot.DialogStates.ADMIN_SPAM_STATE),
     )
     async def spam_handler(message: Message):
         """
-        Start SPAM to all members.
+        Начало рассылки всем членам группы.
         """
         new_state = vkbot.DialogStates.ADMIN_MENU_STATE
         group_info = await bot.group_info()
@@ -301,6 +295,33 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message,
             keyboard=keyboard,
         )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        StateRule({"admin": "add_cheater"}),
+    )
+    async def add_cheater_handler(message: Message):
+        """
+        Админ меню. Кнопка "Добавить кидалу".
+        """
+        new_state = vkbot.DialogStates.ADMIN_ADD_CHEATER
+        await bot.state_dispenser.set(new_state)
+        answer_message = dialogs.add_cheater_id
+        keyboard = vk_keyboards.get_keyboard(new_state, True)
+        await message.answer(
+            message=answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        state=vkbot.DialogStates.ADMIN_ADD_CHEATER,
+    )
+    async def add_cheater_id(message: Message):
+        """
+        Добавление кидалы. Ввод ID.
+        """
+
 
     @bot.on.message(state=vkbot.DialogStates.ADMIN_MENU_STATE)
     async def common_admin_handler(message: Message):
