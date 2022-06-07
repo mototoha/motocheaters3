@@ -188,7 +188,7 @@ class DBCheaters:
         """
         Return all users from table admins
 
-        :return: list of id
+        :return: list of id [int]
         """
         result = []
         sql_query = self._construct_select('admins', ['id'])

@@ -277,7 +277,7 @@ class VKBot(Bot):
         else:
             return False
 
-    def is_user_admin(self, peer_id: str) -> bool:
+    def is_user_admin(self, peer_id: int) -> bool:
         """
         Определяет, является ли пользователь админом.
         :param peer_id:

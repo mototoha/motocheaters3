@@ -317,7 +317,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    @bot.on.message(text="members", state=None)
+    @bot.on.message(text="members", state=None, FromPeerRule=bot.vk_admin_id)
     async def get_members_handler(message: Message):
         """
         Group_members
