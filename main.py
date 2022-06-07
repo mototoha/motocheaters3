@@ -167,7 +167,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # File with cheaters
     @bot.on.message(
         AttachmentTypeRule('doc'),
-        # TODO Переделать правило на метод is_user_admin
         FromPeerRule(bot.vk_admin_id),
         func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
         state=None
@@ -239,8 +238,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         new_state = vkbot.DialogStates.ADMIN_MENU_STATE
         await bot.state_dispenser.set(message.from_id, new_state)
-        is_admin = bot.is_user_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(new_state, is_admin)
+        keyboard = vk_keyboards.get_keyboard(new_state, True)
         await message.answer(
             message=dialogs.admin_menu,
             keyboard=keyboard,
@@ -314,14 +312,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Group_id
         """
-        answer_message = await bot.group_info
+        answer_message = await bot.group_info()
         keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message[0].id,
             keyboard=keyboard,
         )
 
-    @bot.on.message(text="members", state=None, FromPeerRule=bot.vk_admin_id)
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), text="members", state=None, )
     async def get_members_handler(message: Message):
         """
         Group_members
@@ -329,8 +327,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         group_info = await bot.group_info()
         group_id = group_info[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
-        answer_message = str(group_id)
-        answer_message += str(members.items)
+        answer_message = str(group_id) + '\n'
+        answer_message += ' '.join(str(vk_id) for vk_id in members.items)
         keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message,

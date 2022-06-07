@@ -67,7 +67,7 @@ class VKBot(Bot):
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
         # TODO сделать получение group_id однократно
-        self.group_info = self.api.groups.get_by_id()
+        self.group_info = self.api.groups.get_by_id
 
     async def update_cheaters_from_file(self, url: str):
         """
