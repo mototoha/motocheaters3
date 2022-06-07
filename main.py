@@ -141,6 +141,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             user_ids=bot.vk_admin_id,
             forward_messages=message.id,
             keyboard=keyboard,
+            random_id=0,
         )
         # отвечаем вопрошающему
         answer_message = dialogs.thanks
@@ -298,15 +299,34 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        StateRule({"admin": "add_cheater"}),
+        StateRule(vkbot.DialogStates.ADMIN_MENU_STATE),
+        PayloadRule({"admin": "add_cheater"}),
     )
     async def add_cheater_handler(message: Message):
         """
         Админ меню. Кнопка "Добавить кидалу".
         """
         new_state = vkbot.DialogStates.ADMIN_ADD_CHEATER
-        await bot.state_dispenser.set(new_state)
+        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.add_cheater_id
+        keyboard = vk_keyboards.get_keyboard(new_state, True)
+        await message.answer(
+            message=answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        StateRule(vkbot.DialogStates.ADMIN_ADD_CHEATER),
+        PayloadRule({"admin": "main"})
+    )
+    async def return_from_add_cheater_handler(message: Message):
+        """
+        Админ меню. Передумал добавлять кидалу.
+        """
+        new_state = vkbot.DialogStates.ADMIN_MENU_STATE
+        await bot.state_dispenser.set(message.peer_id, new_state)
+        answer_message = dialogs.admin_menu
         keyboard = vk_keyboards.get_keyboard(new_state, True)
         await message.answer(
             message=answer_message,
@@ -321,9 +341,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Добавление кидалы. Ввод ID.
         """
+        pass
 
-
-    @bot.on.message(state=vkbot.DialogStates.ADMIN_MENU_STATE)
+    @bot.on.message(StateGroupRule(vkbot.DialogStates))
     async def common_admin_handler(message: Message):
         return dialogs.admin_common
 
