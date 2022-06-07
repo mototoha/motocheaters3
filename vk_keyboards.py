@@ -20,11 +20,20 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
                      color=KeyboardButtonColor.NEGATIVE)
     elif (menu_level == DialogStates.ADMIN_MENU_STATE) & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
+        keyboard.add(Text("Добавить кидалу", payload='{"admin": "add_cheater"}'),
+                     color=KeyboardButtonColor.POSITIVE)
+        keyboard.add(Text("Удалить кидалу", payload='{"admin": "del_cheater"}'),
+                     color=KeyboardButtonColor.NEGATIVE)
+        keyboard.row()
         keyboard.add(Text("Разослать всем чо-то", payload='{"admin": "mass_sending"}'),
                      color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
     elif (menu_level == DialogStates.ADMIN_SPAM_STATE) & is_admin:
+        keyboard = Keyboard(one_time=False, inline=False)
+        keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
+                     color=KeyboardButtonColor.NEGATIVE)
+    elif (menu_level == DialogStates.ADMIN_ADD_CHEATER) & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)

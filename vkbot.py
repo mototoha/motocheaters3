@@ -22,8 +22,7 @@ class DialogStates(BaseStateGroup):
     TELL_ABOUT_CHEATER_STATE = 'tell_about_cheater'
     ADMIN_MENU_STATE = 'admin'
     ADMIN_SPAM_STATE = 'admin_spam'
-    ADMIN_ADD_STATE = 'admin_add'
-    ADMIN_DEL_STATE = 'admin_del'
+    ADMIN_ADD_CHEATER = 'add_cheater'
 
 
 class IsAdmin(BaseStateGroup):
