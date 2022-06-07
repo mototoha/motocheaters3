@@ -10,15 +10,17 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
     """
     Возвращает json клавиатуры.
     :param menu_level: для какого меню клавиатура.
-    :param is_admin: нужны ли админские кнопки.
+    :param is_admin: Если клавиатура предусматривает опционально админские кнопки, ставить True.
     :return: json клавиатуры.
     """
-    # Клавиатура главного меню в конце
+    # Главная клавиатура в конце.
+    # Сделано специально, чтобы пользователь не оставался без клавиатуры.
     if menu_level == DialogStates.TELL_ABOUT_CHEATER_STATE:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"tell_about_cheater": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    elif (menu_level == DialogStates.ADMIN_MENU_STATE) & is_admin:
+
+    elif menu_level == AdminStates.MAIN:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Добавить кидалу", payload='{"admin": "add_cheater"}'),
                      color=KeyboardButtonColor.POSITIVE)
@@ -29,14 +31,17 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
                      color=KeyboardButtonColor.POSITIVE)
         keyboard.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    elif (menu_level == DialogStates.ADMIN_SPAM_STATE) & is_admin:
+
+    elif (menu_level == AdminStates.SPAM):
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
-    elif (menu_level == DialogStates.ADMIN_ADD_CHEATER) & is_admin:
+
+    elif (menu_level == AdminStates.ADD_CHEATER) & is_admin:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
+
     else:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Рассказать про кидалу", payload='{"main": "tell_about_cheater"}'),
@@ -51,4 +56,5 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
             keyboard.row()
             keyboard.add(Text("Админ меню", payload='{"main": "admin"}'),
                          color=KeyboardButtonColor.NEGATIVE)
+
     return keyboard.get_json()

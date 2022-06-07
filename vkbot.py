@@ -25,12 +25,13 @@ class DialogStates(BaseStateGroup):
     ADMIN_ADD_CHEATER = 'add_cheater'
     ADMIN_DEL_CHEATER = 'del_cheater'
 
+
 class AdminStates(BaseStateGroup):
     """
     Уровни админского меню.
     """
-    MAIN_STATE = 'admin'
-    SPAM_STATE = 'admin_spam'
+    MAIN = 'admin'
+    SPAM = 'admin_spam'
     ADD_CHEATER = 'add_cheater'
     ADD_CHEATER_ID = 'add_cheater_id'
     ADD_CHEATER_TEL = 'add_cheater_tel'
