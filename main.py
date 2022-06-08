@@ -57,6 +57,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheaters_filename,
     )
 
+
+
     # Press 'Tell about cheater'
     @bot.on.message(text="рассказать про кидалу", state=None)
     @bot.on.message(payload={"main": "tell_about_cheater"}, state=None)
@@ -366,7 +368,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.state_dispenser.set(message.from_id, new_state)
         answer_message = dialogs
 
-    @bot.on.message(StateGroupRule(vkbot.DialogStates))
+    @bot.on.message(StateGroupRule(vkbot.AdminStates))
     async def common_admin_handler(message: Message):
         """
         Любая другая хрень в админском меню.
@@ -374,7 +376,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         return dialogs.admin_common
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
-    @bot.on.message(text="group_id", state=None)
+    @bot.on.message(StateRule(None), text="group_id")
     async def get_my_group_id_handler(message: Message):
         """
         Group_id
