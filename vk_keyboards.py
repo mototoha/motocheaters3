@@ -32,12 +32,12 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
         keyboard.add(Text("Вернуться на главную", payload='{"admin": "return_to_main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
 
-    elif (menu_level == AdminStates.SPAM):
+    elif menu_level == AdminStates.SPAM:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
 
-    elif (menu_level == AdminStates.ADD_CHEATER) & is_admin:
+    elif menu_level == AdminStates.ADD_CHEATER_ID:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)

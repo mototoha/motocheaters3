@@ -314,6 +314,30 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
+        StateRule(vkbot.AdminStates.ADD_CHEATER_ID)
+    )
+    async def add_cheater_id_handler(message: Message):
+        """
+        Админ прислал vk_id кидалы.
+        """
+        match = re.search(bot.regexp_main, message.text)
+        new_state = vkbot.AdminStates.ADD_CHEATER_ID
+        if match:
+            if match.lastgroup in ['vk_id', 'shortname']:
+                answer_message = dialogs.add_cheater_ok
+                new_state = vkbot.AdminStates.MAIN
+                await bot.state_dispenser.set(message.peer_id, new_state)
+            else:
+                answer_message = dialogs.add_cheater_error_value
+        else:
+            answer_message = dialogs.add_cheater_error_value
+        await message.answer(
+            message=answer_message,
+            keyboard=vk_keyboards.get_keyboard(new_state)
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
         PayloadRule({"admin": "main"})
     )
