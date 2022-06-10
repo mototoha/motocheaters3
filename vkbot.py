@@ -13,6 +13,13 @@ from vkbottle.exception_factory import VKAPIError
 import database
 import dialogs
 
+REGEXP_MAIN = (
+        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+        r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
+        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
+    )
+
 
 class DialogStates(BaseStateGroup):
     """
@@ -51,15 +58,8 @@ class VKBot(Bot):
     """
     Main bot class.
     """
-    regexp_main = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-        r'|(?P<card>\d{16}(\s\n)?)'
-        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-    )
 
     dialog_states = DialogStates
-    is_moderator = IsModerator
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
         self.vk_token = vk_token
@@ -108,7 +108,7 @@ class VKBot(Bot):
             else:
                 # Если это не vk_id, все символы в строке делаем слитно, надеясь, что получится последовательность цифр.
                 subline = re.sub(r'[- +\r]', '', str(line))
-            match = re.search(self.regexp_main, subline)
+            match = re.search(REGEXP_MAIN, subline)
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
                 if match.lastgroup in ['vk_id', 'shortname']:

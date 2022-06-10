@@ -57,8 +57,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheaters_filename,
     )
 
-
-
     # Press 'Tell about cheater'
     @bot.on.message(text="рассказать про кидалу", state=None)
     @bot.on.message(payload={"main": "tell_about_cheater"}, state=None)
@@ -189,7 +187,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Ловим кидал.
     @bot.on.message(
-        func=lambda message: bool(re.match(bot.regexp_main,
+        func=lambda message: bool(re.match(vkbot.REGEXP_MAIN,
                                            message.text.lower().lstrip('+').replace(' ', ''))),
         state=None
     )
@@ -197,7 +195,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Ловим кидалу
         """
-        match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
+        match = re.match(vkbot.REGEXP_MAIN, message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         # TODO Сделать парсинг групп
         if result_check:  # found
@@ -305,7 +303,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Админ меню. Кнопка "Добавить кидалу".
         """
-        new_state = vkbot.AdminStates.ADD_CHEATER_ID
+        new_state = vkbot.AdminStates.ADD_CHEATER
         await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.add_cheater_id
         keyboard = vk_keyboards.get_keyboard(new_state)
@@ -316,32 +314,29 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
-        StateRule(vkbot.AdminStates.ADD_CHEATER_ID)
+        StateRule(vkbot.AdminStates.ADD_CHEATER),
+        PayloadRule({"admin": "add"}),
     )
-    async def add_cheater_id_handler(message: Message):
+    async def add_cheater_to_db_handler(message: Message):
         """
-        Админ прислал vk_id кидалы.
+        Добавляем кидалу в БД.
         """
-        match = re.search(bot.regexp_main, message.text)
-        new_state = vkbot.AdminStates.ADD_CHEATER_ID
-        if match:
-            if match.lastgroup in ['vk_id', 'shortname']:
-                answer_message = dialogs.add_cheater_ok
-                new_state = vkbot.AdminStates.MAIN
-                await bot.state_dispenser.set(message.peer_id, new_state)
-            else:
-                answer_message = dialogs.add_cheater_error_value
+        cheater = message.state_peer.payload.get('cheater')
+        if cheater:
+            await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
+            keyboard = vk_keyboards.get_keyboard(vkbot.AdminStates.MAIN)
+            await message.answer(
+                message='Ты хочешь добавить кидалу \n' + str(cheater),
+                keyboard=keyboard,
+            )
+
         else:
-            answer_message = dialogs.add_cheater_error_value
-        await message.answer(
-            message=answer_message,
-            keyboard=vk_keyboards.get_keyboard(new_state)
-        )
+            return 'Введи параметры кидалы.'
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
-        PayloadRule({"admin": "main"})
+        PayloadRule({"admin": "main"}),
     )
     async def return_from_add_cheater_handler(message: Message):
         """
@@ -360,13 +355,57 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
     )
-    async def add_cheater_id(message: Message):
+    async def add_cheater_params_handler(message: Message):
         """
-        Добавление кидалы. Ввод ID.
+        Тут распарсится vk_id, shortname, телефон, карта или 50.
         """
-        new_state = vkbot.AdminStates.ADD_CHEATER_ID
-        await bot.state_dispenser.set(message.from_id, new_state)
-        answer_message = dialogs
+        match = re.search(vkbot.REGEXP_MAIN, message.text.replace(' ', ''))
+        cheater = message.state_peer.payload.get('cheater')
+        answer_message = ''
+        if match:
+            if not cheater:
+                cheater = {}
+            if match.lastgroup in {'vk_id', 'shortname'}:
+                vk_id = match[match.lastgroup]
+                users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
+                cheater['id'] = users_info[0].id
+                cheater['shortname'] = users_info[0].screen_name
+            elif match.lastgroup in {'card', 'telephone'}:
+                if cheater.get(match.lastgroup):
+                    if match[match.lastgroup] in cheater[match.lastgroup]:
+                        answer_message += 'Такой параметр ' + match.lastgroup + ' уже есть!\n'
+                    else:
+                        cheater[match.lastgroup].append(match[match.lastgroup])
+                else:
+                    cheater[match.lastgroup] = [match[match.lastgroup]]
+            else:
+                message_text = 'При добавлении кидалы распарсилось непонятно что:\n' + \
+                    message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
+                await bot.api.messages.send(
+                    message=message_text,
+                    user_ids=bot.vk_admin_id,
+                    forward_messages=message.id,
+                    random_id=0,
+                )
+            answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
+            answer_message += '\n' + str(cheater)
+            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
+        elif message.text == '50':
+            if cheater.get('fifty') is None:
+                cheater['fifty'] = True
+            else:
+                cheater['fifty'] = not cheater['fifty']
+            answer_message = 'Полтинник'
+            answer_message += '\n' + str(cheater)
+            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
+        else:
+            answer_message = dialogs.add_cheater_error_value
+            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
+        await message.answer(
+            message=answer_message,
+        )
+
+
 
     @bot.on.message(StateGroupRule(vkbot.AdminStates))
     async def common_admin_handler(message: Message):

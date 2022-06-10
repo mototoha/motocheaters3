@@ -1,7 +1,11 @@
 """
 Blueprint для админ меню.
 """
-from vkbot import AdminStates
+
+from vkbot import (
+    AdminStates,
+    REGEXP_MAIN,
+)
 
 from vkbottle.bot import Blueprint, Message
 from vkbottle.dispatch.rules.base import (
@@ -121,7 +125,7 @@ async def add_cheater_id_handler(message: Message):
     """
     Админ прислал vk_id кидалы.
     """
-    match = re.search(bot.regexp_main, message.text)
+    match = re.search(REGEXP_MAIN, message.text)
     new_state = vkbot.AdminStates.ADD_CHEATER_ID
     if match:
         if match.lastgroup in ['vk_id', 'shortname']:
