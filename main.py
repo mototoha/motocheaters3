@@ -16,6 +16,7 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
 )
 
+import database
 import startup
 import dialogs
 import vk_keyboards
@@ -56,6 +57,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         db_filename,
         cheaters_filename,
     )
+
+    db = database.DBCheaters(db_filename)
 
     # Press 'Tell about cheater'
     @bot.on.message(text="рассказать про кидалу", state=None)
@@ -329,6 +332,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 message='Ты хочешь добавить кидалу \n' + str(cheater),
                 keyboard=keyboard,
             )
+            db.add_cheater()
 
         else:
             return 'Введи параметры кидалы.'
@@ -357,7 +361,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def add_cheater_params_handler(message: Message):
         """
-        Тут распарсится vk_id, shortname, телефон, карта или 50.
+        Тут распарсится vk_id, screen_name, телефон, карта или 50.
         """
         match = re.search(vkbot.REGEXP_MAIN, message.text.replace(' ', ''))
         cheater = message.state_peer.payload.get('cheater')
@@ -365,11 +369,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         if match:
             if not cheater:
                 cheater = {}
-            if match.lastgroup in {'vk_id', 'shortname'}:
+            if match.lastgroup in {'vk_id', 'screen_name'}:
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
                 cheater['id'] = users_info[0].id
-                cheater['shortname'] = users_info[0].screen_name
+                cheater['screen_name'] = users_info[0].screen_name
             elif match.lastgroup in {'card', 'telephone'}:
                 if cheater.get(match.lastgroup):
                     if match[match.lastgroup] in cheater[match.lastgroup]:

@@ -8,9 +8,9 @@ create table vk_id(
   vk_id text,
   fifty bool
   );
-create table shortnames(
+create table screen_names(
   pk integer primary key,
-  shortname text,
+  screen_name text,
   vk_id text,
   foreign key (vk_id) references vk_id(id)
 );

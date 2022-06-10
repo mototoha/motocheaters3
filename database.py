@@ -212,7 +212,7 @@ class DBCheaters:
         """
         pass
 
-    def add_cheater(self, vk_id: str, fifty: bool = True):
+    def add_vk_id(self, vk_id: str, fifty: bool = True):
         """
         Добавляем нового кидалу.
         """
@@ -227,14 +227,14 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_shortname(self, shortname: str, vk_id=''):
+    def add_screen_name(self, screen_name: str, vk_id=''):
         """
-        Добавляем shortname.
+        Добавляем screen_name.
         """
         sql_query = self._construct_insert(
-            table='shortnames',
+            table='screen_names',
             values_dict={
-                'shortname': shortname,
+                'screen_name': screen_name,
                 'vk_id': vk_id,
             }
         )
@@ -306,3 +306,19 @@ class DBCheaters:
         else:
             result = None
         return result
+
+    def add_cheater(self, cheater: dict) -> None:
+        """
+        Метод добавляет кидалу в БД. На вход должен придти словарь с кидалой:
+        cheater = {
+            'vk_id': str,
+            'fifty': Bool, default False
+            'screen_name': str,
+            'telephone': [str],
+            'card': [str]
+        }
+
+        :param cheater: Dict
+        """
+        if cheater['vk_id']:
+            self.add_vk_id(cheater)
