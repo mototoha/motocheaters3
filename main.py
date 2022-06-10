@@ -14,6 +14,7 @@ from vkbottle.dispatch.rules.base import (
     CommandRule,
     StateRule,
     StateGroupRule,
+    RegexRule,
 )
 
 import startup
@@ -25,8 +26,6 @@ import vkbot
 def main():
     """
     Main function.
-
-    :return: None.
     """
 
     startup_parameters = startup.get_parameters_from_json()
@@ -48,7 +47,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     :param db_filename: имя файла БД.
     :param vk_token: Токен.
     :param cheaters_filename: Имя файла для парсинга кидал.
-    :return: None
     """
 
     bot = vkbot.VKBot(
@@ -57,14 +55,15 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheaters_filename,
     )
 
-
-
-    # Press 'Tell about cheater'
-    @bot.on.message(text="рассказать про кидалу", state=None)
-    @bot.on.message(payload={"main": "tell_about_cheater"}, state=None)
+    # Кнопки на главном меню. --------------------------------------------------------------------------------
+    # Кнопка "Рассказать про кидалу".
+    @bot.on.message(
+        StateRule(None),
+        PayloadRule({"main": "tell_about_cheater"}) | RegexRule(r"^рассказать про кидалу$"),
+    )
     async def press_tell_about_cheater_handler(message: Message):
         """
-        Tell about cheater
+        Кнопка "Рассказать про кидалу".
         """
         answer_message = dialogs.tell_about_cheater
         state = bot.dialog_states.TELL_ABOUT_CHEATER_STATE
@@ -76,12 +75,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    # Press 'Помочь нам'
-    @bot.on.message(text="помочь нам", state=None)
-    @bot.on.message(payload={"main": "help_us"}, state=None)
+    # Кнопка 'Помочь нам'
+    @bot.on.message(
+        StateRule(None),
+        PayloadRule({"main": "help_us"}) | RegexRule(r"^помочь нам$")
+    )
     async def press_help_us_handler(message: Message):
         """
-        Tell about cheater
+        Кнопка "Помочь нам".
         """
         answer_message = dialogs.help_us
         is_admin = bot.is_user_admin(message.from_id)
@@ -91,30 +92,29 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    # Кнопка 'Как проверить'
-    @bot.on.message(text="как проверить", state=None)
-    @bot.on.message(payload={"main": "how_check"}, state=None)
+    # Кнопка 'Как проверить'.
+    @bot.on.message(
+        StateRule(None),
+        PayloadRule({"main": "how_check"}) | RegexRule(r"^как проверить$"),
+    )
     async def press_how_check_handler(message: Message):
         """
-        Как проверить
+        Кнопка "Как проверить".
         """
         answer_message = dialogs.how_check
         await message.answer(
             answer_message,
         )
 
-    # Кнопка "Передумал"
+    # Рассказать про кидалу. -------------------------------------------------------------------------------------------
+    # Кнопка "Передумал".
     @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
-        payload={"tell_about_cheater": "main"},
-    )
-    @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
-        text='передумал',
+        StateRule(vkbot.DialogStates.TELL_ABOUT_CHEATER_STATE),
+        PayloadRule({"tell_about_cheater": "main"}) | RegexRule(r'^передумал$'),
     )
     async def press_change_mind_handler(message: Message):
         """
-        Change mind about telling story
+        Кнопка "Передумал".
         """
         await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.change_mind
@@ -125,13 +125,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    # Telling about cheater
+    # Рассказ про кидалу.
     @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE
+        StateRule(vkbot.DialogStates.TELL_ABOUT_CHEATER_STATE),
     )
     async def cheater_story_handler(message: Message):
         """
-        Telling about cheater
+        Рассказ про кидалу.
         """
         users_info = await bot.api.users.get(message.from_id)
         await bot.state_dispenser.delete(message.peer_id)
@@ -155,9 +155,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     # Hi!
-    @bot.on.message(text="Привет<!>", state=None)
-    @bot.on.message(text="ghbdtn<!>", state=None)
-    @bot.on.message(text="начать", state=None)
+    @bot.on.message(
+        StateRule(None),
+        RegexRule(r"^Привет\!?$|^ghbdtn\!?$|^начать$"),
+    )
     async def hi_handler(message: Message):
         """
         Hi!
@@ -175,12 +176,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AttachmentTypeRule('doc'),
         FromPeerRule(bot.vk_admin_id),
+        StateRule(None),
         func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
-        state=None
     )
     async def send_cheaters_file_handler(message: Message):
         """
-        Parsing cheater file
+        Парсим файл с кидалами.
         """
         await message.answer(dialogs.update_db_from_file)
         attachments_url = message.attachments[0].doc.url
@@ -189,9 +190,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Ловим кидал.
     @bot.on.message(
+        StateRule(None),
         func=lambda message: bool(re.match(bot.regexp_main,
                                            message.text.lower().lstrip('+').replace(' ', ''))),
-        state=None
     )
     async def check_cheater_handler(message: Message):
         """
