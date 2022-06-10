@@ -58,9 +58,6 @@ class VKBot(Bot):
         r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     )
 
-    dialog_states = DialogStates
-    is_moderator = IsModerator
-
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
         self.vk_token = vk_token
         self.db_filename = db_filename

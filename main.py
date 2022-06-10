@@ -66,10 +66,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Кнопка "Рассказать про кидалу".
         """
         answer_message = dialogs.tell_about_cheater
-        state = bot.dialog_states.TELL_ABOUT_CHEATER_STATE
+        new_state = vkbot.DialogStates.TELL_ABOUT_CHEATER_STATE
         is_admin = bot.is_user_admin(message.from_id)
-        await bot.state_dispenser.set(message.from_id, state)
-        keyboard = vk_keyboards.get_keyboard(bot.dialog_states.TELL_ABOUT_CHEATER_STATE, is_admin)
+        await bot.state_dispenser.set(message.from_id, new_state)
+        keyboard = vk_keyboards.get_keyboard(vkbot.DialogStates.TELL_ABOUT_CHEATER_STATE, is_admin)
         await message.answer(
             answer_message,
             keyboard=keyboard,
