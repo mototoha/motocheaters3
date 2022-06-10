@@ -199,7 +199,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         match = re.match(bot.regexp_main, message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
-        # TODO Сделать парсинг групп
         if result_check:  # found
             answer_message = dialogs.is_cheater
         else:  # not found
