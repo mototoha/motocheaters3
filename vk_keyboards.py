@@ -3,12 +3,14 @@ JSON для клавиатур
 """
 
 from vkbottle import Keyboard, KeyboardButtonColor, Text
+from vkbottle import BaseStateGroup
 from vkbot import DialogStates, AdminStates
 
 
-def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str:
+def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> str:
     """
     Возвращает json клавиатуры.
+
     :param menu_level: для какого меню клавиатура.
     :param is_admin: Если клавиатура предусматривает опционально админские кнопки, ставить True.
     :return: json клавиатуры.
