@@ -16,6 +16,7 @@ import dialogs
 REGEXP_MAIN = (
         r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
         r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
         r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
         r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     )
@@ -25,12 +26,7 @@ class DialogStates(BaseStateGroup):
     """
     Уровни диалога.
     """
-    MAIN_STATE = 'main'
     TELL_ABOUT_CHEATER_STATE = 'tell_about_cheater'
-    ADMIN_MENU_STATE = 'admin'
-    ADMIN_SPAM_STATE = 'admin_spam'
-    ADMIN_ADD_CHEATER = 'add_cheater'
-    ADMIN_DEL_CHEATER = 'del_cheater'
 
 
 class AdminStates(BaseStateGroup):
@@ -44,14 +40,6 @@ class AdminStates(BaseStateGroup):
     ADD_CHEATER_TEL = 'add_cheater_tel'
     ADD_CHEATER_CARD = 'add_cheater_card'
     ADMIN_DEL_CHEATER = 'del_cheater'
-
-
-class IsModerator(BaseStateGroup):
-    """
-    Маркер модератора. Может получать сообщения о кидалах.
-    """
-    NOT_MODERATOR = 0
-    MODERATOR = 1
 
 
 class VKBot(Bot):

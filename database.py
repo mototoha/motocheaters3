@@ -212,7 +212,7 @@ class DBCheaters:
         """
         pass
 
-    def add_vk_id(self, vk_id: str, fifty: bool = True):
+    def add_vk_id(self, vk_id: str, fifty: bool = False):
         """
         Добавляем нового кидалу.
         """
@@ -274,6 +274,14 @@ class DBCheaters:
         self._connection.commit()
         return None
 
+    def add_proof_link(self, proof_link: str, vk_id: str) -> None:
+        """
+        Добавляет в БД пруфлинк на кидалу.
+        :param proof_link: https://vk.com/wall-####
+        :param vk_id:
+        """
+        pass
+
     def get_cheater_id(self, table: str, params: dict) -> str:
         """
         Get cheater ID.
@@ -320,5 +328,15 @@ class DBCheaters:
 
         :param cheater: Dict
         """
-        if cheater['vk_id']:
-            self.add_vk_id(cheater)
+        if cheater.get('vk_id'):
+            if not cheater.get('fifty'):
+                cheater['fifty'] = False
+            self.add_vk_id(cheater['vk_id'], cheater['fifty'])
+        if cheater.get('screen_name'):
+            self.add_screen_name(cheater['screen_name'], cheater['vk_id'])
+        if cheater.get('telephone'):
+            self.add_telephones(cheater['telephone'])
+        if cheater.get('card'):
+            self.add_cards(cheater['card'])
+        if cheater.get('proof_link'):
+            self.add_proof_link(cheater['proof_link'], cheater['vk_id'])

@@ -326,14 +326,16 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         cheater = message.state_peer.payload.get('cheater')
         if cheater:
-            await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
-            keyboard = vk_keyboards.get_keyboard(vkbot.AdminStates.MAIN)
-            await message.answer(
-                message='Ты хочешь добавить кидалу \n' + str(cheater),
-                keyboard=keyboard,
-            )
-            db.add_cheater()
-
+            if cheater.get('vk_id'):
+                await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
+                keyboard = vk_keyboards.get_keyboard(vkbot.AdminStates.MAIN)
+                await message.answer(
+                    message='Добавляю кидалу\n' + str(cheater),
+                    keyboard=keyboard,
+                )
+                db.add_cheater(cheater)
+            else:
+                return 'Нужен vk_id.'
         else:
             return 'Введи параметры кидалы.'
 
@@ -372,7 +374,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
-                cheater['id'] = users_info[0].id
+                cheater['vk_id'] = users_info[0].id
                 cheater['screen_name'] = users_info[0].screen_name
             elif match.lastgroup in {'card', 'telephone'}:
                 if cheater.get(match.lastgroup):
@@ -382,6 +384,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                         cheater[match.lastgroup].append(match[match.lastgroup])
                 else:
                     cheater[match.lastgroup] = [match[match.lastgroup]]
+            elif match.lastgroup == 'proof_link':
+                cheater['proof_link'] = match[match.lastgroup]
             else:
                 message_text = 'При добавлении кидалы распарсилось непонятно что:\n' + \
                     message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
@@ -408,8 +412,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await message.answer(
             message=answer_message,
         )
-
-
 
     @bot.on.message(StateGroupRule(vkbot.AdminStates))
     async def common_admin_handler(message: Message):
