@@ -81,8 +81,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     # Press 'Помочь нам'
-    @bot.on.message(text="помочь нам", state=None)
-    @bot.on.message(payload={"main": "help_us"}, state=None)
+    @bot.on.message(
+        StateRule(),
+        RegexRule('помочь нам') | PayloadRule({"main": "help_us"}),
+    )
     async def press_help_us_handler(message: Message):
         """
         Tell about cheater
