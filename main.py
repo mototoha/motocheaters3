@@ -113,12 +113,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Кнопка "Передумал"
     @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
-        payload={"tell_about_cheater": "main"},
-    )
-    @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE,
-        text='передумал',
+        StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE),
+        PayloadRule({"tell_about_cheater": "main"}) | RegexRule('передумал'),
     )
     async def press_change_mind_handler(message: Message):
         """
