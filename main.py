@@ -98,8 +98,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     # Кнопка 'Как проверить'
-    @bot.on.message(text="как проверить", state=None)
-    @bot.on.message(payload={"main": "how_check"}, state=None)
+    @bot.on.message(
+        StateRule(),
+        RegexRule('как проверить') | PayloadRule({"main": "how_check"})
+    )
     async def press_how_check_handler(message: Message):
         """
         Как проверить
