@@ -137,9 +137,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Telling about cheater
         """
-        users_info = await bot.api.users.get(message.from_id)
+        users_info = await bot.api.users.get(message.from_id, fields=['screen_name'])
         await bot.state_dispenser.delete(message.peer_id)
-        message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].id))
+        message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].screen_name))
         keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
         # Отправляем историю админам
         await bot.api.messages.send(
