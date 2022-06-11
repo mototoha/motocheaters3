@@ -14,6 +14,7 @@ from vkbottle.dispatch.rules.base import (
     CommandRule,
     StateRule,
     StateGroupRule,
+    RegexRule,
 )
 
 import database
@@ -61,8 +62,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     db = database.DBCheaters(db_filename)
 
     # Press 'Tell about cheater'
-    @bot.on.message(text="рассказать про кидалу", state=None)
-    @bot.on.message(payload={"main": "tell_about_cheater"}, state=None)
+    @bot.on.message(
+        StateRule(),
+        RegexRule('рассказать про кидалу') | PayloadRule({"main": "tell_about_cheater"}),
+    )
     async def press_tell_about_cheater_handler(message: Message):
         """
         Tell about cheater
