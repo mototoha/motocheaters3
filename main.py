@@ -184,7 +184,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def send_cheaters_file_handler(message: Message):
         """
-        Parsing cheater file
+        Если кинули файл с кидалами, то мы ео попробуем распарсить.
+        Идет проверка, что это документ с конкретным именем.
         """
         await message.answer(dialogs.update_db_from_file)
         attachments_url = message.attachments[0].doc.url
@@ -199,7 +200,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def check_cheater_handler(message: Message):
         """
-        Ловим кидалу
+        Ловим кидалу. Если пользователь присылает что-то похожее на ссылку vk, то пробуем ему помочь.
         """
         match = re.match(vkbot.REGEXP_MAIN, message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
@@ -472,7 +473,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Common message.
         """
-        users_info = await bot.api.users.get(message.from_id)
+        users_info = await bot.api.users.get(message.from_id, fields=['screen_name'])
         answer_message = dialogs.dont_understand
         answer_message += dialogs.samples
         keyboard = vk_keyboards.get_keyboard(None, message.peer_id in bot.vk_admin_id)
@@ -481,7 +482,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
         vk_admin_ids = bot.vk_admin_id
-        message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].id))
+        message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].screen_name))
         await bot.api.messages.send(
             message=message_text,
             user_ids=vk_admin_ids,
