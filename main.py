@@ -131,7 +131,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Telling about cheater
     @bot.on.message(
-        state=bot.dialog_states.TELL_ABOUT_CHEATER_STATE
+        StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE)
     )
     async def cheater_story_handler(message: Message):
         """
