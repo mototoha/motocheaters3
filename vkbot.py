@@ -206,9 +206,9 @@ class VKBot(Bot):
                                                         {'vk_id': cheater['vk_id']})
                 if db_record:
                     print('Такой vk_id есть!')
-                    if db_record['fifty'] != cheater['fifty']:
+                    if db_record[0]['fifty'] != cheater['fifty']:
                         print('Поменялся fifty на', cheater['fifty'])
-                        self.db.update_table('vk_id', 'fifty', cheater['fifty'], 'vk_id', cheater['vk_id'])
+                        self.db.update_table('vk_id', {'fifty': cheater['fifty']}, {'vk_id': cheater['vk_id']})
                 else:
                     print('Добавляю кидалу')
                     self.db.add_vk_id(cheater['vk_id'], cheater['fifty'])

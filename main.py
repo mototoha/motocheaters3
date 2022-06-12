@@ -326,9 +326,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def add_cheater_to_db_handler(message: Message):
         """
+        Добавление кидалы.
         Кнопка "Добавить".
         """
         cheater = message.state_peer.payload.get('cheater')
+        cheater_db = message.state_peer.payload.get('cheater_db')
         if cheater:
             if cheater.get('vk_id'):
                 await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
@@ -337,7 +339,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     message='Добавляю кидалу\n' + str(cheater),
                     keyboard=keyboard,
                 )
-                db.add_cheater(cheater)
+                update = bend.add_cheater(cheater, cheater_db)
+                await message.answer(
+                    message='Добавил кидалу\n' + str(update),
+                    keyboard=keyboard,
+                )
             else:
                 return 'Нужен vk_id.'
         else:
@@ -370,6 +376,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
         """
         cheater = message.state_peer.payload.get('cheater')
+        cheater_db = message.state_peer.payload.get('cheater_db')
         answer_message = ''
 
         # Ищем совпадение с регуляркой.
@@ -422,7 +429,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 list_values = cheater.get(match.lastgroup)
                 if list_values:
                     if match[match.lastgroup] in list_values:
-                        answer_message += 'Такой параметр ' + match.lastgroup + ' уже есть!\n'
+                        answer_message += 'Такой параметр ' + match.lastgroup + ' уже введен!\n'
                     else:
                         list_values.append(match[match.lastgroup])
                 else:
@@ -443,8 +450,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 )
 
             answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
-            answer_message += '\n' + str(cheater)
-            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
+            answer_message += '\n' + str(cheater) + '\n'
+            answer_message += 'В бзе уже есть:\n ' + str(cheater_db)
+            await bot.state_dispenser.set(message.from_id, message.state_peer.state,
+                                          cheater=cheater,
+                                          cheater_db=cheater_db)
         # Нет совпадения.
         else:
             answer_message = dialogs.add_cheater_error_value

@@ -4,6 +4,7 @@ Now work with sqlite3.
 """
 import os
 import sqlite3
+from typing import List
 
 import sql_requests
 
@@ -296,20 +297,22 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_proof_link(self, proof_link: str, vk_id: str) -> None:
+    def add_proof_links(self, proof_links: List[str], vk_id: str) -> None:
         """
         Добавляет в БД пруфлинк на кидалу.
-        :param proof_link: https://vk.com/wall-####
-        :param vk_id:
+
+        :param proof_links: Список ссылок https://vk.com/wall-####.
+        :param vk_id: На кого ссылается.
         """
-        sql_query = self._construct_insert(
-            table='proof_links',
-            values_dict={
-                'proof_link': proof_link,
-                'vk_id': vk_id,
-            }
-        )
-        self._cursor.execute(sql_query)
+        for link in proof_links:
+            sql_query = self._construct_insert(
+                table='proof_links',
+                values_dict={
+                    'proof_link': proof_link,
+                    'vk_id': vk_id,
+                }
+            )
+            self._cursor.execute(sql_query)
         self._connection.commit()
         return None
 
@@ -332,21 +335,22 @@ class DBCheaters:
         result = self._cursor.fetchone()
         return result
 
-    def get_dict_from_table(self, table: str, rows: list, condition_dict: dict) -> dict:
+    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> dict:
         """
         Возвращаем значения из таблицы.
         Из списка rows делаем словарь.
         Выводит только одну строку.
 
-        :return: Словарь с результатами or None.
+        :return: Список словарей с результатами or None.
         """
-        sql_query = self._construct_select(table=table, what_select=rows, where_select=condition_dict)
+        sql_query = self._construct_select(table=table, what_select=columns, where_select=condition_dict)
         self._cursor.execute(sql_query)
         result_list = self._cursor.fetchall()
         if result_list:
             result = {}
-            for count, value in enumerate(rows):
-                result[value] = result_list[0][count]
+            for count_row, row in enumerate(result_list):
+                for count, value in enumerate(columns):
+                    result[value] = result_list[count_row][count]
         else:
             result = None
         return result
