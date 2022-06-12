@@ -59,6 +59,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     db = database.DBCheaters(db_filename)
 
+    bend = backend.Backend({'type': 'sqlite', 'filename': db_filename})
+
     # Press 'Tell about cheater'
     @bot.on.message(
         StateRule(),
@@ -385,15 +387,22 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 if users_info:
                     cheater.vk_id = users_info[0].id
                     cheater.screen_name = users_info[0].screen_name
-                    # Проверяем на наличие подобной записи.
+                    # Проверяем на наличие подобной записи в БД.
                     if match.lastgroup == 'vk_id':
-                        db_cheater = db.get_cheater_full(vk_id=match[match.lastgroup])
+                        cheater_db = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
                     else:
-                        db_cheater = db.get_cheater_full(screen_name=match[match.lastgroup])
-                    if db_cheater:
-                        if (db_cheater.vk_id, db_cheater.screen_name) == (cheater.vk_id, cheater.screen_name):
-                            await message.answer('Уже есть чел с параметрами:\n' + repr(db_cheater))
-                # Если пользователя нет.
+                        cheater_db = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
+                    if cheater_db:
+                        # Если есть прямо такой же.
+                        if (cheater_db.vk_id, cheater_db.screen_name) == (cheater.vk_id, cheater.screen_name):
+                            await message.answer('Уже есть чел с параметрами:\n' + str(cheater_db))
+                        # Если что-то не совпало.
+                        else:
+                            bend.screen_name_is_changed(cheater_db.vk_id, cheater_db.screen_name)
+
+                # Если пользователя VK нет.
+                else:
+                    await message.answer('Такого id Вконтакте нет. Лучше возьми другой.')
 
 
             elif match.lastgroup in {'card', 'telephone'}:

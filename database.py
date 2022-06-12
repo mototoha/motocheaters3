@@ -4,6 +4,7 @@ Now work with sqlite3.
 """
 import os
 import sqlite3
+from typing import List, Optional
 
 import sql_requests
 from backend import Cheater
@@ -71,23 +72,29 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _construct_select(table: str, what_select: list, where_select: dict = None, operator: str = 'and') -> str:
+    def _construct_select(table: str,
+                          what_select: list,
+                          where_select: dict,
+                          operator: str = 'and'
+                          ) -> str:
         """
         Создаёт SELECT запрос.
         select {what_select} from {table} where {where_select} and/or {where_select}
 
         :param table: str
-        :param what_select: * or [list]
-        :param where_select: dict
+        :param what_select: * or [list of rows]
+        :param where_select: dict of where
         :param operator: and/or
         :return: SELECT str
         """
         result = 'SELECT '
-        # TODO Add *
-        for count, value in enumerate(what_select):
-            if count:
-                result += ', '
-            result += value
+        if what_select == '*':
+            result += what_select
+        else:
+            for count, value in enumerate(what_select):
+                if count:
+                    result += ', '
+                result += value
         result += ' from ' + table
         if where_select:
             result += ' where '
@@ -105,9 +112,15 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and'):
+    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> None:
         """
-        Construct update query. update {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
+        Construct update query.
+        UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
+
+        :param table: Таблица для апдейта.
+        :param set_params: Словарь параметров. set (param=value, param2=value2).
+        :param where_update: Условие апдейта. where (param=value, param2=value2).
+        :param operator: and или or
         """
         result = 'UPDATE {table} set '.format(table=table)
 
@@ -174,12 +187,19 @@ class DBCheaters:
         result = bool(self._cursor.fetchall())
         return result
 
-    def update_table(self, table, set_param, set_value, where_param, where_value):
+    def update_table(self, table, set_param, set_value, where: dict):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
+
+        :param table: Таблица, которую апдейтим.
+        :param set_param: Параметры, которые устанавливаем.
+        :param set_value: Значения параметров.
+        :param where: Словарь для условий where param=value.
         """
-        sql_query = self._construct_insert(table=table, values_dict={set_param: set_value})
+        sql_query = self._construct_update(table=table,
+                                           set_params={set_param: set_value},
+                                           where_update=where)
         self._cursor.execute(sql_query
                              )
         self._connection.commit()
@@ -379,7 +399,7 @@ class DBCheaters:
         if vk_id:
             db_result = self.get_dict_from_table(table='screen_names',
                                                  rows=['screen_name', 'vk_id'],
-                                                 condition_dict={'vk_id': vk_id})
+                                                 condition_dict={'vk_id': vk_id, 'changed': 'False'})
             if db_result:
                 result.vk_id = db_result['vk_id']
                 result.screen_name = db_result['screen_name']
