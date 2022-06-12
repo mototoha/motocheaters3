@@ -72,7 +72,7 @@ class DBCheaters:
     @staticmethod
     def _construct_select(table: str, what_select: list, where_select: dict = None, operator: str = 'and') -> str:
         """
-        Construct SELECT queue.
+        Создаёт SELECT запрос.
         select {what_select} from {table} where {where_select} and/or {where_select}
 
         :param table: str
@@ -293,9 +293,13 @@ class DBCheaters:
 
     def get_cheater_id(self, table: str, params: dict) -> str:
         """
-        Get cheater ID.
+        Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
+        vk_id есть во всех таблицах про кидал.
+        Словарь должен быть вида:
+        {параметр: значение}.
+        Найти в таблице table, где параметр=значение.
 
-        :return: ID / 0 if nothing
+        :return: ID или 0, если ничего не найдено.
         """
         sql_query = self._construct_select(
             table=table,

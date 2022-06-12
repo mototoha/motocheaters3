@@ -5,7 +5,7 @@ import re
 import requests
 import time
 from typing import List
-from dataclasses import dataclass, field
+
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -29,19 +29,6 @@ REGEXP_ADMIN = (
     r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     r'|(?P<fifty>50|fifty)'
 )
-
-
-@dataclass
-class Cheater:
-    """
-    Тип данных - кидала.
-    """
-    vk_id: str = None
-    fifty: bool = False
-    screen_name: str = None
-    telephone: List[str] = field(default_factory=list)
-    card: List[str] = field(default_factory=list)
-    proof_link: List[str] = field(default_factory=list)
 
 
 class DialogStates(BaseStateGroup):
