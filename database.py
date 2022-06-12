@@ -332,7 +332,8 @@ class DBCheaters:
             'fifty': Bool, default False
             'screen_name': str,
             'telephone': [str],
-            'card': [str]
+            'card': [str],
+            'proof_link': [str],
         }
 
         :param cheater: Dict

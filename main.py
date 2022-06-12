@@ -27,8 +27,6 @@ import vkbot
 def main():
     """
     Main function.
-
-    :return: None.
     """
 
     startup_parameters = startup.get_parameters_from_json()
@@ -45,7 +43,7 @@ def main():
 
 def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     """
-    Запускает бота. Ничего не возвращает.
+    Запускает бота.
 
     :param db_filename: имя файла БД.
     :param vk_token: Токен.
@@ -293,7 +291,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         group_info = await bot.api.groups.get_by_id()
         group_id = group_info[0].id
         members = await bot.api.groups.get_members(group_id=group_id)
-        answer_message = dialogs.spam_send + message.text + '\n' + str(members)
+        answer_message = dialogs.spam_send + message.text
         keyboard = vk_keyboards.get_keyboard(new_state)
         await bot.state_dispenser.set(message.from_id, new_state)
         await message.answer(
@@ -326,7 +324,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def add_cheater_to_db_handler(message: Message):
         """
-        Добавляем кидалу в БД.
+        Кнопка "Добавить".
         """
         cheater = message.state_peer.payload.get('cheater')
         if cheater:
@@ -374,7 +372,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = ''
         if match:
             if not cheater:
-                cheater = {}
+                cheater = vkbot.get_empty_cheater()
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
@@ -406,7 +404,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
         else:
             answer_message = dialogs.add_cheater_error_value
-            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
         await message.answer(
             message=answer_message,
         )

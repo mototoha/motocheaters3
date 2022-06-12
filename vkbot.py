@@ -5,6 +5,7 @@ import re
 import requests
 import time
 from typing import List
+from dataclasses import dataclass, field
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -14,20 +15,33 @@ import database
 import dialogs
 
 REGEXP_MAIN = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-        r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-    )
+    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
+    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
+)
 
 REGEXP_ADMIN = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
-        r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-        r'|(?P<fifty>50|fifty)'
+    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
+    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
+    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
+    r'|(?P<fifty>50|fifty)'
 )
+
+
+@dataclass
+class Cheater:
+    """
+    Тип данных - кидала.
+    """
+    vk_id: str = None
+    fifty: bool = False
+    screen_name: str = None
+    telephone: List[str] = field(default_factory=list)
+    card: List[str] = field(default_factory=list)
+    proof_link: List[str] = field(default_factory=list)
 
 
 class DialogStates(BaseStateGroup):
