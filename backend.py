@@ -115,38 +115,48 @@ class Backend:
         :return: объект Cheater или None, если ничего не нашел.
         """
         db_result = None
+        find_vk_id = None
+        if vk_id:
+            db_result = self.db.get_dict_from_table(table='screen_names',
+                                                    columns=['screen_name', 'vk_id'],
+                                                    condition_dict={'vk_id': vk_id, 'changed': 'False'})
         if screen_name:
             db_result = self.db.get_dict_from_table(table='screen_names',
                                                     columns=['screen_name', 'vk_id'],
                                                     condition_dict={'screen_name': screen_name, 'changed': 'False'})
         if db_result:
-            vk_id = db_result['vk_id']
+            find_vk_id = db_result['vk_id']
 
-        if vk_id:
+        if find_vk_id:
             result = Cheater()
-            result.vk_id = vk_id
+            result.vk_id = find_vk_id
 
             # TODO Сделать запрос через join'ы
             db_result = self.db.get_dict_from_table(table='vk_id',
                                                     columns=['vk_id', 'fifty'])
-            result.fifty = db_result[0]['fifty']
+            if db_result:
+                result.fifty = db_result[0]['fifty']
 
             db_result = self.db.get_dict_from_table(table='screen_names',
                                                     columns=['screen_name'],
                                                     condition_dict={'changed': 'False'})
-            result.screen_name = db_result[0]['screen_name']
+            if db_result:
+                result.screen_name = db_result[0]['screen_name']
 
             db_result = self.db.get_dict_from_table(table='telephones',
                                                     columns=['telephone'])
-            result.telephone = db_result['telephones']
+            if db_result:
+                result.telephone = db_result['telephones']
 
             db_result = self.db.get_dict_from_table(table='cards',
                                                     columns=['card'])
-            result.card = db_result['card']
+            if db_result:
+                result.card = db_result['card']
 
             db_result = self.db.get_dict_from_table(table='proof_links',
                                                     columns=['proof_link'])
-            result.card = db_result['proof_link']
+            if db_result:
+                result.card = db_result['proof_link']
         else:
             result = None
         return result
@@ -218,6 +228,8 @@ class Backend:
             cheater_update.card = list(set(cheater.card) - set(cheater_db.card))
             cheater_update.proof_link = list(set(cheater.proof_link) - set(cheater_db.proof_link))
 
+        if cheater_update.vk_id:
+            self.db.add_vk_id(cheater_update.vk_id, cheater.fifty)
         if cheater_update.screen_name:
             self.db.add_screen_name(cheater_update.screen_name, cheater.vk_id)
         if cheater_update.telephone:

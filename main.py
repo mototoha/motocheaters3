@@ -451,7 +451,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
             answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
             answer_message += '\n' + str(cheater) + '\n'
-            answer_message += 'В бзе уже есть:\n ' + str(cheater_db)
+            if cheater_db:
+                answer_message += 'В базе уже есть:\n ' + str(cheater_db)
             await bot.state_dispenser.set(message.from_id, message.state_peer.state,
                                           cheater=cheater,
                                           cheater_db=cheater_db)
