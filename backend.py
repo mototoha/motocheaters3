@@ -110,7 +110,7 @@ class Backend:
                 result = None
         return result
 
-    def screen_name_is_changed(self, vk_id: str, screen_name: str):
+    def screen_name_is_changed(self, vk_id: str, screen_name: str) -> None:
         """
         Изменяет параметр changed на True для screen_name в БД.
 
@@ -119,4 +119,36 @@ class Backend:
         """
         set_params = {'changed': 'True'}
         where = {'vk_id': vk_id, 'screen_name': screen_name}
-        self.db.update_table('screen_names', 'changed', 'True', 'vk_id',)
+        self.db.update_table('screen_names', {'changed': 'True'}, {'vk_id': vk_id, 'screen_name': screen_name})
+
+    def new_screen_name(self, vk_id: str, screen_name: str) -> None:
+        """
+        Метод записывает в БД новую строчку про screen_name.
+
+        :param vk_id: ID ВК.
+        :param screen_name: Имя ВК.
+        :return: ID ВК.
+        """
+        self.db.add_screen_name(screen_name=screen_name, vk_id=vk_id)
+
+    def check_existence(self, check_values: dict) -> bool:
+        """
+        Метод проверяет наличие записи в БД.
+        Берем первую пару. И ищем по соответствующей таблице.
+
+        :param check_values: Словарь 'что ищем': 'значение'
+        :return: Да или Нет.
+        """
+        if list(check_values.keys())[0] == 'vk_id':
+            table = 'vk_id'
+        elif list(check_values.keys())[0] == 'screen_name':
+            table = 'screen_names'
+        elif list(check_values.keys())[0] == 'telephone':
+            table = 'telephones'
+        elif list(check_values.keys())[0] == 'card':
+            table = 'cards'
+        elif list(check_values.keys())[0] == 'proof_link':
+            table = 'proof_links'
+        else:
+            return False
+        return self.db.check_the_existence(table, check_values)

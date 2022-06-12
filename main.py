@@ -398,8 +398,20 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                             await message.answer('Уже есть чел с параметрами:\n' + str(cheater_db))
                         # Если что-то не совпало.
                         else:
+                            # Записываем в БД, что имя менялось.
                             bend.screen_name_is_changed(cheater_db.vk_id, cheater_db.screen_name)
-
+                            if match.lastgroup == 'vk_id':
+                                # Если пользователь искал vk_id, а имя в БД и из API не совпало - записываем новое имя.
+                                bend.new_screen_name(cheater_db.vk_id, cheater.screen_name)
+                                cheater_db = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
+                            else:
+                                # Если пользователь искал screen_name, проверяем новый id.
+                                if bend.check_existence({'vk_id': cheater.vk_id}):
+                                    # Если он есть - добавляем новую строку screen_name.
+                                    bend.new_screen_name(cheater.vk_id, cheater.screen_name)
+                                    cheater_db = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
+                            await message.answer('Кидала старый - имя новое. Вот известный чел: \n'
+                                                 + str(cheater_db))
                 # Если пользователя VK нет.
                 else:
                     await message.answer('Такого id Вконтакте нет. Лучше возьми другой.')

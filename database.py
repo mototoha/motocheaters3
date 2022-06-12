@@ -179,8 +179,10 @@ class DBCheaters:
 
     def check_the_existence(self, table: str, parameter_list: dict) -> bool:
         """
-        Проверяем наличие vk_id.
+        Проверяем наличие ключа словаря в таблице table по условию ключ=значение.
 
+        :param table: таблица, где ищем.
+        :param parameter_list: Словарь со значениями.
         :return: True or False
         """
         sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
@@ -248,7 +250,7 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_screen_name(self, screen_name: str, vk_id=''):
+    def add_screen_name(self, screen_name: str, vk_id='', changed: bool = False):
         """
         Добавляем screen_name.
         """
@@ -257,6 +259,7 @@ class DBCheaters:
             values_dict={
                 'screen_name': screen_name,
                 'vk_id': vk_id,
+                'changed': str(changed)
             }
         )
         self._cursor.execute(sql_query)
