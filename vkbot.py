@@ -4,7 +4,7 @@ Classes for VKBot
 import re
 import requests
 import time
-import logging
+from typing import List
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -285,6 +285,13 @@ class VKBot(Bot):
             return True
         else:
             return False
+
+    def get_group_admins(self) -> List[str]:
+        """
+        Метод обращается к API VK и возвращает список админов группы.
+        :return: list[str]
+        """
+        pass
 
 
 if __name__ == '__main__':

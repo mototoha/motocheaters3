@@ -129,13 +129,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    # Telling about cheater
+    # Кнопка "Рассказать про кидалу"
     @bot.on.message(
         StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE)
     )
     async def cheater_story_handler(message: Message):
         """
-        Telling about cheater
+        Кнопка "Рассказать про кидалу".
         """
         users_info = await bot.api.users.get(message.from_id, fields=['screen_name'])
         await bot.state_dispenser.delete(message.peer_id)
