@@ -371,12 +371,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = ''
 
         # Ищем совпадение с регуляркой.
-        match = re.search(vkbot.REGEXP_ADMIN, message.text.replace(' ', ''))
+        match = re.match(vkbot.REGEXP_ADMIN, message.text.replace(' ', ''))
 
         # Есть совпадение.
         if match:
             if not cheater:
-                cheater = backend.Cheater
+                cheater = backend.Cheater()
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за соответствием vk_id и short_name
                 vk_id = match[match.lastgroup]
@@ -392,7 +392,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                         db_cheater = db.get_cheater_full(screen_name=match[match.lastgroup])
                     if db_cheater:
                         if (db_cheater.vk_id, db_cheater.screen_name) == (cheater.vk_id, cheater.screen_name):
-                            await message.answer('Уже есть чел с параметрами:\n' + str(db_cheater))
+                            await message.answer('Уже есть чел с параметрами:\n' + repr(db_cheater))
                 # Если пользователя нет.
 
 

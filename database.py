@@ -375,7 +375,7 @@ class DBCheaters:
         :param proof_link: ссылка на пруф
         :return: объект Cheater или None, если ничего не нашел.
         """
-        result = Cheater
+        result = Cheater()
         if vk_id:
             db_result = self.get_dict_from_table(table='screen_names',
                                                  rows=['screen_name', 'vk_id'],
