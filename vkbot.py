@@ -59,7 +59,6 @@ class VKBot(Bot):
     dialog_states = DialogStates
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
-        self.vk_token = vk_token
         self.db_filename = db_filename
         self.cheaters_filename = cheaters_filename
 

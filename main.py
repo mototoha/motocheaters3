@@ -4,7 +4,6 @@ python3 main.py [config_filename.json]
 """
 
 import re
-import logging
 
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
@@ -18,6 +17,7 @@ from vkbottle.dispatch.rules.base import (
 )
 
 import database
+import backend
 import startup
 import dialogs
 import vk_keyboards
@@ -376,16 +376,26 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         # Есть совпадение.
         if match:
             if not cheater:
-                cheater = vkbot.Cheater
+                cheater = backend.Cheater
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за соответствием vk_id и short_name
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
-                cheater.vk_id = users_info[0].id
-                cheater.screen_name = users_info[0].screen_name
-                # Проверяем на наличие подобной записи.
-                if db.get_cheater_full():
-                    pass
+
+                if users_info:
+                    cheater.vk_id = users_info[0].id
+                    cheater.screen_name = users_info[0].screen_name
+                    # Проверяем на наличие подобной записи.
+                    if match.lastgroup == 'vk_id':
+                        db_cheater = db.get_cheater_full(vk_id=match[match.lastgroup])
+                    else:
+                        db_cheater = db.get_cheater_full(screen_name=match[match.lastgroup])
+                    if db_cheater:
+                        if (db_cheater.vk_id, db_cheater.screen_name) == (cheater.vk_id, cheater.screen_name):
+                            await message.answer('Уже есть чел с параметрами:\n' + str(db_cheater))
+                # Если пользователя нет.
+
+
             elif match.lastgroup in {'card', 'telephone'}:
                 if cheater.get(match.lastgroup):
                     if match[match.lastgroup] in cheater[match.lastgroup]:
@@ -407,6 +417,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     forward_messages=message.id,
                     random_id=0,
                 )
+
             answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
             answer_message += '\n' + str(cheater)
             await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)

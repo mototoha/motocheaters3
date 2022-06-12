@@ -6,6 +6,7 @@ import os
 import sqlite3
 
 import sql_requests
+from backend import Cheater
 
 
 class DBCheaters:
@@ -314,8 +315,9 @@ class DBCheaters:
         """
         Возвращаем значения из таблицы.
         Из списка rows делаем словарь.
+        Выводит только одну строку.
 
-        :return: Dict of result sql or None.
+        :return: Словарь с результатами or None.
         """
         sql_query = self._construct_select(table=table, what_select=rows, where_select=condition_dict)
         self._cursor.execute(sql_query)
@@ -354,3 +356,33 @@ class DBCheaters:
             self.add_cards(cheater['card'])
         if cheater.get('proof_link'):
             self.add_proof_link(cheater['proof_link'], cheater['vk_id'])
+
+    def get_cheater_full(self,
+                         vk_id: str = None,
+                         screen_name: str = None,
+                         telephone: str = None,
+                         card: str = None,
+                         proof_link: str = None,
+                         ) -> Cheater:
+        """
+        Метод возвращает инфу про кидалу, которая есть в БД. На вход подаётся один из параметров.
+        Корректно работать будет только с одним параметром. Приоритет - по порядку в заголовке.
+
+        :param vk_id: id VK
+        :param screen_name: отображаемое имя
+        :param telephone: телефон
+        :param card: номер карты
+        :param proof_link: ссылка на пруф
+        :return: объект Cheater или None, если ничего не нашел.
+        """
+        result = Cheater
+        if vk_id:
+            db_result = self.get_dict_from_table(table='screen_names',
+                                                 rows=['screen_name', 'vk_id'],
+                                                 condition_dict={'vk_id': vk_id})
+            if db_result:
+                result.vk_id = db_result['vk_id']
+                result.screen_name = db_result['screen_name']
+            else:
+                result = None
+        return result
