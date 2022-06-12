@@ -280,7 +280,16 @@ class DBCheaters:
         :param proof_link: https://vk.com/wall-####
         :param vk_id:
         """
-        pass
+        sql_query = self._construct_insert(
+            table='proof_links',
+            values_dict={
+                'proof_link': proof_link,
+                'vk_id': vk_id,
+            }
+        )
+        self._cursor.execute(sql_query)
+        self._connection.commit()
+        return None
 
     def get_cheater_id(self, table: str, params: dict) -> str:
         """

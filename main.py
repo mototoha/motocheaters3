@@ -367,9 +367,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def add_cheater_params_handler(message: Message):
         """
-        Тут распарсится vk_id, screen_name, телефон, карта или 50.
+        Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
         """
-        match = re.search(vkbot.REGEXP_MAIN, message.text.replace(' ', ''))
+        match = re.search(vkbot.REGEXP_ADMIN, message.text.replace(' ', ''))
         cheater = message.state_peer.payload.get('cheater')
         answer_message = ''
         if match:
@@ -390,6 +390,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     cheater[match.lastgroup] = [match[match.lastgroup]]
             elif match.lastgroup == 'proof_link':
                 cheater['proof_link'] = match[match.lastgroup]
+            elif match.lastgroup == 'fifty':
+                cheater['fifty'] = not (bool(cheater.get('fifty')))
             else:
                 message_text = 'При добавлении кидалы распарсилось непонятно что:\n' + \
                     message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
@@ -400,14 +402,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     random_id=0,
                 )
             answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
-            answer_message += '\n' + str(cheater)
-            await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
-        elif message.text == '50':
-            if cheater.get('fifty') is None:
-                cheater['fifty'] = True
-            else:
-                cheater['fifty'] = not cheater['fifty']
-            answer_message = 'Полтинник'
             answer_message += '\n' + str(cheater)
             await bot.state_dispenser.set(message.from_id, message.state_peer.state, cheater=cheater)
         else:

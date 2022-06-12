@@ -26,6 +26,11 @@ create table cards(
   vk_id text,
   foreign key (vk_id) references vk_id(id)
 );
+create table proof_links(
+  pk integer primary key,
+  proof_link text,
+  vk_id text
+);
 
 create table admins(
   pk integer primary key,
