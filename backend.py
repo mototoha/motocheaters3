@@ -101,8 +101,8 @@ class Backend:
         result = Cheater()
         if vk_id:
             db_result = self.db.get_dict_from_table(table='screen_names',
-                                                 rows=['screen_name', 'vk_id'],
-                                                 condition_dict={'vk_id': vk_id, 'changed': 'False'})
+                                                    rows=['screen_name', 'vk_id'],
+                                                    condition_dict={'vk_id': vk_id, 'changed': 'False'})
             if db_result:
                 result.vk_id = db_result['vk_id']
                 result.screen_name = db_result['screen_name']
@@ -112,9 +112,11 @@ class Backend:
 
     def screen_name_is_changed(self, vk_id: str, screen_name: str):
         """
-        Изменяет параметр changed для screen_name в БД.
+        Изменяет параметр changed на True для screen_name в БД.
 
         :param vk_id: id, который поменял имя.
         :param screen_name: screen_name, который больше не используется.
         """
-        self.db.update_table('screen_names', 'changed', 'True', 'vk_id', cheater_db.vk_id)
+        set_params = {'changed': 'True'}
+        where = {'vk_id': vk_id, 'screen_name': screen_name}
+        self.db.update_table('screen_names', 'changed', 'True', 'vk_id',)

@@ -112,7 +112,7 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> None:
+    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
         """
         Construct update query.
         UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
@@ -121,6 +121,7 @@ class DBCheaters:
         :param set_params: Словарь параметров. set (param=value, param2=value2).
         :param where_update: Условие апдейта. where (param=value, param2=value2).
         :param operator: and или or
+        :return: SQL UPDATE
         """
         result = 'UPDATE {table} set '.format(table=table)
 
@@ -187,18 +188,17 @@ class DBCheaters:
         result = bool(self._cursor.fetchall())
         return result
 
-    def update_table(self, table, set_param, set_value, where: dict):
+    def update_table(self, table: str, set_params, where: dict):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
 
         :param table: Таблица, которую апдейтим.
-        :param set_param: Параметры, которые устанавливаем.
-        :param set_value: Значения параметров.
-        :param where: Словарь для условий where param=value.
+        :param set_params: Словарь параметров, которые устанавливаем set (param1=value1, param2=value2).
+        :param where: Словарь для условий where (param1=value1, param2=value2).
         """
         sql_query = self._construct_update(table=table,
-                                           set_params={set_param: set_value},
+                                           set_params=set_params,
                                            where_update=where)
         self._cursor.execute(sql_query
                              )
