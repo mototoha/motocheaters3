@@ -12,7 +12,7 @@ create table screen_names(
   pk integer primary key,
   screen_name text,
   vk_id text,
-  changed: bool
+  changed bool
 );
 create table telephones(
   pk integer primary key,

@@ -2,7 +2,10 @@
 Тут находится бекэнд проекта.
 """
 from dataclasses import dataclass, field, fields
-from typing import List
+from typing import (
+    Any,
+    List,
+)
 
 from database import DBCheaters
 
@@ -16,8 +19,9 @@ REGEXP_MAIN = (
 
 REGEXP_ADMIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link_user>wall\d*_\d*)'
     r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
     r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
     r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     r'|(?P<fifty>50|fifty)'
@@ -44,9 +48,9 @@ class Cheater:
     vk_id: str = None
     fifty: bool = False
     screen_name: str = None
-    telephones: List[str] = field(default_factory=list)
-    cards: List[str] = field(default_factory=list)
-    proof_links: List[str] = field(default_factory=list)
+    telephone: List[str] = field(default_factory=list)
+    card: List[str] = field(default_factory=list)
+    proof_link: List[str] = field(default_factory=list)
 
     def __str__(self):
         """
@@ -58,6 +62,18 @@ class Cheater:
         for f in fields(self):
             result[f.name] = self.__getattribute__(f.name)
         return str(result)
+
+    def get(self, value: str) -> Any:
+        """
+        Метод возвращает значение параметра Value кидалы.
+        Если спрашивают непонятно что - возвращает None.
+        :param value: Атрибут, который хочешь получить.
+        :return: Значение или None.
+        """
+        for f in fields(self):
+            if f.name == value:
+                return self.__getattribute__(f.name)
+        return None
 
 
 class Backend:
@@ -98,16 +114,22 @@ class Backend:
         :param proof_link: ссылка на пруф
         :return: объект Cheater или None, если ничего не нашел.
         """
-        result = Cheater()
+        db_result = None
         if vk_id:
             db_result = self.db.get_dict_from_table(table='screen_names',
                                                     rows=['screen_name', 'vk_id'],
                                                     condition_dict={'vk_id': vk_id, 'changed': 'False'})
-            if db_result:
-                result.vk_id = db_result['vk_id']
-                result.screen_name = db_result['screen_name']
-            else:
-                result = None
+        elif screen_name:
+            db_result = self.db.get_dict_from_table(table='screen_names',
+                                                    rows=['screen_name', 'vk_id'],
+                                                    condition_dict={'screen_name': screen_name, 'changed': 'False'})
+        if db_result:
+            result = Cheater(
+                vk_id=db_result['vk_id'],
+                screen_name=db_result['screen_name']
+            )
+        else:
+            result = None
         return result
 
     def screen_name_is_changed(self, vk_id: str, screen_name: str) -> None:

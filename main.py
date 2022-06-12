@@ -373,18 +373,23 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = ''
 
         # Ищем совпадение с регуляркой.
-        match = re.match(vkbot.REGEXP_ADMIN, message.text.replace(' ', ''))
+        match = re.match(backend.REGEXP_ADMIN, message.text.replace(' ', ''))
 
         # Есть совпадение.
         if match:
             if not cheater:
                 cheater = backend.Cheater()
+
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за соответствием vk_id и short_name
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
-
-                if users_info:
+                # Если пользователя VK нет.
+                if not users_info:
+                    await message.answer(dialogs.add_cheater_no_id)
+                elif users_info[0].deactivated:
+                    await message.answer(dialogs.add_cheater_id_delete)
+                else:
                     cheater.vk_id = users_info[0].id
                     cheater.screen_name = users_info[0].screen_name
                     # Проверяем на наличие подобной записи в БД.
@@ -395,7 +400,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     if cheater_db:
                         # Если есть прямо такой же.
                         if (cheater_db.vk_id, cheater_db.screen_name) == (cheater.vk_id, cheater.screen_name):
-                            await message.answer('Уже есть чел с параметрами:\n' + str(cheater_db))
+                            await message.answer(dialogs.add_cheater_id_exist + str(cheater_db))
                         # Если что-то не совпало.
                         else:
                             # Записываем в БД, что имя менялось.
@@ -410,28 +415,26 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                                     # Если он есть - добавляем новую строку screen_name.
                                     bend.new_screen_name(cheater.vk_id, cheater.screen_name)
                                     cheater_db = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
-                            await message.answer('Кидала старый - имя новое. Вот известный чел: \n'
-                                                 + str(cheater_db))
-                # Если пользователя VK нет.
-                else:
-                    await message.answer('Такого id Вконтакте нет. Лучше возьми другой.')
+                            await message.answer(dialogs.add_cheater_new_screen_name + str(cheater_db))
 
-
-            elif match.lastgroup in {'card', 'telephone'}:
-                if cheater.get(match.lastgroup):
-                    if match[match.lastgroup] in cheater[match.lastgroup]:
+            elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
+                # Список значений 'card', 'telephone' или 'proof_link'
+                list_values = cheater.get(match.lastgroup)
+                if list_values:
+                    if match[match.lastgroup] in list_values:
                         answer_message += 'Такой параметр ' + match.lastgroup + ' уже есть!\n'
                     else:
-                        cheater[match.lastgroup].append(match[match.lastgroup])
+                        list_values.append(match[match.lastgroup])
                 else:
-                    cheater[match.lastgroup] = [match[match.lastgroup]]
-            elif match.lastgroup == 'proof_link':
-                cheater['proof_link'] = match[match.lastgroup]
+                    list_values = [match[match.lastgroup]]
+                cheater.__setattr__(match.lastgroup, list_values)
             elif match.lastgroup == 'fifty':
-                cheater['fifty'] = not (bool(cheater.get('fifty')))
+                cheater.fifty = not cheater.fifty
+            elif match.lastgroup == 'proof_link_user':
+                await message.answer('Ссылки на стены пользователей не публикуются. Их могут удалить в любой момент.')
             else:
                 message_text = 'При добавлении кидалы распарсилось непонятно что:\n' + \
-                    message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
+                               message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
                 await bot.api.messages.send(
                     message=message_text,
                     user_ids=bot.vk_admin_id,
@@ -530,5 +533,6 @@ if __name__ == '__main__':
     main()
 
 # Global TO DO
+# TODO Сделать контроль полей БД при запуске
 # TODO Рассылка (пока только заготовка)
 # TODO Удалить запись из БД
