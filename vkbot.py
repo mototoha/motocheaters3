@@ -45,10 +45,7 @@ class AdminStates(BaseStateGroup):
     MAIN = 'admin'
     SPAM = 'admin_spam'
     ADD_CHEATER = 'add_cheater'
-    ADD_CHEATER_ID = 'add_cheater_id'
-    ADD_CHEATER_TEL = 'add_cheater_tel'
-    ADD_CHEATER_CARD = 'add_cheater_card'
-    ADMIN_DEL_CHEATER = 'del_cheater'
+    DEL_CHEATER = 'del_cheater'
 
 
 class VKBot(Bot):

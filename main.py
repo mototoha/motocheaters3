@@ -321,6 +321,24 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
+        StateRule(vkbot.AdminStates.MAIN),
+        PayloadRule({"admin": "del_cheater"}),
+    )
+    async def add_cheater_handler(message: Message):
+        """
+        Админ меню. Кнопка "Удалить кидалу".
+        """
+        new_state = vkbot.AdminStates.DEL_CHEATER
+        await bot.state_dispenser.set(message.peer_id, new_state)
+        answer_message = dialogs.del_cheater_id
+        keyboard = vk_keyboards.get_keyboard(new_state)
+        await message.answer(
+            message=answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
         PayloadRule({"admin": "add"}),
     )
@@ -356,7 +374,25 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def return_from_add_cheater_handler(message: Message):
         """
-        Админ меню. Передумал добавлять кидалу.
+        Добавление кидалы. Передумал добавлять кидалу.
+        """
+        new_state = vkbot.AdminStates.MAIN
+        await bot.state_dispenser.set(message.peer_id, new_state)
+        answer_message = dialogs.admin_menu
+        keyboard = vk_keyboards.get_keyboard(new_state)
+        await message.answer(
+            message=answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
+        StateRule(vkbot.AdminStates.DEL_CHEATER),
+        PayloadRule({"admin": "main"}),
+    )
+    async def return_from_add_cheater_handler(message: Message):
+        """
+        Удаление кидалы. Передумал добавлять кидалу.
         """
         new_state = vkbot.AdminStates.MAIN
         await bot.state_dispenser.set(message.peer_id, new_state)

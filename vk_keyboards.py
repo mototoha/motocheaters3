@@ -44,6 +44,11 @@ def get_keyboard(menu_level: DialogStates = None, is_admin: bool = False) -> str
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
 
+    elif menu_level == AdminStates.DEL_CHEATER:
+        keyboard = Keyboard(one_time=False, inline=False)
+        keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
+                     color=KeyboardButtonColor.NEGATIVE)
+
     else:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Рассказать про кидалу", payload='{"main": "tell_about_cheater"}'),
