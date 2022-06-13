@@ -438,10 +438,41 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         FromPeerRule(bot.vk_admin_id),
+        StateRule(vkbot.AdminStates.DEL_CHEATER),
+    )
+    async def admin_del_cheater_text_handler(message: Message):
+        """
+        Удаление кидалы. Парсим текст для удаления.
+        """
+        # Парсим строчку.
+        match = re.search(backend.get_regexp('del'), message.text)
+        if match:
+            if match.lastgroup in ('vk_id', 'screen_name'):
+                if match.lastgroup == 'vk_id':
+                    cheater_info = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
+                else:
+                    cheater_info = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
+            elif match.lastgroup in ('telephone', 'card', 'proof_link'):
+                pass
+        else:
+            return dialogs.del_cheater_error_value
+
+        new_state = vkbot.AdminStates.MAIN
+        await bot.state_dispenser.set(message.peer_id, new_state)
+        answer_message = dialogs.del_success
+        keyboard = vk_keyboards.get_keyboard(new_state)
+        await message.answer(
+            message=answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
     )
     async def admin_add_cheater_params_handler(message: Message):
         """
+        Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
         """
         cheater = message.state_peer.payload.get('cheater')
@@ -532,7 +563,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             message=answer_message,
         )
 
-    @bot.on.message(StateGroupRule(vkbot.AdminStates))
+    @bot.on.message(StateGroupRule(vkbot.AdminStates.MAIN))
     async def admin_common_message_handler():
         """
         Любая другая хрень в админском меню.

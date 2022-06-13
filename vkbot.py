@@ -52,16 +52,13 @@ class VKBot(Bot):
     """
     Main bot class.
     """
-
     dialog_states = DialogStates
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
-        self.db_filename = db_filename
-        self.cheaters_filename = cheaters_filename
-
         super().__init__(vk_token)
         self.labeler.vbml_ignore_case = True
-
+        self.db_filename = db_filename
+        self.cheaters_filename = cheaters_filename
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
