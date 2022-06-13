@@ -43,7 +43,7 @@ def get_regexp(*args) -> str:
     которые надо использовать. Если ничего не передали - берется все.\n
     Можно передать ключевые слова:\n
     all -все;\n
-    main - vk_id, screen_name, card, telephone;\n
+    main, search - vk_id, screen_name, card, telephone;\n
     add - vk_id, screen_name, card, telephone, proof_link, fifty;\n
     del - vk_id, screen_name, card, telephone, proof_link.
 
@@ -51,17 +51,17 @@ def get_regexp(*args) -> str:
     Если сначала идут ключевые слова - остальное игнорируется.\n
     Если идут группы - ключевые слова игнорируются.
 
-    :param *args: Указываем параметры, которые хотим парсить регуляркой.
+    :param args: Указываем параметры, которые хотим парсить регуляркой.
     :return: Регулярка.
     """
     result = ''
     # Группы регулярок.
     regexp_group_list = tuple(REGEXP_CHEATER.keys())
     # Запрошенные группы регулярок.
-    request_group_list = tuple()
+    request_group_list: tuple
     if args[0] == 'all':
         request_group_list = tuple(REGEXP_CHEATER.keys())
-    elif args[0] == 'main':
+    elif args[0] in ('main', 'search'):
         request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone'])
     elif args[0] == 'add':
         request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone', 'proof_link', 'fifty'])

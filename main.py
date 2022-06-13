@@ -213,7 +213,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
-        match = re.match(vkbot.REGEXP_MAIN, message.text.lower().lstrip('+').replace(' ', ''))
+        match = re.search(backend.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         if result_check:  # found
             answer_message = dialogs.is_cheater
@@ -563,7 +563,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             message=answer_message,
         )
 
-    @bot.on.message(StateGroupRule(vkbot.AdminStates.MAIN))
+    @bot.on.message(StateGroupRule(vkbot.AdminStates))
     async def admin_common_message_handler():
         """
         Любая другая хрень в админском меню.
