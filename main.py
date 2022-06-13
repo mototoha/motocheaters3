@@ -322,10 +322,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Начало рассылки всем членам группы.
         """
         new_state = vkbot.AdminStates.MAIN
-        group_info = await bot.api.groups.get_by_id()
-        group_id = group_info[0].id
-        # Выбираем всех пользователей.
-        members = await bot.api.groups.get_members(group_id=group_id)
+        # Выбираем всех пользователей. Я знаю, что комментировать код - плохо.
+        # Пока эта тема не в приоритете.
+        # group_info = await bot.api.groups.get_by_id()
+        # group_id = group_info[0].id
+        # members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = dialogs.spam_send + message.text
         keyboard = vk_keyboards.get_keyboard(new_state)
         await bot.state_dispenser.set(message.from_id, new_state)
@@ -447,13 +448,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         # Парсим строчку.
         match = re.search(backend.get_regexp('del'), message.text)
         if match:
-            if match.lastgroup in ('vk_id', 'screen_name'):
-                if match.lastgroup == 'vk_id':
-                    cheater_info = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
-                else:
-                    cheater_info = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
-            elif match.lastgroup in ('telephone', 'card', 'proof_link'):
-                pass
+            # TODO Удаление кидалы.
+            pass
         else:
             return dialogs.del_cheater_error_value
 
