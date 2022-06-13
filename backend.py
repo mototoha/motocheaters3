@@ -213,7 +213,7 @@ class Backend:
         :param cheater_db:  Что найдено в БД.
         :return : Что добавлено в читерах.
         """
-        cheater_update = Cheater()
+        cheater_update = Cheater()  # Что добавлять в БД.
         if not cheater_db:
             cheater_update = cheater
         else:
