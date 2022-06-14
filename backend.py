@@ -241,13 +241,18 @@ class Backend:
     def check_existence(self, check_values: dict) -> bool:
         """
         Метод проверяет наличие записи в БД.
-        Берем первую пару. И ищем по соответствующей таблице.
+        Берем первую пару. И ищем по соответствующей таблице.\n
+        'vk_id' -> 'vk_ids'\n
+        'screen_name' -> 'screen_names'\n
+        telephone' -> 'telephones'\n
+        'card' -> 'cards'\n
+        'proof_link' -> 'proof_links'\n
 
         :param check_values: Словарь 'что ищем': 'значение'
         :return: Да или Нет.
         """
         if list(check_values.keys())[0] == 'vk_id':
-            table = 'vk_id'
+            table = 'vk_ids'
         elif list(check_values.keys())[0] == 'screen_name':
             table = 'screen_names'
         elif list(check_values.keys())[0] == 'telephone':
