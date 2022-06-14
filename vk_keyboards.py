@@ -39,7 +39,14 @@ def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> s
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
 
-    elif menu_level == AdminStates.ADD_CHEATER_ID:
+    elif menu_level == AdminStates.ADD_CHEATER:
+        keyboard = Keyboard(one_time=False, inline=False)
+        keyboard.add(Text("Добавить", payload='{"admin": "add"}'),
+                     color=KeyboardButtonColor.POSITIVE)
+        keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
+                     color=KeyboardButtonColor.NEGATIVE)
+
+    elif menu_level == AdminStates.DEL_CHEATER:
         keyboard = Keyboard(one_time=False, inline=False)
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)

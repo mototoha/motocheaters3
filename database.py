@@ -4,6 +4,7 @@ Now work with sqlite3.
 """
 import os
 import sqlite3
+from typing import List
 
 import sql_requests
 
@@ -70,23 +71,29 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _construct_select(table: str, what_select: list, where_select: dict = None, operator: str = 'and') -> str:
+    def _construct_select(table: str,
+                          what_select: list,
+                          where_select: dict = None,
+                          operator: str = 'and'
+                          ) -> str:
         """
-        Construct SELECT queue.
+        Создаёт SELECT запрос.
         select {what_select} from {table} where {where_select} and/or {where_select}
 
         :param table: str
-        :param what_select: * or [list]
-        :param where_select: dict
+        :param what_select: * or [list of rows]
+        :param where_select: dict of where
         :param operator: and/or
         :return: SELECT str
         """
         result = 'SELECT '
-        # TODO Add *
-        for count, value in enumerate(what_select):
-            if count:
-                result += ', '
-            result += value
+        if what_select == '*':
+            result += what_select
+        else:
+            for count, value in enumerate(what_select):
+                if count:
+                    result += ', '
+                result += value
         result += ' from ' + table
         if where_select:
             result += ' where '
@@ -104,9 +111,16 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and'):
+    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
         """
-        Construct update query. update {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
+        Construct update query.
+        UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
+
+        :param table: Таблица для апдейта.
+        :param set_params: Словарь параметров. set (param=value, param2=value2).
+        :param where_update: Условие апдейта. where (param=value, param2=value2).
+        :param operator: and или or
+        :return: SQL UPDATE
         """
         result = 'UPDATE {table} set '.format(table=table)
 
@@ -164,8 +178,10 @@ class DBCheaters:
 
     def check_the_existence(self, table: str, parameter_list: dict) -> bool:
         """
-        Проверяем наличие vk_id.
+        Проверяем наличие ключа словаря в таблице table по условию ключ=значение.
 
+        :param table: таблица, где ищем.
+        :param parameter_list: Словарь со значениями.
         :return: True or False
         """
         sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
@@ -173,12 +189,18 @@ class DBCheaters:
         result = bool(self._cursor.fetchall())
         return result
 
-    def update_table(self, table, set_param, set_value, where_param, where_value):
+    def update_table(self, table: str, set_params, where: dict):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
+
+        :param table: Таблица, которую апдейтим.
+        :param set_params: Словарь параметров, которые устанавливаем set (param1=value1, param2=value2).
+        :param where: Словарь для условий where (param1=value1, param2=value2).
         """
-        sql_query = self._construct_insert(table=table, values_dict={set_param: set_value})
+        sql_query = self._construct_update(table=table,
+                                           set_params=set_params,
+                                           where_update=where)
         self._cursor.execute(sql_query
                              )
         self._connection.commit()
@@ -212,7 +234,7 @@ class DBCheaters:
         """
         pass
 
-    def add_cheater(self, vk_id: str, fifty: bool = True):
+    def add_vk_id(self, vk_id: str, fifty: bool = False):
         """
         Добавляем нового кидалу.
         """
@@ -227,15 +249,16 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def add_shortname(self, shortname: str, vk_id=''):
+    def add_screen_name(self, screen_name: str, vk_id='', changed: bool = False):
         """
-        Добавляем shortname.
+        Добавляем screen_name.
         """
         sql_query = self._construct_insert(
-            table='shortnames',
+            table='screen_names',
             values_dict={
-                'shortname': shortname,
+                'screen_name': screen_name,
                 'vk_id': vk_id,
+                'changed': str(changed)
             }
         )
         self._cursor.execute(sql_query)
@@ -274,11 +297,34 @@ class DBCheaters:
         self._connection.commit()
         return None
 
+    def add_proof_links(self, proof_links: List[str], vk_id: str) -> None:
+        """
+        Добавляет в БД пруфлинк на кидалу.
+
+        :param proof_links: Список ссылок https://vk.com/wall-####.
+        :param vk_id: На кого ссылается.
+        """
+        for link in proof_links:
+            sql_query = self._construct_insert(
+                table='proof_links',
+                values_dict={
+                    'proof_link': proof_link,
+                    'vk_id': vk_id,
+                }
+            )
+            self._cursor.execute(sql_query)
+        self._connection.commit()
+        return None
+
     def get_cheater_id(self, table: str, params: dict) -> str:
         """
-        Get cheater ID.
+        Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
+        vk_id есть во всех таблицах про кидал.
+        Словарь должен быть вида:
+        {параметр: значение}.
+        Найти в таблице table, где параметр=значение.
 
-        :return: ID / 0 if nothing
+        :return: ID или 0, если ничего не найдено.
         """
         sql_query = self._construct_select(
             table=table,
@@ -289,20 +335,49 @@ class DBCheaters:
         result = self._cursor.fetchone()
         return result
 
-    def get_dict_from_table(self, table: str, rows: list, condition_dict: dict) -> dict:
+    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> dict:
         """
         Возвращаем значения из таблицы.
         Из списка rows делаем словарь.
+        Выводит только одну строку.
 
-        :return: Dict of result sql or None.
+        :return: Список словарей с результатами or None.
         """
-        sql_query = self._construct_select(table=table, what_select=rows, where_select=condition_dict)
+        sql_query = self._construct_select(table=table, what_select=columns, where_select=condition_dict)
         self._cursor.execute(sql_query)
         result_list = self._cursor.fetchall()
         if result_list:
             result = {}
-            for count, value in enumerate(rows):
-                result[value] = result_list[0][count]
+            for count_row, row in enumerate(result_list):
+                for count, value in enumerate(columns):
+                    result[value] = result_list[count_row][count]
         else:
             result = None
         return result
+
+    def add_cheater(self, cheater: dict) -> None:
+        """
+        Метод добавляет кидалу в БД. На вход должен придти словарь с кидалой:
+        cheater = {
+            'vk_id': str,
+            'fifty': Bool, default False
+            'screen_name': str,
+            'telephone': [str],
+            'card': [str],
+            'proof_link': [str],
+        }
+
+        :param cheater: Dict
+        """
+        if cheater.get('vk_id'):
+            if not cheater.get('fifty'):
+                cheater['fifty'] = False
+            self.add_vk_id(cheater['vk_id'], cheater['fifty'])
+        if cheater.get('screen_name'):
+            self.add_screen_name(cheater['screen_name'], cheater['vk_id'])
+        if cheater.get('telephone'):
+            self.add_telephones(cheater['telephone'])
+        if cheater.get('card'):
+            self.add_cards(cheater['card'])
+        if cheater.get('proof_link'):
+            self.add_proof_link(cheater['proof_link'], cheater['vk_id'])

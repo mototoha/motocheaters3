@@ -4,7 +4,6 @@ Methods for getting startup parameters.
 """
 import pathlib
 import json
-import logging
 
 config_json = 'config.json'
 

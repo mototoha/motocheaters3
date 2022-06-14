@@ -4,7 +4,8 @@ Classes for VKBot
 import re
 import requests
 import time
-import logging
+from typing import List
+
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -13,17 +14,28 @@ from vkbottle.exception_factory import VKAPIError
 import database
 import dialogs
 
+REGEXP_MAIN = (
+    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
+    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
+)
+
+REGEXP_ADMIN = (
+    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
+    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
+    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
+    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
+    r'|(?P<fifty>50|fifty)'
+)
+
 
 class DialogStates(BaseStateGroup):
     """
     Уровни диалога.
     """
-    MAIN_STATE = 'main'
     TELL_ABOUT_CHEATER_STATE = 'tell_about_cheater'
-    ADMIN_MENU_STATE = 'admin'
-    ADMIN_SPAM_STATE = 'admin_spam'
-    ADMIN_ADD_CHEATER = 'add_cheater'
-    ADMIN_DEL_CHEATER = 'del_cheater'
 
 
 class AdminStates(BaseStateGroup):
@@ -33,39 +45,20 @@ class AdminStates(BaseStateGroup):
     MAIN = 'admin'
     SPAM = 'admin_spam'
     ADD_CHEATER = 'add_cheater'
-    ADD_CHEATER_ID = 'add_cheater_id'
-    ADD_CHEATER_TEL = 'add_cheater_tel'
-    ADD_CHEATER_CARD = 'add_cheater_card'
-    ADMIN_DEL_CHEATER = 'del_cheater'
-
-
-class IsModerator(BaseStateGroup):
-    """
-    Маркер модератора. Может получать сообщения о кидалах.
-    """
-    NOT_MODERATOR = 0
-    MODERATOR = 1
+    DEL_CHEATER = 'del_cheater'
 
 
 class VKBot(Bot):
     """
     Main bot class.
     """
-    regexp_main = (
-        r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-        r'|((https://|http://)?(m\.)?vk.com/){1}(?P<shortname>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-        r'|(?P<card>\d{16}(\s\n)?)'
-        r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-    )
+    dialog_states = DialogStates
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
-        self.vk_token = vk_token
-        self.db_filename = db_filename
-        self.cheaters_filename = cheaters_filename
-
         super().__init__(vk_token)
         self.labeler.vbml_ignore_case = True
-
+        self.db_filename = db_filename
+        self.cheaters_filename = cheaters_filename
         self.db = database.DBCheaters(self.db_filename)
         self.vk_admin_id = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
@@ -96,7 +89,7 @@ class VKBot(Bot):
         """
         # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
-        cheater = {'vk_id': '', 'fifty': fifty, 'shortname': '', 'telephone': [], 'card': []}  # Запись про кидалу
+        cheater = {'vk_id': '', 'fifty': fifty, 'screen_name': '', 'telephone': [], 'card': []}  # Запись про кидалу
         cheaters_list = []  # Список кидал
         for line in content.split('\n'):
             print('Строка : \n', line)
@@ -105,17 +98,17 @@ class VKBot(Bot):
             else:
                 # Если это не vk_id, все символы в строке делаем слитно, надеясь, что получится последовательность цифр.
                 subline = re.sub(r'[- +\r]', '', str(line))
-            match = re.search(self.regexp_main, subline)
+            match = re.search(REGEXP_MAIN, subline)
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
-                if match.lastgroup in ['vk_id', 'shortname']:
-                    if cheater.get('vk_id') or cheater.get('shortname'):
+                if match.lastgroup in ['vk_id', 'screen_name']:
+                    if cheater.get('vk_id') or cheater.get('screen_name'):
                         # Запись добавляется в список, когда встречается следующая запись про кидалу.
                         # Сделано, чтобы можно было добавлять телефоны и карты конкретного кидалы.
                         # Последняя запись добавляется после цикла.
                         print('Добавляю кидалу в список. \n', cheater)
                         cheaters_list.append(cheater)
-                        cheater = {'vk_id': '', 'fifty': fifty, 'shortname': '', 'telephone': [], 'card': []}
+                        cheater = {'vk_id': '', 'fifty': fifty, 'screen_name': '', 'telephone': [], 'card': []}
                     if match.lastgroup == 'vk_id':
                         # Если это vk_id - добавляем id в cheater.
                         cheater['vk_id'] = match[match.lastgroup]
@@ -130,9 +123,9 @@ class VKBot(Bot):
                             return "VKAPIError_6 Слишком много запросов, повтори через полчаса"
                         if user:
                             if user[0].screen_name != cheater['vk_id']:
-                                cheater['shortname'] = user[0].screen_name
-                    elif match.lastgroup == 'shortname':
-                        # Если имя - ищем vk_id и добавляем id и shortname в cheater.
+                                cheater['screen_name'] = user[0].screen_name
+                    elif match.lastgroup == 'screen_name':
+                        # Если имя - ищем vk_id и добавляем id и screen_name в cheater.
                         user = None
                         group = None
                         try:
@@ -146,7 +139,7 @@ class VKBot(Bot):
                         if user:
                             cheater['vk_id'] = 'id' + str(user[0].id)
                             if user[0].screen_name != cheater['vk_id']:
-                                cheater['shortname'] = user[0].screen_name
+                                cheater['screen_name'] = user[0].screen_name
                         else:
                             try:
                                 group = await self.api.groups.get_by_id(group_id=match[match.lastgroup],
@@ -162,9 +155,9 @@ class VKBot(Bot):
                                 else:
                                     group_type = 'club'
                                 cheater['vk_id'] = group_type + str(group[0].id)
-                                # VK_API возвращает shortname=vk_id, если имени нет.
+                                # VK_API возвращает screen_name=vk_id, если имени нет.
                                 if group[0].screen_name != cheater['vk_id']:
-                                    cheater['shortname'] = group[0].screen_name
+                                    cheater['screen_name'] = group[0].screen_name
                             except VKAPIError[100]:
                                 print('Группа', match[match.lastgroup], 'не найдена')
                             except VKAPIError[6]:
@@ -207,29 +200,29 @@ class VKBot(Bot):
                                                         {'vk_id': cheater['vk_id']})
                 if db_record:
                     print('Такой vk_id есть!')
-                    if db_record['fifty'] != cheater['fifty']:
+                    if db_record[0]['fifty'] != cheater['fifty']:
                         print('Поменялся fifty на', cheater['fifty'])
-                        self.db.update_table('vk_id', 'fifty', cheater['fifty'], 'vk_id', cheater['vk_id'])
+                        self.db.update_table('vk_id', {'fifty': cheater['fifty']}, {'vk_id': cheater['vk_id']})
                 else:
                     print('Добавляю кидалу')
-                    self.db.add_cheater(cheater['vk_id'], cheater['fifty'])
+                    self.db.add_vk_id(cheater['vk_id'], cheater['fifty'])
 
-            if cheater['shortname']:
-                if self.db.check_the_existence('shortnames',
-                                               {'shortname': cheater['shortname'],
+            if cheater['screen_name']:
+                if self.db.check_the_existence('screen_names',
+                                               {'screen_name': cheater['screen_name'],
                                                 'vk_id': cheater['vk_id']
                                                 }
                                                ):
-                    print('Такой shortname-id есть!')
+                    print('Такой screen_name-id есть!')
                 else:
-                    print('Добавляем новый shortname-id')
-                    self.db.add_shortname(cheater['shortname'], cheater['vk_id'])
+                    print('Добавляем новый screen_name-id')
+                    self.db.add_screen_name(cheater['screen_name'], cheater['vk_id'])
 
             if cheater['telephone']:
                 if cheater['vk_id']:
                     id_tel = cheater['vk_id']
-                elif cheater['shortname']:
-                    id_tel = cheater['shortname']
+                elif cheater['screen_name']:
+                    id_tel = cheater['screen_name']
                 else:
                     id_tel = None
                 for tel in cheater['telephone']:
@@ -242,8 +235,8 @@ class VKBot(Bot):
             if cheater['card']:
                 if cheater['vk_id']:
                     id_card = cheater['vk_id']
-                elif cheater['shortname']:
-                    id_card = cheater['shortname']
+                elif cheater['screen_name']:
+                    id_card = cheater['screen_name']
                 else:
                     id_card = None
                 for card in cheater['card']:
@@ -264,8 +257,8 @@ class VKBot(Bot):
         """
         if parameter == 'vk_id':
             check_result = self.db.get_cheater_id('vk_id', {parameter: value})
-        elif parameter == 'shortname':
-            check_result = self.db.get_cheater_id('shortnames', {parameter: value})
+        elif parameter == 'screen_name':
+            check_result = self.db.get_cheater_id('screen_names', {parameter: value})
         elif parameter == 'card':
             check_result = self.db.get_cheater_id('cards', {parameter: value})
         elif parameter == 'telephone':
@@ -287,6 +280,13 @@ class VKBot(Bot):
             return True
         else:
             return False
+
+    def get_group_admins(self) -> List[str]:
+        """
+        Метод обращается к API VK и возвращает список админов группы.
+        :return: list[str]
+        """
+        pass
 
 
 if __name__ == '__main__':
