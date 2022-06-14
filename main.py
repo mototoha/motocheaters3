@@ -496,13 +496,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     cheater.vk_id = users_info[0].id
                     cheater.screen_name = users_info[0].screen_name
                     # Проверяем на наличие подобной записи в БД.
-                    if match.lastgroup == 'vk_id':
-                        cheater_db = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
-                    else:
-                        cheater_db = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
-                    if cheater_db:
+                    db_result = bend.get_id_screen_name(match.lastgroup, match[match.lastgroup])
+                    if db_result:
                         # Если есть прямо такой же.
-                        if (cheater_db.vk_id, cheater_db.screen_name) == (cheater.vk_id, cheater.screen_name):
+                        if (vk_id, cheater_db.screen_name) == (cheater.vk_id, cheater.screen_name):
                             await message.answer(dialogs.add_cheater_id_exist + str(cheater_db))
                         # Если что-то не совпало.
                         else:

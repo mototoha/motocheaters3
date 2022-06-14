@@ -304,13 +304,15 @@ class Backend:
 
         :param param: str 'vk_id' или 'screen_name'
         :param value: id '1231231' или screen_name 'sample'
-        :return: {'id': 'screen_name'}
+        :return: {'id': '', 'screen_name': ''}
         """
         result = {}
         if param in ('vk_id', 'screen_name'):
             sql = self.db.get_dict_from_table('screen_names',
-                                                     ['screen_name', 'vk_id'],
-                                                     {param: value, 'changed': False})
+                                              ['screen_name', 'vk_id'],
+                                              {param: value, 'changed': False})
             if sql:
-                result = next(iter(sql))
+                # На всякий случай, если вернется несколько строк из БД.
+                result['vk_id'] = sql[0][1]
+                result['screen_name'] = sql[0][0]
         return result
