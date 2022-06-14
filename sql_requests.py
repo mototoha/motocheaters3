@@ -3,11 +3,11 @@ Contains sql requests templates.
 """
 
 create_tables = """
-create table vk_id(
+create table vk_ids(
   pk integer primary key,
   vk_id text,
   fifty bool
-  );
+);
 create table screen_names(
   pk integer primary key,
   screen_name text,

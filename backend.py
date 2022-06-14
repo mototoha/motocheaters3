@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, fields
 from typing import (
     Any,
     List,
+    Optional,
 )
 
 from database import DBCheaters
@@ -156,7 +157,7 @@ class Backend:
                               proof_link: str = None,
                               ) -> Cheater:
         """
-        Метод возвращает инфу про кидалу, которая есть в БД. На вход подаётся один из параметров.
+        Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаётся один из параметров.
         Корректно работать будет только с одним параметром. Приоритет - по порядку в заголовке.
 
         :param vk_id: id VK
@@ -166,13 +167,16 @@ class Backend:
         :param proof_link: ссылка на пруф
         :return: объект Cheater или None, если ничего не нашел.
         """
+        result = Cheater()
         db_result = None
         find_vk_id = None
         if vk_id:
+            # Если передали vk_id - обращаемся к БД за остальными параметрами.
+            # Проверяем fifty.
             db_result = self.db.get_dict_from_table(table='screen_names',
                                                     columns=['screen_name', 'vk_id'],
                                                     condition_dict={'vk_id': vk_id, 'changed': 'False'})
-        if screen_name:
+        elif screen_name:
             db_result = self.db.get_dict_from_table(table='screen_names',
                                                     columns=['screen_name', 'vk_id'],
                                                     condition_dict={'screen_name': screen_name, 'changed': 'False'})
@@ -292,3 +296,21 @@ class Backend:
             self.db.add_proof_links(cheater_update.proof_link, cheater.vk_id)
 
         return cheater_update
+
+    def get_id_screen_name(self, param: str = Optional['vk_id', 'screen_name'], value: str = None) -> dict:
+        """
+        Метод возвращает действующую запись о соответствии vk_id и screen_name.\n
+        Screen_name с параметром changed=True игнорятся.
+
+        :param param: str 'vk_id' или 'screen_name'
+        :param value: id '1231231' или screen_name 'sample'
+        :return: {'id': 'screen_name'}
+        """
+        result = {}
+        if param in ('vk_id', 'screen_name'):
+            sql = self.db.get_dict_from_table('screen_names',
+                                                     ['screen_name', 'vk_id'],
+                                                     {param: value, 'changed': False})
+            if sql:
+                result = next(iter(sql))
+        return result

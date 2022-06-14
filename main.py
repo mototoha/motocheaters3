@@ -476,7 +476,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = ''
 
         # Ищем совпадение с регуляркой.
-        match = re.match(backend.REGEXP_ADMIN, message.text.replace(' ', ''))
+        match = re.match(backend.get_regexp(all), message.text.replace(' ', ''))
 
         # Есть совпадение.
         if match:
@@ -484,7 +484,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 cheater = backend.Cheater()
 
             if match.lastgroup in {'vk_id', 'screen_name'}:
-                # Обращение к API за соответствием vk_id и short_name
+                # Обращение к API за vk_id и short_name
                 vk_id = match[match.lastgroup]
                 users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
                 # Если пользователя VK нет.
