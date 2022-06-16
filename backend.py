@@ -168,51 +168,55 @@ class Backend:
         :return: объект Cheater или None, если ничего не нашел.
         """
         result = Cheater()
-        db_result = None
-        find_vk_id = None
+        if not vk_id:
+            if screen_name:
+                sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'screen_name': screen_name, 'changed': 'False'})
+                vk_id = sql_result['vk_id']
+            elif telephone:
+                sql_result = self.db.get_dict_from_table(table='telephones',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'telephone': telephone})
+                vk_id = sql_result['vk_id']
+            elif card:
+                sql_result = self.db.get_dict_from_table(table='cards',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'card': card})
+                vk_id = sql_result['vk_id']
+            elif proof_link:
+                sql_result = self.db.get_dict_from_table(table='proof_links',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'proof_link': proof_link})
+                vk_id = sql_result['vk_id']
+        # Если нашелся vk_id.
         if vk_id:
             # Если передали vk_id - обращаемся к БД за остальными параметрами.
-            # Проверяем fifty.
-            db_result = self.db.get_dict_from_table(table='screen_names',
-                                                    columns=['screen_name', 'vk_id'],
-                                                    condition_dict={'vk_id': vk_id, 'changed': 'False'})
-        elif screen_name:
-            db_result = self.db.get_dict_from_table(table='screen_names',
-                                                    columns=['screen_name', 'vk_id'],
-                                                    condition_dict={'screen_name': screen_name, 'changed': 'False'})
-        if db_result:
-            find_vk_id = db_result['vk_id']
+            sql_result = self.db.get_dict_from_table(table='vk_ids',
+                                                     columns=['vk_id', 'fifty'],
+                                                     condition_dict={'vk_id': vk_id})
+            result.vk_id = sql_result[0]['vk_id']
+            result.fifty = sql_result[0]['fifty']
 
-        if find_vk_id:
-            result = Cheater()
-            result.vk_id = find_vk_id
+            sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                     columns=['screen_name'],
+                                                     condition_dict={'vk_id': vk_id, 'changed': 'False'})
+            result.screen_name = sql_result[0]['screen_name']
 
-            # TODO Сделать запрос через join'ы
-            db_result = self.db.get_dict_from_table(table='vk_id',
-                                                    columns=['vk_id', 'fifty'])
-            if db_result:
-                result.fifty = db_result[0]['fifty']
+            sql_result = self.db.get_dict_from_table(table='telephones',
+                                                     columns=['telephone'],
+                                                     condition_dict={'vk_id': vk_id})
+            result.telephone = sql_result.values()
 
-            db_result = self.db.get_dict_from_table(table='screen_names',
-                                                    columns=['screen_name'],
-                                                    condition_dict={'changed': 'False'})
-            if db_result:
-                result.screen_name = db_result[0]['screen_name']
+            sql_result = self.db.get_dict_from_table(table='cards',
+                                                     columns=['card'],
+                                                     condition_dict={'vk_id': vk_id})
+            result.card = sql_result.values()
 
-            db_result = self.db.get_dict_from_table(table='telephones',
-                                                    columns=['telephone'])
-            if db_result:
-                result.telephone = db_result['telephones']
-
-            db_result = self.db.get_dict_from_table(table='cards',
-                                                    columns=['card'])
-            if db_result:
-                result.card = db_result['card']
-
-            db_result = self.db.get_dict_from_table(table='proof_links',
-                                                    columns=['proof_link'])
-            if db_result:
-                result.card = db_result['proof_link']
+            sql_result = self.db.get_dict_from_table(table='proof_links',
+                                                     columns=['proof_link'],
+                                                     condition_dict={'vk_id': vk_id})
+            result.proof_link = sql_result.values()
         else:
             result = None
         return result
