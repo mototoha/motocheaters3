@@ -169,29 +169,28 @@ class Backend:
         """
         result = Cheater()
         if not vk_id:
+            sql_result = {}
             if screen_name:
                 sql_result = self.db.get_dict_from_table(table='screen_names',
                                                          columns=['vk_id'],
                                                          condition_dict={'screen_name': screen_name, 'changed': 'False'})
-                vk_id = sql_result['vk_id']
             elif telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',
                                                          columns=['vk_id'],
                                                          condition_dict={'telephone': telephone})
-                vk_id = sql_result['vk_id']
             elif card:
                 sql_result = self.db.get_dict_from_table(table='cards',
                                                          columns=['vk_id'],
                                                          condition_dict={'card': card})
-                vk_id = sql_result['vk_id']
             elif proof_link:
                 sql_result = self.db.get_dict_from_table(table='proof_links',
                                                          columns=['vk_id'],
                                                          condition_dict={'proof_link': proof_link})
-                vk_id = sql_result['vk_id']
-        # Если нашелся vk_id.
+            vk_id = sql_result.get('vk_id')
+
+        # Если нашелся или передан vk_id.
         if vk_id:
-            # Если передали vk_id - обращаемся к БД за остальными параметрами.
+            # Обращаемся к БД за остальными параметрами.
             sql_result = self.db.get_dict_from_table(table='vk_ids',
                                                      columns=['vk_id', 'fifty'],
                                                      condition_dict={'vk_id': vk_id})
