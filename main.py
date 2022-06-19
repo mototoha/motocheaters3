@@ -471,23 +471,25 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
         """
-        cheater = message.state_peer.payload.get('cheater')
-        cheater_db = message.state_peer.payload.get('cheater_db')
+        cheater = message.state_peer.payload.get('cheater')  # кидала в процессе добавления
+        cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
         answer_message = ''
 
         # Ищем совпадение с регуляркой.
-        match = re.match(backend.get_regexp(all), message.text.replace(' ', ''))
+        match = re.match(backend.get_regexp('all'), message.text.replace(' ', ''))
 
         # Есть совпадение.
         if match:
             if not cheater:
-                # Если еще не создан шаблон кидалы - создаём.
+                # Если еще не создан шаблон кидалы для админа - создаём.
                 cheater = backend.Cheater()
+            if not cheater_db:
+                # Если еще нет параметров кидалы из БД - создаём шаблон.
+                cheater_db = backend.Cheater()
 
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за vk_id и short_name
-                vk_id = match[match.lastgroup]
-                users_info = await bot.api.users.get(vk_id, fields=['screen_name'])
+                users_info = await bot.api.users.get(match[match.lastgroup], fields=['screen_name'])
                 if not users_info:
                     # Если пользователя VK нет.
                     await message.answer(dialogs.add_cheater_no_id)
@@ -496,32 +498,24 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     await message.answer(dialogs.add_cheater_id_delete)
                 else:
                     cheater.vk_id = str(users_info[0].id)
-                    cheater.screen_name = users_info[0].screen_name
-                    # Проверяем на наличие подобной записи в БД.
-                    db_record = bend.get_id_screen_name(match.lastgroup, match[match.lastgroup])
-                    if db_record:
-                        # Если есть прямо такой же.
-                        if (db_record['vk_id'], db_record['screen_name']) == (cheater.vk_id, cheater.screen_name):
-                            await message.answer(dialogs.add_cheater_id_exist.format(cheater.vk_id,
-                                                                                     cheater.screen_name)
-                                                 )
-                        # Если что-то не совпало.
-                        else:
-                            # Записываем в БД, что имя менялось.
-                            bend.screen_name_is_changed(cheater_db.vk_id, cheater_db.screen_name)
-                            if match.lastgroup == 'vk_id':
-                                # Если пользователь искал vk_id, а имя в БД и из API не совпало - записываем новое имя.
-                                bend.new_screen_name(cheater_db.vk_id, cheater.screen_name)
-                                cheater_db = bend.get_cheater_full_info(vk_id=match[match.lastgroup])
+                    cheater.screen_name = str(users_info[0].screen_name)
+                    # Проверяем на наличие записей в БД.
+                    db_vk_id, db_screen_name = bend.get_id_screen_name(match.lastgroup, match[match.lastgroup])
+                    if db_vk_id:
+                        if db_vk_id == cheater.vk_id:
+                            # Если есть такой же vk_id.
+                            if db_screen_name == cheater.screen_name:
+                                # Есть точно такой же - обновление существующего.
+                                await message.answer(dialogs.add_cheater_exist.format(cheater.vk_id,
+                                                                                      cheater.screen_name))
                             else:
-                                # Если пользователь искал screen_name, проверяем новый id.
-                                if bend.check_existence({'vk_id': cheater.vk_id}):
-                                    # Если он есть - добавляем новую строку screen_name.
-                                    bend.new_screen_name(cheater.vk_id, cheater.screen_name)
-                                    cheater_db = bend.get_cheater_full_info(screen_name=match[match.lastgroup])
-                                    await message.answer(dialogs.add_cheater_new_screen_name.format(cheater.vk_id,
-                                                                                                    cheater.screen_name)
-                                                         )
+                                # Если имя не совпало - обновляем имя и готовимся обновлять существующего.
+                                pass
+                        else:
+                            # Если такого vk_id нет.
+                            if db_screen_name == cheater.screen_name:
+                                # Если есть имя - обновим информацию про имя в БД. Добавляем нового кидалу.
+                                pass
             elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
                 # Список значений 'card', 'telephone' или 'proof_link'
                 list_values = cheater.get(match.lastgroup)

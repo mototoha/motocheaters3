@@ -305,7 +305,7 @@ class Backend:
 
         return cheater_update
 
-    def get_id_screen_name(self, param: str = Optional['vk_id', 'screen_name'], value: str = None) -> dict:
+    def get_id_screen_name(self, param: str = Optional['vk_id', 'screen_name'], value: str = None) -> tuple[str, str]:
         """
         Метод возвращает действующую запись о соответствии vk_id и screen_name.\n
         Screen_name с параметром changed=True игнорятся.
@@ -323,4 +323,4 @@ class Backend:
                 # На всякий случай, если вернется несколько строк из БД.
                 result['vk_id'] = sql[0][1]
                 result['screen_name'] = sql[0][0]
-        return result
+        return result['vk_id'], result['screen_name']
