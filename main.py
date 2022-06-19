@@ -205,7 +205,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Ловим кидалу.
     @bot.on.message(
-        func=lambda message: bool(re.match(vkbot.REGEXP_MAIN,
+        func=lambda message: bool(re.match(backend.get_regexp('search'),
                                            message.text.lower().lstrip('+').replace(' ', ''))),
         state=None
     )
