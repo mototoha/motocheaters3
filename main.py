@@ -516,6 +516,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                             if db_screen_name == cheater.screen_name:
                                 # Если есть имя - обновим информацию про имя в БД. Добавляем нового кидалу.
                                 pass
+                    else:
+                        # Если в БД нет такого vk_id - это новый кидала.
+                        pass
             elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
                 # Список значений 'card', 'telephone' или 'proof_link'
                 list_values = cheater.get(match.lastgroup)
