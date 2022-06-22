@@ -195,7 +195,7 @@ class VKBot(Bot):
         for cheater in cheaters_list:
             print('Разбираем запись ', cheater, sep='\n')
             if cheater['vk_id']:
-                db_record = self.db.get_dict_from_table('vk_id',
+                db_record = self.db.get_dict_from_table('vk_ids',
                                                         ['vk_id', 'fifty'],
                                                         {'vk_id': cheater['vk_id']})
                 if db_record:
@@ -287,6 +287,23 @@ class VKBot(Bot):
         :return: list[str]
         """
         pass
+
+    def send_message_to_admins(self, message: str = 'Что-то', message_forward_id: int = None):
+        """
+        Метод посылает всем админам какое-то сообщение.
+
+        :param message: Сообщение для администраторов группы.
+        :param message_forward_id : пересылаемое сообщение.
+        :return: None
+        """
+        vk_admin_ids = self.vk_admin_id
+        message_text = message
+        await self.api.messages.send(
+            message=message_text,
+            user_ids=vk_admin_ids,
+            forward_messages=message_forward_id,
+            random_id=0,
+        )
 
 
 if __name__ == '__main__':

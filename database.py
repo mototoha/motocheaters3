@@ -189,7 +189,7 @@ class DBCheaters:
         result = bool(self._cursor.fetchall())
         return result
 
-    def update_table(self, table: str, set_params, where: dict):
+    def update_table(self, table: str, set_params: dict, where: dict):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
@@ -201,8 +201,7 @@ class DBCheaters:
         sql_query = self._construct_update(table=table,
                                            set_params=set_params,
                                            where_update=where)
-        self._cursor.execute(sql_query
-                             )
+        self._cursor.execute(sql_query)
         self._connection.commit()
         return None
 
@@ -239,7 +238,7 @@ class DBCheaters:
         Добавляем нового кидалу.
         """
         sql_query = self._construct_insert(
-            table='vk_id',
+            table='vk_ids',
             values_dict={
                 'vk_id': vk_id,
                 'fifty': fifty,
@@ -344,12 +343,14 @@ class DBCheaters:
         """
         sql_query = self._construct_select(table=table, what_select=columns, where_select=condition_dict)
         self._cursor.execute(sql_query)
-        result_list = self._cursor.fetchall()
-        if result_list:
-            result = {}
-            for count_row, row in enumerate(result_list):
+        query_result = self._cursor.fetchall()
+        if query_result:
+            result = []
+            for count_row, row in enumerate(query_result):
+                one_row = {}
                 for count, value in enumerate(columns):
-                    result[value] = result_list[count_row][count]
+                    one_row[value] = query_result[count_row][count]
+                result.append(one_row)
         else:
             result = None
         return result

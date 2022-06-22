@@ -6,27 +6,12 @@ from typing import (
     Any,
     List,
     Optional,
+    Union,
+    Literal,
+    Tuple,
 )
 
 from database import DBCheaters
-
-
-REGEXP_MAIN = (
-    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-)
-
-REGEXP_ADMIN = (
-    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link_user>wall\d*_\d*)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-    r'|(?P<fifty>50|fifty)'
-)
 
 REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)',
@@ -149,31 +134,34 @@ class Backend:
             db_filename = db_params.get('filename')
             self.db = DBCheaters(db_filename)
 
-    def get_cheater_full_info(self,
-                              vk_id: str = None,
-                              screen_name: str = None,
-                              telephone: str = None,
-                              card: str = None,
-                              proof_link: str = None,
-                              ) -> Cheater:
+    def get_cheater_info(self,
+                         vk_id: Optional[str] = None,
+                         screen_name: Optional[str] = None,
+                         telephone: Optional[str] = None,
+                         card: Optional[str] = None,
+                         proof_link: Optional[str] = None,
+                         return_fields: Optional[Union[str, List[str]]] = None,
+                         ) -> Optional[Union[Cheater, List[Cheater]]]:
         """
-        Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаётся один из параметров.
-        Корректно работать будет только с одним параметром. Приоритет - по порядку в заголовке.
+        Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаются параметры, по которым надо его найти.
+        Сейчас используется только первый по порядку.\n
+        В результате вернется либо Cheater(), лио список Cheater()'ов, либо None.
 
-        :param vk_id: id VK
-        :param screen_name: отображаемое имя
-        :param telephone: телефон
-        :param card: номер карты
-        :param proof_link: ссылка на пруф
-        :return: объект Cheater или None, если ничего не нашел.
+        :param vk_id: id VK,
+        :param screen_name: отображаемое имя,
+        :param telephone: телефон,
+        :param card: номер карт,
+        :param proof_link: ссылка на пруф,
+        :param return_fields: поля, которые требуется вернуть,
+        :return: объект (список объектов) Cheater или None, если ничего не нашел.
         """
-        result = Cheater()
         if not vk_id:
             sql_result = {}
             if screen_name:
                 sql_result = self.db.get_dict_from_table(table='screen_names',
                                                          columns=['vk_id'],
-                                                         condition_dict={'screen_name': screen_name, 'changed': 'False'})
+                                                         condition_dict={'screen_name': screen_name,
+                                                                         'changed': 'False'})
             elif telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',
                                                          columns=['vk_id'],
@@ -190,6 +178,7 @@ class Backend:
 
         # Если нашелся или передан vk_id.
         if vk_id:
+            result = Cheater()
             # Обращаемся к БД за остальными параметрами.
             sql_result = self.db.get_dict_from_table(table='vk_ids',
                                                      columns=['vk_id', 'fifty'],
@@ -239,6 +228,11 @@ class Backend:
         :param screen_name: Имя ВК.
         :return: ID ВК.
         """
+        # Помечаем старые имена как changed=True.
+        self.db.update_table(table='screen_names',
+                             set_params={'changed': True},
+                             where={'vk_id': vk_id})
+        # Добавляем новое имя.
         self.db.add_screen_name(screen_name=screen_name, vk_id=vk_id)
 
     def check_existence(self, check_values: dict) -> bool:
@@ -305,7 +299,7 @@ class Backend:
 
         return cheater_update
 
-    def get_id_screen_name(self, param: str = Optional['vk_id', 'screen_name'], value: str = None) -> tuple[str, str]:
+    def get_id_screen_name(self, param: Literal['vk_id', 'screen_name'] = None, value: str = None) -> Tuple[str, str]:
         """
         Метод возвращает действующую запись о соответствии vk_id и screen_name.\n
         Screen_name с параметром changed=True игнорятся.

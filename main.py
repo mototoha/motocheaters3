@@ -497,28 +497,19 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     # Если пользователь удален.
                     await message.answer(dialogs.add_cheater_id_delete)
                 else:
+                    # Если пользователь ВК есть - запрашиваем нашу БД.
+                    cheater_db = bend.get_cheater_info()
+                    if not isinstance(cheater_db, backend.Cheater()):
+                        bot.send_message_to_admins(str(cheater_db))
+                        return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
+                               'Пропусти и продолжи добавление других кидал.'
                     cheater.vk_id = str(users_info[0].id)
                     cheater.screen_name = str(users_info[0].screen_name)
                     # Проверяем на наличие записей в БД.
-                    db_vk_id, db_screen_name = bend.get_id_screen_name(match.lastgroup, match[match.lastgroup])
-                    if db_vk_id:
-                        if db_vk_id == cheater.vk_id:
+                    if cheater_db.vk_id:
+                        if cheater_db.vk_id == cheater.vk_id:
                             # Если есть такой же vk_id.
-                            if db_screen_name == cheater.screen_name:
-                                # Есть точно такой же - обновление существующего.
-                                await message.answer(dialogs.add_cheater_exist.format(cheater.vk_id,
-                                                                                      cheater.screen_name))
-                            else:
-                                # Если имя не совпало - обновляем имя и готовимся обновлять существующего.
-                                pass
-                        else:
-                            # Если такого vk_id нет.
-                            if db_screen_name == cheater.screen_name:
-                                # Если есть имя - обновим информацию про имя в БД. Добавляем нового кидалу.
-                                pass
-                    else:
-                        # Если в БД нет такого vk_id - это новый кидала.
-                        pass
+                            pass
             elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
                 # Список значений 'card', 'telephone' или 'proof_link'
                 list_values = cheater.get(match.lastgroup)
