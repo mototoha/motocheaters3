@@ -466,7 +466,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         FromPeerRule(bot.vk_admin_id),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
     )
-    async def admin_add_cheater_params_handler(message: Message):
+    async def admin_add_cheater_text_handler(message: Message):
         """
         Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
@@ -498,8 +498,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     await message.answer(dialogs.add_cheater_id_delete)
                 else:
                     # Если пользователь ВК есть - запрашиваем нашу БД.
-                    cheater_db = bend.get_cheater_info()
-                    if not isinstance(cheater_db, backend.Cheater()):
+                    cheater_db = bend.get_cheater_info(match[match.lastgroup])
+                    if not isinstance(cheater_db, backend.Cheater):
                         bot.send_message_to_admins(str(cheater_db))
                         return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
                                'Пропусти и продолжи добавление других кидал.'

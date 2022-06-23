@@ -135,8 +135,7 @@ class Backend:
             self.db = DBCheaters(db_filename)
 
     def get_cheater_info(self,
-                         vk_id: Optional[str] = None,
-                         screen_name: Optional[str] = None,
+                         id_name: Optional[str] = None,
                          telephone: Optional[str] = None,
                          card: Optional[str] = None,
                          proof_link: Optional[str] = None,
@@ -147,22 +146,25 @@ class Backend:
         Сейчас используется только первый по порядку.\n
         В результате вернется либо Cheater(), лио список Cheater()'ов, либо None.
 
-        :param vk_id: id VK,
-        :param screen_name: отображаемое имя,
+        :param id_name: id или screen_name VK,
         :param telephone: телефон,
         :param card: номер карт,
         :param proof_link: ссылка на пруф,
         :param return_fields: поля, которые требуется вернуть,
         :return: объект (список объектов) Cheater или None, если ничего не нашел.
         """
-        if not vk_id:
-            sql_result = {}
-            if screen_name:
+        sql_result = {}
+        vk_id = ''
+        if id_name:
+            if id_name.isdigit():
+                vk_id = id_name
+            else:
                 sql_result = self.db.get_dict_from_table(table='screen_names',
                                                          columns=['vk_id'],
-                                                         condition_dict={'screen_name': screen_name,
+                                                         condition_dict={'screen_name': id_name,
                                                                          'changed': 'False'})
-            elif telephone:
+        else:
+            if telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',
                                                          columns=['vk_id'],
                                                          condition_dict={'telephone': telephone})
@@ -174,6 +176,7 @@ class Backend:
                 sql_result = self.db.get_dict_from_table(table='proof_links',
                                                          columns=['vk_id'],
                                                          condition_dict={'proof_link': proof_link})
+        if sql_result:
             vk_id = sql_result.get('vk_id')
 
         # Если нашелся или передан vk_id.
