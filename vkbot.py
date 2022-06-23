@@ -6,7 +6,6 @@ import requests
 import time
 from typing import List
 
-
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
@@ -304,6 +303,24 @@ class VKBot(Bot):
             forward_messages=message_forward_id,
             random_id=0,
         )
+
+    def update_db_screen_name(self, vk_id: str, screen_name: str = None) -> object:
+        """
+        Метод обновляет screen_name в БД для заданного vk_id.
+
+        Все старые screen_name помечаются как changed=True.
+
+        Если передано имя - берется оно, если нет - запрашивается новое имя и помещается в базу.
+
+        :param screen_name: имя, на которое надо изменить БД.
+        :param vk_id: id, который необходимо обновить.
+        :return: получилось или нет
+        """
+        if not screen_name:
+            user_info = await self.api.users.get([vk_id])
+            screen_name = user_info[0].screen_name
+        self.db.update_table('screen_names', {'changed': True}, {'screen_name': screen_name})
+        self.db.add_screen_name(screen_name, vk_id)
 
 
 if __name__ == '__main__':

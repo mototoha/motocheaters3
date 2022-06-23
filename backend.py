@@ -96,15 +96,16 @@ class Cheater:
 
         :return: Значения словарем.
         """
-        result = {}
+        result = ''
         for f in fields(self):
-            result[f.name] = self.__getattribute__(f.name)
-        return str(result)
+            result += str(self.__getattribute__(f.name)) + '\n'
+        return result
 
     def get(self, value: str) -> Any:
         """
         Метод возвращает значение параметра Value кидалы.
         Если спрашивают непонятно что - возвращает None.
+
         :param value: Атрибут, который хочешь получить.
         :return: Значение или None.
         """
@@ -211,17 +212,6 @@ class Backend:
         else:
             result = None
         return result
-
-    def screen_name_is_changed(self, vk_id: str, screen_name: str) -> None:
-        """
-        Изменяет параметр changed на True для screen_name в БД.
-
-        :param vk_id: id, который поменял имя.
-        :param screen_name: screen_name, который больше не используется.
-        """
-        set_params = {'changed': 'True'}
-        where = {'vk_id': vk_id, 'screen_name': screen_name}
-        self.db.update_table('screen_names', {'changed': 'True'}, {'vk_id': vk_id, 'screen_name': screen_name})
 
     def new_screen_name(self, vk_id: str, screen_name: str) -> None:
         """

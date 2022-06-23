@@ -393,7 +393,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 )
                 update = bend.add_cheater(cheater, cheater_db)
                 await message.answer(
-                    message='Добавил кидалу\n' + str(update),
+                    message='Добавил(обновил) кидалу\n' + str(update),
                     keyboard=keyboard,
                 )
             else:
@@ -426,7 +426,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def admin_return_from_del_cheater_handler(message: Message):
         """
-        Удаление кидалы. Передумал добавлять кидалу.
+        Удаление кидалы. Передумал удалять что-то.
         """
         new_state = vkbot.AdminStates.MAIN
         await bot.state_dispenser.set(message.peer_id, new_state)
@@ -473,7 +473,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         cheater = message.state_peer.payload.get('cheater')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
-        answer_message = ''
 
         # Ищем совпадение с регуляркой.
         match = re.match(backend.get_regexp('all'), message.text.replace(' ', ''))
@@ -503,19 +502,48 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                         bot.send_message_to_admins(str(cheater_db))
                         return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
                                'Пропусти и продолжи добавление других кидал.'
-                    cheater.vk_id = str(users_info[0].id)
-                    cheater.screen_name = str(users_info[0].screen_name)
-                    # Проверяем на наличие записей в БД.
-                    if cheater_db.vk_id:
-                        if cheater_db.vk_id == cheater.vk_id:
-                            # Если есть такой же vk_id.
-                            pass
+                    api_vk_id = str(users_info[0].id)
+                    api_screen_name = str(users_info[0].screen_name)
+
+                    if match.lastgroup == 'vk_id':
+                        if cheater_db:
+                            if cheater_db.screen_name != api_screen_name:
+                                bot.update_db_screen_name(cheater_db.vk_id)
+                            cheater.vk_id = cheater_db.vk_id
+                            cheater.screen_name = api_screen_name
+                        else:
+                            cheater_db = bend.get_cheater_info(api_screen_name)
+                            if cheater_db:
+                                bot.update_db_screen_name(cheater_db.vk_id)
+                            cheater.vk_id = api_vk_id
+                            cheater.screen_name = api_screen_name
+                    elif match.lastgroup == 'screen_name':
+                        if cheater_db:
+                            if cheater_db.vk_id == api_vk_id:
+                                cheater.vk_id = api_vk_id
+                                cheater.screen_name = api_screen_name
+                            else:
+                                bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db_2 = bend.get_cheater_info(api_vk_id)
+                                if cheater_db_2:
+                                    bot.update_db_screen_name(cheater_db_2.vk_id)
+                                cheater.vk_id = api_vk_id
+                                cheater.screen_name = api_screen_name
+                        else:
+                            cheater_db = bend.get_cheater_info(api_vk_id)
+                            if cheater_db:
+                                bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater.vk_id = cheater_db.vk_id
+                                cheater.screen_name = cheater.screen_name
+                            else:
+                                cheater.vk_id = api_vk_id
+                                cheater.screen_name = api_screen_name
             elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
                 # Список значений 'card', 'telephone' или 'proof_link'
                 list_values = cheater.get(match.lastgroup)
                 if list_values:
                     if match[match.lastgroup] in list_values:
-                        answer_message += 'Такой параметр ' + match.lastgroup + ' уже введен!\n'
+                        message.answer('Такой параметр ' + match.lastgroup + ' уже введен!\n')
                     else:
                         list_values.append(match[match.lastgroup])
                 else:
@@ -535,7 +563,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     random_id=0,
                 )
 
-            answer_message += 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
+            answer_message = 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
             answer_message += '\n' + str(cheater) + '\n'
             if cheater_db:
                 answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
