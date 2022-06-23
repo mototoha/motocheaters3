@@ -134,7 +134,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Рассказ про кидалу. Пользователь прислал историю.
         """
-        users_info = await bot.api.users.get(message.from_id, fields=['screen_name'])
+        users_info = await bot.api.users.get([message.from_id], fields=['screen_name'])
 
         # Отправляем историю админам.
         message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].screen_name))
@@ -164,7 +164,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Приветствие.
         Парсит слова "привет" в русской и английской раскладке, "начать".
         """
-        users_info = await bot.api.users.get(message.from_id)
+        users_info = await bot.api.users.get([message.from_id])
         answer_message = dialogs.hello.format(users_info[0].first_name)
         is_admin = bot.is_user_admin(message.peer_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
@@ -469,7 +469,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     async def admin_add_cheater_text_handler(message: Message):
         """
         Добавление кидалы.
-        Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или  50.
+        Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или 50.
         """
         cheater = message.state_peer.payload.get('cheater')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
