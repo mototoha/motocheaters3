@@ -15,6 +15,7 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
     RegexRule,
 )
+from vkbottle.exception_factory import VKAPIError
 
 import backend
 import startup
@@ -393,7 +394,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 )
                 update = bend.add_cheater(cheater, cheater_db)
                 await message.answer(
-                    message='Добавил(обновил) кидалу\n' + str(update),
+                    message='Добавил(обновил) следующие поля\n' + str(update),
                     keyboard=keyboard,
                 )
             else:
@@ -482,39 +483,33 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             if not cheater:
                 # Если еще не создан шаблон кидалы для админа - создаём.
                 cheater = backend.Cheater()
-            if not cheater_db:
-                # Если еще нет параметров кидалы из БД - создаём шаблон.
-                cheater_db = backend.Cheater()
 
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за vk_id и short_name
-                users_info = await bot.api.users.get(match[match.lastgroup], fields=['screen_name'])
-                if not users_info:
-                    # Если пользователя VK нет.
-                    await message.answer(dialogs.add_cheater_no_id)
-                elif users_info[0].deactivated:
-                    # Если пользователь удален.
+                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name(match[match.lastgroup])
+                if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete)
+                if api_vk_id is None:
+                    await message.answer(dialogs.add_cheater_no_id)
                 else:
                     # Если пользователь ВК есть - запрашиваем нашу БД.
                     cheater_db = bend.get_cheater_info(match[match.lastgroup])
-                    if not isinstance(cheater_db, backend.Cheater):
-                        bot.send_message_to_admins(str(cheater_db))
+                    if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
+                        await bot.send_message_to_admins(str(cheater_db))
                         return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
                                'Пропусти и продолжи добавление других кидал.'
-                    api_vk_id = str(users_info[0].id)
-                    api_screen_name = str(users_info[0].screen_name)
-
                     if match.lastgroup == 'vk_id':
                         if cheater_db:
                             if cheater_db.screen_name != api_screen_name:
-                                bot.update_db_screen_name(cheater_db.vk_id)
+                                await bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db.screen_name = api_screen_name
                             cheater.vk_id = cheater_db.vk_id
                             cheater.screen_name = api_screen_name
                         else:
                             cheater_db = bend.get_cheater_info(api_screen_name)
                             if cheater_db:
-                                bot.update_db_screen_name(cheater_db.vk_id)
+                                await bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db.screen_name = api_screen_name
                             cheater.vk_id = api_vk_id
                             cheater.screen_name = api_screen_name
                     elif match.lastgroup == 'screen_name':
@@ -523,16 +518,18 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                                 cheater.vk_id = api_vk_id
                                 cheater.screen_name = api_screen_name
                             else:
-                                bot.update_db_screen_name(cheater_db.vk_id)
+                                await bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db.screen_name = api_screen_name
                                 cheater_db_2 = bend.get_cheater_info(api_vk_id)
                                 if cheater_db_2:
-                                    bot.update_db_screen_name(cheater_db_2.vk_id)
+                                    await bot.update_db_screen_name(cheater_db_2.vk_id)
                                 cheater.vk_id = api_vk_id
                                 cheater.screen_name = api_screen_name
                         else:
                             cheater_db = bend.get_cheater_info(api_vk_id)
                             if cheater_db:
-                                bot.update_db_screen_name(cheater_db.vk_id)
+                                await bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db.screen_name = api_screen_name
                                 cheater.vk_id = cheater_db.vk_id
                                 cheater.screen_name = cheater.screen_name
                             else:
@@ -543,7 +540,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 list_values = cheater.get(match.lastgroup)
                 if list_values:
                     if match[match.lastgroup] in list_values:
-                        message.answer('Такой параметр ' + match.lastgroup + ' уже введен!\n')
+                        await message.answer('Такой параметр ' + match.lastgroup + ' уже введен!\n')
                     else:
                         list_values.append(match[match.lastgroup])
                 else:
@@ -563,8 +560,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     random_id=0,
                 )
 
-            answer_message = 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup]
-            answer_message += '\n' + str(cheater) + '\n'
+            answer_message = 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup] + '\n\n'
+            if cheater:
+                answer_message += 'Твой кидала:\n' + str(cheater) + '\n'
             if cheater_db:
                 answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
             await bot.state_dispenser.set(message.from_id, message.state_peer.state,
@@ -578,7 +576,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     @bot.on.message(StateGroupRule(vkbot.AdminStates))
-    async def admin_common_message_handler():
+    async def admin_common_message_handler(message: Message):
         """
         Любая другая хрень в админском меню.
         """

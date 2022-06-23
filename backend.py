@@ -15,8 +15,8 @@ from database import DBCheaters
 
 REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)',
-    'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
+    'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
     'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
     'telephone': r'\+?(?P<telephone>\d{10,15}(\s\n)?)',
     'fifty': r'(?P<fifty>50|fifty)'
@@ -98,7 +98,19 @@ class Cheater:
         """
         result = ''
         for f in fields(self):
-            result += str(self.__getattribute__(f.name)) + '\n'
+            result += str(f.name) + ': ' + str(self.__getattribute__(f.name)) + '\n'
+        return result
+
+    def __bool__(self):
+        """
+        Переопределен метод bool.
+        Если все значения пустые - вернет False.
+
+        :return: bool
+        """
+        result = False
+        for f in fields(self):
+            result |= bool(self.__getattribute__(f.name))
         return result
 
     def get(self, value: str) -> Any:
@@ -154,10 +166,11 @@ class Backend:
         :param return_fields: поля, которые требуется вернуть,
         :return: объект (список объектов) Cheater или None, если ничего не нашел.
         """
-        sql_result = {}
+        sql_result = []
         vk_id = ''
+        # Сначала определяемся, по какому vk_id искать.
         if id_name:
-            if id_name.isdigit():
+            if id_name.startswith(('id', 'club', 'public', 'event')):
                 vk_id = id_name
             else:
                 sql_result = self.db.get_dict_from_table(table='screen_names',
@@ -177,38 +190,56 @@ class Backend:
                 sql_result = self.db.get_dict_from_table(table='proof_links',
                                                          columns=['vk_id'],
                                                          condition_dict={'proof_link': proof_link})
-        if sql_result:
-            vk_id = sql_result.get('vk_id')
+            if sql_result:
+                vk_id = sql_result[0].get('vk_id')
 
         # Если нашелся или передан vk_id.
         if vk_id:
-            result = Cheater()
+            cheater_info = Cheater()
             # Обращаемся к БД за остальными параметрами.
             sql_result = self.db.get_dict_from_table(table='vk_ids',
                                                      columns=['vk_id', 'fifty'],
                                                      condition_dict={'vk_id': vk_id})
-            result.vk_id = sql_result[0]['vk_id']
-            result.fifty = sql_result[0]['fifty']
+            if sql_result:
+                cheater_info.vk_id = sql_result[0]['vk_id']
+                cheater_info.fifty = sql_result[0]['fifty']
 
             sql_result = self.db.get_dict_from_table(table='screen_names',
                                                      columns=['screen_name'],
                                                      condition_dict={'vk_id': vk_id, 'changed': 'False'})
-            result.screen_name = sql_result[0]['screen_name']
+            if sql_result:
+                cheater_info.screen_name = sql_result[0]['screen_name']
 
             sql_result = self.db.get_dict_from_table(table='telephones',
                                                      columns=['telephone'],
                                                      condition_dict={'vk_id': vk_id})
-            result.telephone = sql_result.values()
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
 
             sql_result = self.db.get_dict_from_table(table='cards',
                                                      columns=['card'],
                                                      condition_dict={'vk_id': vk_id})
-            result.card = sql_result.values()
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
 
             sql_result = self.db.get_dict_from_table(table='proof_links',
                                                      columns=['proof_link'],
                                                      condition_dict={'vk_id': vk_id})
-            result.proof_link = sql_result.values()
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
+            if not cheater_info:
+                result = None
+            else:
+                result = cheater_info
         else:
             result = None
         return result

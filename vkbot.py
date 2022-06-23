@@ -4,7 +4,7 @@ Classes for VKBot
 import re
 import requests
 import time
-from typing import List
+from typing import List, Tuple, Optional, Union
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -255,7 +255,7 @@ class VKBot(Bot):
         :return vk_id, False.
         """
         if parameter == 'vk_id':
-            check_result = self.db.get_cheater_id('vk_id', {parameter: value})
+            check_result = self.db.get_cheater_id('vk_ids', {parameter: value})
         elif parameter == 'screen_name':
             check_result = self.db.get_cheater_id('screen_names', {parameter: value})
         elif parameter == 'card':
@@ -317,10 +317,46 @@ class VKBot(Bot):
         :return: получилось или нет
         """
         if not screen_name:
-            user_info = await self.api.users.get([vk_id])
+            user_info = await self.api.users.get([vk_id], fields=['screen_name'])
             screen_name = user_info[0].screen_name
         self.db.update_table('screen_names', {'changed': True}, {'screen_name': screen_name})
         self.db.add_screen_name(screen_name, vk_id)
+
+    async def get_from_api_id_screen_name(self, id_name: str = None) -> Optional[Tuple[str, str, bool]]:
+        """
+        Метод возвращает id и screen_name в виде кортежа из двух значений.
+
+        :param id_name: vk_id или screen_name
+        :return: vk_id, screen_name, deleted
+        """
+        result_vk_id = None
+        result_screen_name = None
+        result_banned = False
+        users_info = await self.api.users.get(id_name, fields=['screen_name'])
+        if users_info:
+            if users_info[0].deactivated:
+                # Если пользователь забанен.
+                result_banned = True
+            result_vk_id = 'id' + str(users_info[0].id)
+            result_screen_name = users_info[0].screen_name
+        else:
+            try:
+                group = await self.api.groups.get_by_id(group_id=id_name,
+                                                        fields='screen_name'
+                                                        )
+                if group[0].type.value == 'group':
+                    group_type = 'club'
+                elif group[0].type.value == 'page':
+                    group_type = 'public'
+                elif group[0].type.value == 'event':
+                    group_type = 'event'
+                else:
+                    group_type = 'club'
+                result_vk_id = group_type + str(group[0].id)
+                result_screen_name = group[0].screen_name
+            except VKAPIError[100]:
+                pass
+        return result_vk_id, result_screen_name, result_banned
 
 
 if __name__ == '__main__':

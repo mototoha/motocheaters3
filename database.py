@@ -131,6 +131,8 @@ class DBCheaters:
                 s_params += ', '
                 s_values += ', '
             s_params += param
+            if type(set_params[param]) == bool:
+                set_params[param] = str(set_params[param])
             s_values += set_params[param]
         s_params += ')'
         s_values += ')'
@@ -307,7 +309,7 @@ class DBCheaters:
             sql_query = self._construct_insert(
                 table='proof_links',
                 values_dict={
-                    'proof_link': proof_link,
+                    'proof_link': link,
                     'vk_id': vk_id,
                 }
             )
