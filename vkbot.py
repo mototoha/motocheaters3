@@ -287,7 +287,7 @@ class VKBot(Bot):
         """
         pass
 
-    def send_message_to_admins(self, message: str = 'Что-то', message_forward_id: int = None):
+    async def send_message_to_admins(self, message: str = 'Что-то', message_forward_id: int = None):
         """
         Метод посылает всем админам какое-то сообщение.
 
@@ -304,7 +304,7 @@ class VKBot(Bot):
             random_id=0,
         )
 
-    def update_db_screen_name(self, vk_id: str, screen_name: str = None) -> object:
+    async def update_db_screen_name(self, vk_id: str, screen_name: str = None) -> object:
         """
         Метод обновляет screen_name в БД для заданного vk_id.
 
