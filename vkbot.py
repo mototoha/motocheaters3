@@ -269,13 +269,13 @@ class VKBot(Bot):
         else:
             return False
 
-    def is_user_admin(self, peer_id: int) -> bool:
+    async def is_user_admin(self, peer_id: int) -> bool:
         """
         Определяет, является ли пользователь админом.
         :param peer_id:
         :return:
         """
-        if peer_id in self.vk_admin_id:
+        if peer_id in self.vk_admin_id or peer_id in (await self.get_group_admins()):
             return True
         else:
             return False

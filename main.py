@@ -70,7 +70,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         answer_message = dialogs.tell_about_cheater
         state = bot.dialog_states.TELL_ABOUT_CHEATER_STATE
-        is_admin = bot.is_user_admin(message.from_id)
+        is_admin = await bot.is_user_admin(message.from_id)
         await bot.state_dispenser.set(message.from_id, state)
         keyboard = vk_keyboards.get_keyboard(bot.dialog_states.TELL_ABOUT_CHEATER_STATE, is_admin)
         await message.answer(
@@ -88,7 +88,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Кнопка 'Помочь нам'.
         """
         answer_message = dialogs.help_us
-        is_admin = bot.is_user_admin(message.from_id)
+        is_admin = await bot.is_user_admin(message.from_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
@@ -120,7 +120,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.change_mind
-        is_admin = bot.is_user_admin(message.peer_id)
+        is_admin = await bot.is_user_admin(message.peer_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
@@ -149,7 +149,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         # отвечаем вопрошающему
         await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.thanks
-        is_admin = bot.is_user_admin(message.peer_id)
+        is_admin = await bot.is_user_admin(message.peer_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
@@ -167,7 +167,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         users_info = await bot.api.users.get([message.from_id])
         answer_message = dialogs.hello.format(users_info[0].first_name)
-        is_admin = bot.is_user_admin(message.peer_id)
+        is_admin = await bot.is_user_admin(message.peer_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
@@ -232,7 +232,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     forward_messages=message.id,
                     random_id=0,
                 )
-        is_admin = bot.is_user_admin(message.peer_id)
+        is_admin = await bot.is_user_admin(message.peer_id)
         keyboard = vk_keyboards.get_keyboard(None, is_admin)
         await message.answer(
             answer_message,
@@ -583,13 +583,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         return dialogs.admin_common
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
-    @bot.on.message(StateRule(None), text="group_id")
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), text="group_id")
     async def debug_get_my_group_id_handler(message: Message):
         """
         Вывести group_id.
         """
         answer_message = await bot.group_info()
-        keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
+        keyboard = vk_keyboards.get_keyboard(None, await bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message[0].id,
             keyboard=keyboard,
@@ -605,13 +605,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = str(group_id) + '\n'
         answer_message += ' '.join(str(vk_id) for vk_id in members.items)
-        keyboard = vk_keyboards.get_keyboard(None, bot.is_user_admin(message.from_id))
+        keyboard = vk_keyboards.get_keyboard(None, await bot.is_user_admin(message.from_id))
         await message.answer(
             answer_message,
             keyboard=keyboard,
         )
 
-    @bot.on.message(text="dialogstate")
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), text="dialogstate")
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
@@ -625,7 +625,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message,
         )
 
-    @bot.on.message(text="admins")
+    @bot.on.message(FromPeerRule(bot.vk_admin_id), text="admins")
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
