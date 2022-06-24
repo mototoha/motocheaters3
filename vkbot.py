@@ -142,7 +142,7 @@ class VKBot(Bot):
                         else:
                             try:
                                 group = await self.api.groups.get_by_id(group_id=match[match.lastgroup],
-                                                                        fields='screen_name'
+                                                                        fields=['screen_name']
                                                                         )
                                 print('Запрос группы:\n', group)
                                 if group[0].type.value == 'group':
@@ -297,7 +297,7 @@ class VKBot(Bot):
             random_id=0,
         )
 
-    async def update_db_screen_name(self, vk_id: str, screen_name: str = None) -> object:
+    async def update_db_screen_name(self, vk_id: str, screen_name: str = None):
         """
         Метод обновляет screen_name в БД для заданного vk_id.
 
@@ -335,7 +335,7 @@ class VKBot(Bot):
         else:
             try:
                 group = await self.api.groups.get_by_id(group_id=id_name,
-                                                        fields='screen_name'
+                                                        fields=['screen_name']
                                                         )
                 if group[0].type.value == 'group':
                     group_type = 'club'
@@ -359,7 +359,14 @@ class VKBot(Bot):
         :param group_id: id или screen_name группы.
         :return: Список администраторов.
         """
-        result = await self.api.groups.get_members(group_id=group_id, filter='managers')
+        if group_id:
+            members = await self.api.groups.get_members(group_id=group_id, filter='managers')
+        else:
+            group_id = str((await self.group_info())[0].id)
+            members = await self.api.groups.get_members(group_id=group_id, filter='managers')
+        result = []
+        for member in members.items:
+            result.append(str(member.id))
         return result
 
 

@@ -207,7 +207,7 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def get_admins(self) -> list:
+    def get_admins(self) -> List[int]:
         """
         Return all users from table admins
 

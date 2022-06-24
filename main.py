@@ -631,10 +631,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Вывести state dispenser.
         """
         answer_message = await bot.get_group_admins()
-        print(type(answer_message))
-        print(answer_message)
-        if answer_message:
-            print(answer_message.state)
         await message.answer(
             str(answer_message),
         )
@@ -645,7 +641,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Common message.
         """
-        users_info = await bot.api.users.get(message.from_id, fields=['screen_name'])
+        users_info = await bot.api.users.get([message.from_id], fields=['screen_name'])
         answer_message = dialogs.dont_understand
         answer_message += dialogs.samples
         keyboard = vk_keyboards.get_keyboard(None, message.peer_id in bot.vk_admin_id)
