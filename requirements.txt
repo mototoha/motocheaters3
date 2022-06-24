@@ -1,2 +1,2 @@
-requests==2.27.1
-vkbottle==4.3.0
+vkbottle>=4.3.0
+requests>=2.27.1
