@@ -15,7 +15,6 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
     RegexRule,
 )
-from vkbottle.exception_factory import VKAPIError
 
 import backend
 import startup
