@@ -8,9 +8,9 @@ import json
 config_json = 'config.json'
 
 parameters_from_json = {
-    'db_filename': 'str',
-    'vk_token': 'str',
-    'cheaters_filename': 'str',
+    'db_filename': 'cheaters.db',
+    'vk_token': '',
+    'cheaters_filename': 'kidaly.txt',
 }
 
 parameters_from_db = {
@@ -62,7 +62,11 @@ def get_parameters_from_json(json_filename=config_json) -> dict:
     for param in parameters_from_json:
         if not json_parameters.get(param):
             print('There is no variable', param, 'in config file', json_filename)
-            user_input = input('Enter ' + param + ':')
+            user_input = ''
+            while not user_input:
+                user_input = input('Enter ' + param + '(' + parameters_from_json[param] + '): ')
+                if not user_input:
+                    user_input = parameters_from_json[param]
             file_need_to_rewrite = True
             json_parameters[param] = user_input
         result[param] = json_parameters[param]
