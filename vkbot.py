@@ -186,7 +186,7 @@ class VKBot(Bot):
         print('Вот итоговый список:', cheaters_list, '\n')
         return cheaters_list
 
-    async def _update_database_from_list(self, cheaters_list: str):
+    async def _update_database_from_list(self, cheaters_list: list):
         """
         Принимает на вход список кидал, обновляет базу и возвращает ответ строкой.
         :return: Ответ для пользователя
@@ -280,13 +280,6 @@ class VKBot(Bot):
         else:
             return False
 
-    def get_group_admins(self) -> List[str]:
-        """
-        Метод обращается к API VK и возвращает список админов группы.
-        :return: list[str]
-        """
-        pass
-
     async def send_message_to_admins(self, message: str = 'Что-то', message_forward_id: int = None):
         """
         Метод посылает всем админам какое-то сообщение.
@@ -357,6 +350,17 @@ class VKBot(Bot):
             except VKAPIError[100]:
                 pass
         return result_vk_id, result_screen_name, result_banned
+
+    async def get_group_admins(self, group_id: str = None) -> List[str]:
+        """
+        Метод возвращает список администраторов группы.
+        Если имя группы не переданно - берется своя группа (от имени котрой запущен бот).
+
+        :param group_id: id или screen_name группы.
+        :return: Список администраторов.
+        """
+        result = await self.api.groups.get_members(group_id=group_id, filter='managers')
+        return result
 
 
 if __name__ == '__main__':

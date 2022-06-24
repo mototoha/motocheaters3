@@ -625,6 +625,20 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message,
         )
 
+    @bot.on.message(text="admins")
+    async def debug_get_dialogstate_handler(message: Message):
+        """
+        Вывести state dispenser.
+        """
+        answer_message = await bot.get_group_admins()
+        print(type(answer_message))
+        print(answer_message)
+        if answer_message:
+            print(answer_message.state)
+        await message.answer(
+            str(answer_message),
+        )
+
     # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(state=None)
     async def common_handler(message: Message):
