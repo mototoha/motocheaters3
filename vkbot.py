@@ -12,6 +12,7 @@ from vkbottle.exception_factory import VKAPIError
 
 import database
 import dialogs
+import vk_keyboards
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
@@ -59,7 +60,7 @@ class VKBot(Bot):
         self.db_filename = db_filename
         self.cheaters_filename = cheaters_filename
         self.db = database.DBCheaters(self.db_filename)
-        self.vk_admin_id = self.db.get_admins()
+        self.admins_from_db = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
 
     async def update_cheaters_from_file(self, url: str):
@@ -269,13 +270,13 @@ class VKBot(Bot):
         else:
             return False
 
-    async def is_user_admin(self, peer_id: int) -> bool:
+    async def is_admin(self, peer_id: int) -> bool:
         """
         Определяет, является ли пользователь админом.
         :param peer_id:
         :return:
         """
-        if peer_id in self.vk_admin_id or peer_id in (await self.get_group_admins()):
+        if peer_id in self.admins_from_db or peer_id in (await self.get_group_admins()):
             return True
         else:
             return False
@@ -288,7 +289,7 @@ class VKBot(Bot):
         :param message_forward_id : пересылаемое сообщение.
         :return: None
         """
-        vk_admin_ids = self.vk_admin_id
+        vk_admin_ids = self.admins_from_db
         message_text = message
         await self.api.messages.send(
             message=message_text,
@@ -368,6 +369,24 @@ class VKBot(Bot):
         for member in members.items:
             result.append(str(member.id))
         return result
+
+    async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
+        """
+        Метод отвечает за ответ пользователю. На вход принимает id пользователя, новый статус и текст сообщения.
+
+        :param text: Текст для ответа.
+        :param new_state: Новый статус.
+        :param peer_id: vk_id
+        """
+        if new_state:
+            self.state_dispenser.set(peer_id, new_state)
+        keyboard = vk_keyboards.get_keyboard(new_state, await self.is_admin(peer_id))
+        await self.api.messages.send(
+            peer_id=peer_id,
+            message=text,
+            keyboard=keyboard,
+            random_id=0,
+        )
 
 
 if __name__ == '__main__':
