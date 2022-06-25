@@ -6,6 +6,7 @@ import requests
 import time
 from typing import List, Tuple, Optional, Union
 
+import vkbottle
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
@@ -379,7 +380,10 @@ class VKBot(Bot):
         :param peer_id: vk_id
         """
         if new_state:
-            self.state_dispenser.set(peer_id, new_state)
+            await self.state_dispenser.set(peer_id, new_state)
+        else:
+            if await self.state_dispenser.get(peer_id):
+                await self.state_dispenser.delete(peer_id)
         keyboard = vk_keyboards.get_keyboard(new_state, await self.is_admin(peer_id))
         await self.api.messages.send(
             peer_id=peer_id,

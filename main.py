@@ -82,12 +82,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Кнопка 'Помочь нам'.
         """
         answer_message = dialogs.help_us
-        is_admin = await bot.is_admin(message.from_id)
-        keyboard = vk_keyboards.get_keyboard(None, is_admin)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.peer_id)
 
     # Кнопка 'Как проверить'.
     @bot.on.message(
@@ -99,9 +94,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Кнопка 'Как проверить'.
         """
         answer_message = dialogs.how_check
-        await message.answer(
-            answer_message,
-        )
+        await bot.answer_to_peer(answer_message, message.peer_id)
 
     # Кнопка "Передумал".
     @bot.on.message(
@@ -112,14 +105,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Рассказ про кидалу. Кнопка "Передумал".
         """
-        await bot.state_dispenser.delete(message.peer_id)
+        #await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.change_mind
-        is_admin = await bot.is_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(None, is_admin)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.peer_id)
+
 
     # История про кидалу.
     @bot.on.message(
