@@ -177,6 +177,7 @@ class Backend:
                                                          columns=['vk_id'],
                                                          condition_dict={'screen_name': id_name,
                                                                          'changed': 'False'})
+                id_name = sql_result['vk_id']
         else:
             if telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',
