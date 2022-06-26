@@ -29,7 +29,7 @@ class AdminUserRule(ABCRule[Message]):
         members = []
         for member in members_api.items:
             members.append(str(member.id))
-        members.append(self.bot.admins_from_db)
+        members += self.bot.admins_from_db
         if event.from_id in members:
             result = True
         return result

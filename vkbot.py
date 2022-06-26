@@ -4,9 +4,8 @@ Classes for VKBot
 import re
 import requests
 import time
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional
 
-import vkbottle
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
