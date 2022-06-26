@@ -23,12 +23,5 @@ class AdminUserRule(ABCRule[Message]):
         :param event: Сообщение от пользователя.
         :return: bool
         """
-        result = False
-        members_api = await self.bot.api.groups.get_members(group_id=self.bot.group_id, filter='managers')
-        members = []
-        for member in members_api.items:
-            members.append(str(member.id))
-        members += self.bot.admins_from_db
-        if event.from_id in members:
-            result = True
+        result = await self.bot.is_admin(event.from_id)
         return result

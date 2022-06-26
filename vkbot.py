@@ -283,7 +283,7 @@ class VKBot(Bot):
         """
         Определяет, является ли пользователь админом.
         :param peer_id:
-        :return:
+        :return: True or False
         """
         if peer_id in self.admins_from_db or peer_id in (await self.get_group_admins()):
             return True
