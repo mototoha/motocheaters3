@@ -48,5 +48,6 @@ insert_new_row = 'INSERT into {table} '
 
 select_id_screen_names = 'SELECT vk_id, fifty from vk_ids' \
                          'LEFT JOIN' \
-                         'SELECT screen_name from screen_names where changed = False' \
-                         'on vk_ids.vk_id = screen_names.vk_id'
+                         'SELECT screen_name from screen_names' \
+                         'on vk_ids.vk_id = screen_names.vk_id' \
+                         'where changed = False'

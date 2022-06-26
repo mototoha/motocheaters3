@@ -390,4 +390,5 @@ class DBCheaters:
 
         :return: Список кидал.
         """
-        vk_ids = self.get_cheaters_full_list()
+        vk_ids = self._cursor.execute(sql_requests.select_id_screen_names)
+        print(vk_ids)
