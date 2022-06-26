@@ -49,3 +49,9 @@ insert_new_row = 'INSERT into {table} '
 select_id_screen_names = 'select vk_ids.vk_id, screen_name, fifty ' \
                          'from vk_ids JOIN screen_names ' \
                          'on vk_ids.vk_id = screen_names.vk_id'
+
+select_all_cheaters_full_info = 'select vk_id, screen_name, fifty, card, telephone, proof_link from vk_ids' \
+                                'LEFT JOIN screen_names on vk_ids.vk_id = screen_names.vk_id' \
+                                'LEFT JOIN cards on vk_ids.vk_id = cards.vk_id' \
+                                'LEFT JOIN telephones on vk_ids.vk_id = telephones.vk_id' \
+                                'LEFT JOIN proof_links on vk_ids.vk_id = proof_links.vk_id'
