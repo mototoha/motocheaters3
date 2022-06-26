@@ -57,7 +57,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     :param db_filename: имя файла БД.
     :param vk_token: Токен.
     :param cheaters_filename: Имя файла для парсинга кидал.
-    :return: None
     """
 
     bot = vkbot.VKBot(
