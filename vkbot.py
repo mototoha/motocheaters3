@@ -11,6 +11,7 @@ from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
+
 import database
 import dialogs
 import vk_keyboards
@@ -63,6 +64,14 @@ class VKBot(Bot):
         self.db = database.DBCheaters(self.db_filename)
         self.admins_from_db = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
+        self.group_id = ''
+
+    async def get_async_params(self):
+        """
+        Метод получает значения для свойств объекта класса с помощью асинхронных методов.
+        """
+        group_info = await self.api.groups.get_by_id()
+        self.group_id = group_info[0].id
 
     async def update_cheaters_from_file(self, url: str):
         """
@@ -369,11 +378,13 @@ class VKBot(Bot):
         result = []
         for member in members.items:
             result.append(str(member.id))
+        result.append(self.admins_from_db)
         return result
 
     async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
         """
         Метод отвечает за ответ пользователю. На вход принимает id пользователя, новый статус и текст сообщения.
+        Изменяет StateDispenser, генерирует клавиатуру и отправляет пользователю ответ.
 
         :param text: Текст для ответа.
         :param new_state: Новый статус.

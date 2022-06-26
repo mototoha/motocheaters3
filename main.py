@@ -22,6 +22,8 @@ import dialogs
 import vk_keyboards
 import vkbot
 
+from CustomRules import AdminUserRule
+
 
 def main():
     """
@@ -38,6 +40,14 @@ def main():
         startup_parameters['vk_token'],
         startup_parameters['cheaters_filename']
     )
+
+
+async def bot_load(bot: vkbot.VKBot):
+    """
+    Метод стартует при начале работы бота.
+    :return:
+    """
+    await bot.get_async_params()
 
 
 def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
@@ -105,10 +115,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Рассказ про кидалу. Кнопка "Передумал".
         """
-        #await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.change_mind
         await bot.answer_to_peer(answer_message, message.peer_id)
-
 
     # История про кидалу.
     @bot.on.message(
@@ -130,14 +138,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
         # отвечаем вопрошающему
-        await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.thanks
-        is_admin = await bot.is_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(None, is_admin)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.peer_id)
 
     # Приветствие.
     @bot.on.message(text="Привет<!>", state=None)
@@ -150,19 +152,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         users_info = await bot.api.users.get([message.from_id])
         answer_message = dialogs.hello.format(users_info[0].first_name)
-        is_admin = await bot.is_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(None, is_admin)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.peer_id)
 
     # Кинули файл с кидалами.
     @bot.on.message(
         AttachmentTypeRule('doc'),
-        FromPeerRule(bot.admins_from_db),
-        func=(lambda message: message.attachments[0].doc.title == cheaters_filename),
-        state=None
     )
     async def send_file_handler(message: Message):
         """
@@ -184,10 +178,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         # TODO Вынести проверку файла за декоратор внутрь метода.
         #  Сделать ответ, если кидает не админ или имя не совпало.
-        await message.answer(dialogs.update_db_from_file)
-        attachments_url = message.attachments[0].doc.url
-        answer_message = await bot.update_cheaters_from_file(attachments_url)
-        await message.answer(answer_message)
+        is_admin = message.peer_id in (await bot.get_group_admins())
+        if is_admin and (message.attachments[0].doc.title == bot.cheaters_filename):
+            await message.answer(dialogs.update_db_from_file)
+            attachments_url = message.attachments[0].doc.url
+            answer_message = await bot.update_cheaters_from_file(attachments_url)
+            await bot.answer_to_peer(answer_message, message.peer_id)
+        else:
+            return 'Не бросайся файлами, я их не ем.'
 
     # Ловим кидалу.
     @bot.on.message(
@@ -218,16 +216,12 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     forward_messages=message.id,
                     random_id=0,
                 )
-        is_admin = await bot.is_admin(message.peer_id)
-        keyboard = vk_keyboards.get_keyboard(None, is_admin)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+
+        await bot.answer_to_peer(answer_message, message.peer_id)
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         CommandRule('Админ меню') | PayloadRule({"main": "admin"}),
         StateRule(),
     )
@@ -236,12 +230,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Переход в админское меню.
         """
         new_state = vkbot.AdminStates.MAIN
-        await bot.state_dispenser.set(message.from_id, new_state)
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=dialogs.admin_menu,
-            keyboard=keyboard,
-        )
+        answer_message = dialogs.admin_menu
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     # Кнопка "Вернуться на главную".
     @bot.on.message(
@@ -254,13 +244,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Возврат из админского меню в главное.
         Кнопка "Вернуться на главную".
         """
-        await bot.state_dispenser.delete(message.peer_id)
         answer_message = dialogs.return_to_main
-        keyboard = vk_keyboards.get_keyboard(None, is_admin=bot.is_admin(message.from_id))
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -273,31 +258,21 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Админское меню. Переход в рассылку.
         """
         new_state = vkbot.AdminStates.SPAM
-        await bot.state_dispenser.set(message.from_id, new_state)
         answer_message = dialogs.spam_header
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
         PayloadRule({"admin": "main"}),
-        StateRule(vkbot.AdminStates.MAIN),
+        StateRule(vkbot.AdminStates.SPAM),
     )
     async def admin_spam_change_mind_handler(message: Message):
         """
         Спам меню. Кнопка "Передумал".
         """
         new_state = vkbot.AdminStates.MAIN
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.admin_menu
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -315,12 +290,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         # group_id = group_info[0].id
         # members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = dialogs.spam_send + message.text
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await bot.state_dispenser.set(message.from_id, new_state)
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -332,13 +302,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Админ меню. Кнопка "Добавить кидалу".
         """
         new_state = vkbot.AdminStates.ADD_CHEATER
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.add_cheater_id
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -350,13 +315,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Админ меню. Кнопка "Удалить кидалу".
         """
         new_state = vkbot.AdminStates.DEL_CHEATER
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.del_cheater_start
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -398,13 +358,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы. Передумал добавлять кидалу.
         """
         new_state = vkbot.AdminStates.MAIN
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.admin_menu
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -416,13 +371,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Удаление кидалы. Передумал удалять что-то.
         """
         new_state = vkbot.AdminStates.MAIN
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.admin_menu
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -441,13 +391,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             return dialogs.del_cheater_error_value
 
         new_state = vkbot.AdminStates.MAIN
-        await bot.state_dispenser.set(message.peer_id, new_state)
         answer_message = dialogs.del_success
-        keyboard = vk_keyboards.get_keyboard(new_state)
-        await message.answer(
-            message=answer_message,
-            keyboard=keyboard,
-        )
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         FromPeerRule(bot.admins_from_db),
@@ -574,10 +519,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Вывести group_id.
         """
-        answer_message = await bot.group_info()
+        answer_message = bot.group_id
         keyboard = vk_keyboards.get_keyboard(None, await bot.is_admin(message.from_id))
         await message.answer(
-            answer_message[0].id,
+            answer_message,
             keyboard=keyboard,
         )
 
@@ -641,6 +586,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             forward_messages=message.id,
             random_id=0,
         )
+
+    bot.loop_wrapper.on_startup.append(bot_load(bot))
 
     print('Запускаю бота')
     bot.run_forever()
