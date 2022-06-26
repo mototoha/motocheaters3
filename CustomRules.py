@@ -14,7 +14,6 @@ class AdminUserRule(ABCRule[Message]):
 
     def __init__(self, bot: VKBot):
         self.bot = bot
-        self.group_id = bot.group_id
 
     async def check(self, event: Message) -> bool:
         """
