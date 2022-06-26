@@ -408,6 +408,14 @@ class VKBot(Bot):
             random_id=0,
         )
 
+    def export_db(self) -> str:
+        """
+        Метод возвращает .csv файл с экспортом из БД.
+        :return : .txt
+        """
+        cheaters_list = self.db.get_cheaters_full_list()
+        return None
+
 
 if __name__ == '__main__':
     #  Тут будет тест

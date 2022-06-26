@@ -382,4 +382,12 @@ class DBCheaters:
         if cheater.get('card'):
             self.add_cards(cheater['card'])
         if cheater.get('proof_link'):
-            self.add_proof_link(cheater['proof_link'], cheater['vk_id'])
+            self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
+
+    def get_cheaters_full_list(self) -> List[dict]:
+        """
+        Метод возвращает список со словарями кидал.
+
+        :return: Список кидал.
+        """
+        vk_ids = self.get_cheaters_full_list()
