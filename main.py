@@ -505,6 +505,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AdminUserRule(bot),
         StateGroupRule(vkbot.AdminStates),
+        text='экспорт'
+    )
+    async def admin_export_to_csv_handler(message: Message):
+        """
+        Любая другая хрень в админском меню.
+        """
+        bot.db.get_cheaters_full_list()
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        StateGroupRule(vkbot.AdminStates),
     )
     async def admin_common_message_handler(message: Message):
         """
