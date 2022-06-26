@@ -384,6 +384,20 @@ class DBCheaters:
         if cheater.get('proof_link'):
             self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
 
+    def update_fifty(self, vk_id: str, fifty: bool = None):
+        """
+        Метод меняет у vk_id параметр fifty на противоположный (если передан None) или указанный.
+
+        :param vk_id: id Вконтакте.
+        :param fifty: Новый параметр.
+        """
+        if fifty:
+            self.update_table('vk_ids', {'fifty': fifty}, {'vk_id': vk_id})
+        else:
+            vk_info = self.get_dict_from_table('vk_ids', ['fifty'], {'vk_id': vk_id})
+            old_fifty = vk_info['fifty']
+            self.update_table('vk_ids', {'fifty': not old_fifty}, {'vk_id': vk_id})
+
     def get_cheaters_full_list(self) -> List[dict]:
         """
         Метод возвращает список со словарями кидал.
