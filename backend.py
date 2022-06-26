@@ -1,5 +1,6 @@
 """
 Тут находится бекэнд проекта.
+Все методы, что не пользуют vk_api и db.
 """
 from dataclasses import dataclass, field, fields
 from typing import (

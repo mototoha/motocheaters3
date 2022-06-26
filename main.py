@@ -509,9 +509,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def admin_export_to_csv_handler(message: Message):
         """
-        Любая другая хрень в админском меню.
+        Экспорт базы данных в читаемый формат.
         """
-        bot.db.get_cheaters_full_list()
+        bot.export_db()
 
     @bot.on.message(
         AdminUserRule(bot),
@@ -615,4 +615,6 @@ if __name__ == '__main__':
 # TODO Сделать красивый вывод при найденном кидале.
 # TODO Добавить экспорт.
 # TODO Убрать пользователей из БД, оставить только админов группы.
+# TODO Убрать из бекэнда все операции с БД.
+# TODO Сделать проверку обновления кода в папке.
 

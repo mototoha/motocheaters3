@@ -1,6 +1,7 @@
 """
 Classes for VKBot
 """
+import pprint
 import re
 import requests
 import time
@@ -14,6 +15,7 @@ from vkbottle.exception_factory import VKAPIError
 import database
 import dialogs
 import vk_keyboards
+import backend
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
@@ -30,57 +32,6 @@ REGEXP_ADMIN = (
     r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     r'|(?P<fifty>50|fifty)'
 )
-
-REGEXP_CHEATER = {
-    'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)',
-    'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
-    'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
-    'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
-    'telephone': r'\+?(?P<telephone>\d{10,15}(\s\n)?)',
-    'fifty': r'(?P<fifty>50|fifty)'
-}
-
-def get_regexp(*args: 'str') -> str:
-    """
-    Возвращает регулярку с нужными строками для парсинга. В качестве аргументов принимает значения регулярок,
-    которые надо использовать. Если ничего не передали - берется все.\n
-    Можно передать ключевые слова:\n
-    all -все;\n
-    main, search - vk_id, screen_name, card, telephone;\n
-    add - vk_id, screen_name, card, telephone, proof_link, fifty;\n
-    del - vk_id, screen_name, card, telephone, proof_link.
-
-    Либо перечисляем группы регулярок.\n
-    Если сначала идут ключевые слова - остальное игнорируется.\n
-    Если идут группы - ключевые слова игнорируются.
-
-    :param args: Указываем параметры, которые хотим парсить регуляркой.
-    :return: Регулярка.
-    """
-    result = ''
-    # Группы регулярок.
-    regexp_group_list = tuple(REGEXP_CHEATER.keys())
-    # Запрошенные группы регулярок.
-    request_group_list: tuple
-    if args[0] == 'all':
-        request_group_list = tuple(REGEXP_CHEATER.keys())
-    elif args[0] in ('main', 'search'):
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone'])
-    elif args[0] == 'add':
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone', 'proof_link', 'fifty'])
-    elif args[0] == 'del':
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone', 'proof_link'])
-    elif args:
-        request_group_list = args
-    else:
-        request_group_list = tuple(REGEXP_CHEATER.keys())
-    for group in request_group_list:
-        if group in regexp_group_list:
-            if result:
-                # Если регулярка уже есть, добавляем или |
-                result += r'|'
-            result += REGEXP_CHEATER[group]
-    return result
 
 
 class DialogStates(BaseStateGroup):
@@ -464,7 +415,20 @@ class VKBot(Bot):
         Метод возвращает .csv файл с экспортом из БД.
         :return : .txt
         """
+        result = ''
         cheaters_list = self.db.get_cheaters_full_list()
+        one_cheater = backend.Cheater()
+        for cheater in cheaters_list:
+            if one_cheater.vk_id != cheater['vk_id']:
+                if one_cheater:
+                    result += str(one_cheater).replace('\n', '\t')+'\n'
+                one_cheater.vk_id = cheater['vk_id']
+            if cheater['screen_name']:
+                one_cheater.screen_name = cheater['screen_name']
+            for param in ('telephone', 'card', 'proof_link'):
+                if cheater.get(param):
+                    one_cheater.__setattr__(param, one_cheater.__getattribute__(param).append(cheater.get(param)))
+        pprint.pprint(result)
         return None
 
 

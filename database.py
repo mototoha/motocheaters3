@@ -401,10 +401,29 @@ class DBCheaters:
     def get_cheaters_full_list(self) -> List[dict]:
         """
         Метод возвращает список со словарями кидал.
+        Возвращает JOIN таблицу с полями: \n
+        vk_id \n
+        screen_name \n
+        fifty \n
+        telephone \n
+        card \n
+        proof_link \n
 
         :return: Список кидал.
         """
         vk_ids = self._cursor.execute(sql_requests.select_all_cheaters_full_info)
-        for one_cheater in vk_ids:
-            pass
+        result_tuple = vk_ids.fetchall()
+        result = []
+        for cheater_record in result_tuple:
+            result.append(
+                {
+                    'vk_id': cheater_record[0],
+                    'screen_name' :cheater_record[1],
+                    'fifty': cheater_record[2],
+                    'telephone': cheater_record[3],
+                    'card:': cheater_record[4],
+                    'proof_link': cheater_record[5],
+                }
+            )
+        return result
 
