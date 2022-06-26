@@ -4,14 +4,16 @@ Classes for VKBot
 import re
 import requests
 import time
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
+
 import database
 import dialogs
+import vk_keyboards
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
@@ -59,8 +61,19 @@ class VKBot(Bot):
         self.db_filename = db_filename
         self.cheaters_filename = cheaters_filename
         self.db = database.DBCheaters(self.db_filename)
-        self.vk_admin_id = self.db.get_admins()
+        self.admins_from_db = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
+        self.group_id = ''
+
+    async def get_async_params(self):
+        """
+        Метод получает значения для свойств объекта класса с помощью асинхронных методов.
+        Список параметров:
+        - group_id
+        ...
+        """
+        group_info = await self.api.groups.get_by_id()
+        self.group_id = group_info[0].id
 
     async def update_cheaters_from_file(self, url: str):
         """
@@ -269,13 +282,16 @@ class VKBot(Bot):
         else:
             return False
 
-    async def is_user_admin(self, peer_id: int) -> bool:
+    async def is_admin(self, peer_id: int) -> bool:
         """
         Определяет, является ли пользователь админом.
         :param peer_id:
-        :return:
+        :return: True or False
         """
-        if peer_id in self.vk_admin_id or peer_id in (await self.get_group_admins()):
+        group_admins = await self.get_group_admins()
+        for count, value in enumerate(group_admins):
+            group_admins[count] = int(value)
+        if peer_id in self.admins_from_db or peer_id in group_admins:
             return True
         else:
             return False
@@ -288,7 +304,7 @@ class VKBot(Bot):
         :param message_forward_id : пересылаемое сообщение.
         :return: None
         """
-        vk_admin_ids = self.vk_admin_id
+        vk_admin_ids = self.admins_from_db
         message_text = message
         await self.api.messages.send(
             message=message_text,
@@ -367,7 +383,30 @@ class VKBot(Bot):
         result = []
         for member in members.items:
             result.append(str(member.id))
+        result += self.admins_from_db
         return result
+
+    async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
+        """
+        Метод отвечает за ответ пользователю. На вход принимает id пользователя, новый статус и текст сообщения.
+        Изменяет StateDispenser, генерирует клавиатуру и отправляет пользователю ответ.
+
+        :param text: Текст для ответа.
+        :param new_state: Новый статус.
+        :param peer_id: vk_id
+        """
+        if new_state:
+            await self.state_dispenser.set(peer_id, new_state)
+        else:
+            if await self.state_dispenser.get(peer_id):
+                await self.state_dispenser.delete(peer_id)
+        keyboard = vk_keyboards.get_keyboard(new_state, await self.is_admin(peer_id))
+        await self.api.messages.send(
+            peer_id=peer_id,
+            message=text,
+            keyboard=keyboard,
+            random_id=0,
+        )
 
 
 if __name__ == '__main__':
