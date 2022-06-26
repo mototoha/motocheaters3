@@ -32,20 +32,20 @@ def main():
 
     startup_parameters = startup.get_parameters_from_json()
     if not startup_parameters:
+        print('Предполетную проверку не прошел')
         return None
     print(startup_parameters)
 
     start_bot(
-        startup_parameters['db_filename'],
-        startup_parameters['vk_token'],
-        startup_parameters['cheaters_filename']
+        db_filename=startup_parameters['db_filename'],
+        vk_token=startup_parameters['vk_token'],
+        cheaters_filename=startup_parameters['cheaters_filename']
     )
 
 
 async def bot_load(bot: vkbot.VKBot):
     """
     Метод стартует при начале работы бота.
-    :return:
     """
     await bot.get_async_params()
 
@@ -235,7 +235,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Кнопка "Вернуться на главную".
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.MAIN),
         PayloadRule({"admin": "return_to_main"}),
     )
@@ -248,7 +248,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         PayloadRule({"admin": "mass_sending"}),
         StateRule(vkbot.AdminStates.MAIN),
     )
@@ -262,7 +262,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         PayloadRule({"admin": "main"}),
         StateRule(vkbot.AdminStates.SPAM),
     )
@@ -275,7 +275,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.SPAM),
     )
     async def admin_start_spam_handler(message: Message):
@@ -293,7 +293,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.MAIN),
         PayloadRule({"admin": "add_cheater"}),
     )
@@ -306,7 +306,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.MAIN),
         PayloadRule({"admin": "del_cheater"}),
     )
@@ -319,7 +319,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
         PayloadRule({"admin": "add"}),
     )
@@ -349,7 +349,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             return 'Введи параметры кидалы.'
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
         PayloadRule({"admin": "main"}),
     )
@@ -362,7 +362,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.DEL_CHEATER),
         PayloadRule({"admin": "main"}),
     )
@@ -375,7 +375,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.DEL_CHEATER),
     )
     async def admin_del_cheater_text_handler(message: Message):
@@ -395,7 +395,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        FromPeerRule(bot.admins_from_db),
+        AdminUserRule(bot),
         StateRule(vkbot.AdminStates.ADD_CHEATER),
     )
     async def admin_add_cheater_text_handler(message: Message):
@@ -506,7 +506,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             message=answer_message,
         )
 
-    @bot.on.message(StateGroupRule(vkbot.AdminStates))
+    @bot.on.message(
+        AdminUserRule(bot),
+        StateGroupRule(vkbot.AdminStates),
+    )
     async def admin_common_message_handler(message: Message):
         """
         Любая другая хрень в админском меню.

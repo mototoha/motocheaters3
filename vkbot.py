@@ -68,6 +68,9 @@ class VKBot(Bot):
     async def get_async_params(self):
         """
         Метод получает значения для свойств объекта класса с помощью асинхронных методов.
+        Список параметров:
+        - group_id
+        ...
         """
         group_info = await self.api.groups.get_by_id()
         self.group_id = group_info[0].id
