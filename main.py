@@ -176,8 +176,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         vk.com/id3166 \n
         3215321532159999
         """
-        # TODO Вынести проверку файла за декоратор внутрь метода.
-        #  Сделать ответ, если кидает не админ или имя не совпало.
         is_admin = message.peer_id in (await bot.get_group_admins())
         if is_admin and (message.attachments[0].doc.title == bot.cheaters_filename):
             await message.answer(dialogs.update_db_from_file)
@@ -332,12 +330,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheater_db = message.state_peer.payload.get('cheater_db')
         if cheater:
             if cheater.get('vk_id'):
+                new_state = vkbot.AdminStates.MAIN
                 await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
                 keyboard = vk_keyboards.get_keyboard(vkbot.AdminStates.MAIN)
-                await message.answer(
-                    message='Добавляю кидалу\n' + str(cheater),
-                    keyboard=keyboard,
-                )
+                answer_message = 'Добавляю кидалу\n' + str(cheater)
+                await bot.answer_to_peer(answer_message, message.peer_id, new_state)
                 update = bend.add_cheater(cheater, cheater_db)
                 await message.answer(
                     message='Добавил(обновил) следующие поля\n' + str(update),
@@ -603,3 +600,6 @@ if __name__ == '__main__':
 # TODO Сделать контроль полей БД при запуске
 # TODO Рассылка (пока только заготовка)
 # TODO Удалить запись из БД
+# TODO Сделать проверку на админа при появлении любого сообщения, а не в каждом хендлере
+# TODO Запретить писать другим группам
+

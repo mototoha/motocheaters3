@@ -288,7 +288,10 @@ class VKBot(Bot):
         :param peer_id:
         :return: True or False
         """
-        if peer_id in self.admins_from_db or peer_id in (await self.get_group_admins()):
+        group_admins = await self.get_group_admins()
+        for count, value in enumerate(group_admins):
+            group_admins[count] = int(value)
+        if peer_id in self.admins_from_db or peer_id in group_admins:
             return True
         else:
             return False
@@ -380,7 +383,7 @@ class VKBot(Bot):
         result = []
         for member in members.items:
             result.append(str(member.id))
-        result.append(self.admins_from_db)
+        result += self.admins_from_db
         return result
 
     async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
