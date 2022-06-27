@@ -418,8 +418,10 @@ class VKBot(Bot):
         """
         result = 'vk_id;screen_name;telephones;cards;proof_links\n'
         fifty = False
+
         cheaters_list = self.db.get_cheaters_full_list()
         one_cheater = backend.Cheater()
+
         for cheater in cheaters_list:
             if one_cheater.vk_id != cheater['vk_id']:
                 result += one_cheater.str_csv()
@@ -427,13 +429,20 @@ class VKBot(Bot):
                     if cheater['fifty'] and (not fifty):
                         result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
                         fifty = True
+
                 one_cheater = backend.Cheater()
                 one_cheater.vk_id = cheater['vk_id']
+
             if cheater['screen_name']:
                 one_cheater.screen_name = cheater['screen_name']
+
             for param in ('telephone', 'card', 'proof_link'):
                 if cheater.get(param):
                     one_cheater.__getattribute__(param).append(cheater.get(param))
+
+        if one_cheater:
+            result += one_cheater.str_csv()
+
         return result
 
 
