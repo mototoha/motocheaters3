@@ -424,8 +424,7 @@ class VKBot(Bot):
             if one_cheater.vk_id != cheater['vk_id']:
                 if one_cheater:
                     if cheater['fifty'] and (not fifty):
-                        bytestr = 'Далее идут полтинники -  реальные продавцы/разборки/сервисы/прочее - ' \
-                                  'работают, как повезет\n'
+                        bytestr = 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
                         result += bytestr.encode().decode()
                         fifty = True
                     result += one_cheater.str_csv()
