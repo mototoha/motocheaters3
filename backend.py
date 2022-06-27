@@ -127,12 +127,16 @@ class Cheater:
                 return self.__getattribute__(f.name)
         return None
 
-    def str_csv(self, sep: str = ',') -> str:
+    def str_csv(self, sep: str = ';') -> str:
         """
-        Метод возвращает строку для вставки в csv файл.
+        Метод возвращает строку для вставки в csv файл. Параметр fifty опускается.
         :return: параметры через разделитель (по-умолчанию - запятая)
         """
         result = ''
+        for f in fields(self):
+            if f.name != 'fifty':
+                result += str(self.__getattribute__(f.name)) + sep
+        result += '\n'
         return result
 
 
