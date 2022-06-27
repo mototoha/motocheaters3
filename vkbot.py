@@ -422,11 +422,11 @@ class VKBot(Bot):
         one_cheater = backend.Cheater()
         for cheater in cheaters_list:
             if one_cheater.vk_id != cheater['vk_id']:
+                result += one_cheater.str_csv()
                 if one_cheater:
                     if cheater['fifty'] and (not fifty):
                         result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
                         fifty = True
-                result += one_cheater.str_csv()
                 one_cheater = backend.Cheater()
                 one_cheater.vk_id = cheater['vk_id']
             if cheater['screen_name']:
