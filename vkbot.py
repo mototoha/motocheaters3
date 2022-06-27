@@ -412,15 +412,19 @@ class VKBot(Bot):
 
     def export_db(self) -> str:
         """
-        Метод возвращает .csv файл с экспортом из БД.
-        :return : .txt
+        Метод парсит БД и возвращает строку в csv формате для отправки пользователю.
+        :return : str in csv format (separates TAB)
         """
-        result = ''
+        result = 'vk_id\tscreen_name\ttelephones\tcards\tproof_links\n'
+        fifty = False
         cheaters_list = self.db.get_cheaters_full_list()
         one_cheater = backend.Cheater()
         for cheater in cheaters_list:
             if one_cheater.vk_id != cheater['vk_id']:
                 if one_cheater:
+                    if one_cheater.fifty and not fifty:
+                        result += 'Далее идут полтинники -  реальные продавцы/разборки/сервисы/прочее - ' \
+                                  'работают, как повезет'
                     result += str(one_cheater).replace('\n', '\t')+'\n'
                 one_cheater.vk_id = cheater['vk_id']
             if cheater['screen_name']:
@@ -428,8 +432,7 @@ class VKBot(Bot):
             for param in ('telephone', 'card', 'proof_link'):
                 if cheater.get(param):
                     one_cheater.__setattr__(param, one_cheater.__getattribute__(param).append(cheater.get(param)))
-        pprint.pprint(result)
-        return None
+        return result
 
 
 if __name__ == '__main__':

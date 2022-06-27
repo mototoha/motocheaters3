@@ -511,7 +511,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Экспорт базы данных в читаемый формат.
         """
-        bot.export_db()
+        csv_to_peer = bot.export_db()
 
     @bot.on.message(
         AdminUserRule(bot),
