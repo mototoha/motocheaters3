@@ -6,6 +6,7 @@ import re
 import requests
 import time
 from typing import List, Tuple, Optional
+from dataclasses import dataclass, field, fields
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -415,7 +416,7 @@ class VKBot(Bot):
         Метод парсит БД и возвращает строку в csv формате для отправки пользователю.
         :return : str in csv format (separates TAB)
         """
-        result = 'vk_id\tscreen_name\ttelephones\tcards\tproof_links\n'
+        result = 'vk_id,screen_name,telephones,cards,proof_links\n'
         fifty = False
         cheaters_list = self.db.get_cheaters_full_list()
         one_cheater = backend.Cheater()
@@ -424,8 +425,12 @@ class VKBot(Bot):
                 if one_cheater:
                     if one_cheater.fifty and not fifty:
                         result += 'Далее идут полтинники -  реальные продавцы/разборки/сервисы/прочее - ' \
-                                  'работают, как повезет'
-                    result += str(one_cheater).replace('\n', '\t')+'\n'
+                                  'работают, как повезет\n'
+                        fifty = True
+                    result += one_cheater.vk_id + ','
+                    if one_cheater.screen_name:
+                        result += one_cheater.screen_name
+                    result += one_cheater.telephone + ',' + one_cheater.card + ',' + one_cheater.screen_name
                 one_cheater = backend.Cheater()
                 one_cheater.vk_id = cheater['vk_id']
             if cheater['screen_name']:

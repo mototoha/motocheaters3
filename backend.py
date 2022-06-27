@@ -127,6 +127,14 @@ class Cheater:
                 return self.__getattribute__(f.name)
         return None
 
+    def str_csv(self, sep: str = ',') -> str:
+        """
+        Метод возвращает строку для вставки в csv файл.
+        :return: параметры через разделитель (по-умолчанию - запятая)
+        """
+        result = ''
+        return result
+
 
 class Backend:
     """
