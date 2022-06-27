@@ -426,12 +426,13 @@ class VKBot(Bot):
                         result += 'Далее идут полтинники -  реальные продавцы/разборки/сервисы/прочее - ' \
                                   'работают, как повезет'
                     result += str(one_cheater).replace('\n', '\t')+'\n'
+                one_cheater = backend.Cheater()
                 one_cheater.vk_id = cheater['vk_id']
             if cheater['screen_name']:
                 one_cheater.screen_name = cheater['screen_name']
             for param in ('telephone', 'card', 'proof_link'):
                 if cheater.get(param):
-                    one_cheater.__setattr__(param, one_cheater.__getattribute__(param).append(cheater.get(param)))
+                    one_cheater.__getattribute__(param).append(cheater.get(param))
         return result
 
 

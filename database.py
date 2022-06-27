@@ -420,8 +420,8 @@ class DBCheaters:
                     'vk_id': cheater_record[0],
                     'screen_name' :cheater_record[1],
                     'fifty': cheater_record[2],
-                    'telephone': cheater_record[3],
-                    'card:': cheater_record[4],
+                    'card': cheater_record[3],
+                    'telephone:': cheater_record[4],
                     'proof_link': cheater_record[5],
                 }
             )

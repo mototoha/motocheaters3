@@ -15,6 +15,7 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
     RegexRule,
 )
+from vkbottle import DocMessagesUploader
 
 import backend
 import startup
@@ -512,6 +513,15 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Экспорт базы данных в читаемый формат.
         """
         csv_to_peer = bot.export_db()
+        uploader = DocMessagesUploader(bot.api)
+        uploader.generate_attachment_strings = True
+        doc = await uploader.upload('kidaly.csv',
+                                    csv_to_peer.encode(),
+                                    peer_id=message.from_id,
+                                    )
+        await message.answer(
+            attachment=doc
+        )
 
     @bot.on.message(
         AdminUserRule(bot),
