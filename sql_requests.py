@@ -50,7 +50,7 @@ select_id_screen_names = 'select vk_ids.vk_id, screen_name, fifty ' \
                          'from vk_ids JOIN screen_names ' \
                          'on vk_ids.vk_id = screen_names.vk_id'
 
-select_all_cheaters_full_info  = """
+select_all_cheaters_full_info = """
 SELECT vk_ids.vk_id, screen_name, fifty, card, telephone, proof_link FROM vk_ids 
 LEFT JOIN screen_names on vk_ids.vk_id = screen_names.vk_id 
 LEFT JOIN cards on vk_ids.vk_id = cards.vk_id 
