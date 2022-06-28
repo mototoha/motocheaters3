@@ -1,12 +1,10 @@
 """
 Classes for VKBot
 """
-import pprint
 import re
 import requests
 import time
-from typing import List, Tuple, Optional
-import codecs
+from typing import List, Tuple, Optional, Union
 
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
@@ -16,7 +14,7 @@ from vkbottle.exception_factory import VKAPIError
 import database
 import dialogs
 import vk_keyboards
-import backend
+from backend import Cheater
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
@@ -130,7 +128,7 @@ class VKBot(Bot):
                         user = None
                         try:
                             user = await self.api.users.get(user_ids=match[match.lastgroup],
-                                                            fields='screen_name'
+                                                            fields=['screen_name']
                                                             )
                             print('Запрос юзера вернул:\n', user)
                         except VKAPIError[6]:
@@ -145,7 +143,7 @@ class VKBot(Bot):
                         group = None
                         try:
                             user = await self.api.users.get(user_ids=match[match.lastgroup],
-                                                            fields='screen_name'
+                                                            fields=['screen_name']
                                                             )
                             print('Запрос юзера вернул:\n', user)
                         except VKAPIError[6]:
@@ -334,6 +332,7 @@ class VKBot(Bot):
         self.db.update_table('screen_names', {'changed': True}, {'screen_name': screen_name})
         self.db.add_screen_name(screen_name, vk_id)
 
+
     async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool]]:
         """
         Метод возвращает id и screen_name в виде кортежа из двух значений.
@@ -373,7 +372,7 @@ class VKBot(Bot):
     async def get_group_admins(self, group_id: str = None) -> List[str]:
         """
         Метод возвращает список администраторов группы.
-        Если имя группы не переданно - берется своя группа (от имени котрой запущен бот).
+        Если имя группы не передано - берется своя группа (от имени котрой запущен бот).
 
         :param group_id: id или screen_name группы.
         :return: Список администраторов.
@@ -420,7 +419,7 @@ class VKBot(Bot):
         fifty = False
 
         cheaters_list = self.db.get_cheaters_full_list()
-        one_cheater = backend.Cheater()
+        one_cheater = Cheater()
 
         for cheater in cheaters_list:
             if one_cheater.vk_id != cheater['vk_id']:
@@ -430,7 +429,7 @@ class VKBot(Bot):
                         result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
                         fifty = True
 
-                one_cheater = backend.Cheater()
+                one_cheater = Cheater()
                 one_cheater.vk_id = cheater['vk_id']
 
             if cheater['screen_name']:
@@ -443,6 +442,104 @@ class VKBot(Bot):
         if one_cheater:
             result += one_cheater.str_csv()
 
+        return result
+
+    def get_cheater_from_db(self,
+                            id_name: Optional[str] = None,
+                            telephone: Optional[str] = None,
+                            card: Optional[str] = None,
+                            proof_link: Optional[str] = None,
+                            return_fields: Optional[Union[str, List[str]]] = None,
+                            ) -> Optional[Union[Cheater, List[Cheater]]]:
+        """
+        Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаются параметры, по которым надо его найти.
+        Сейчас используется только первый по порядку.\n
+        В результате вернется либо Cheater(), лио список Cheater()'ов, либо None.
+
+        :param id_name: id или screen_name VK,
+        :param telephone: телефон,
+        :param card: номер карт,
+        :param proof_link: ссылка на пруф,
+        :param return_fields: поля, которые требуется вернуть,
+        :return: объект (список объектов) Cheater или None, если ничего не нашел.
+        """
+        sql_result = []
+        vk_id = ''
+        # Сначала определяемся, по какому vk_id искать.
+        if id_name:
+            if id_name.startswith(('id', 'club', 'public', 'event')):
+                vk_id = id_name
+            else:
+                sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'screen_name': id_name,
+                                                                         'changed': 'False'})
+                id_name = sql_result['vk_id']
+        else:
+            if telephone:
+                sql_result = self.db.get_dict_from_table(table='telephones',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'telephone': telephone})
+            elif card:
+                sql_result = self.db.get_dict_from_table(table='cards',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'card': card})
+            elif proof_link:
+                sql_result = self.db.get_dict_from_table(table='proof_links',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'proof_link': proof_link})
+            if sql_result:
+                vk_id = sql_result[0].get('vk_id')
+
+        # Если нашелся или передан vk_id.
+        if vk_id:
+            cheater_info = Cheater()
+            # Обращаемся к БД за остальными параметрами.
+            sql_result = self.db.get_dict_from_table(table='vk_ids',
+                                                     columns=['vk_id', 'fifty'],
+                                                     condition_dict={'vk_id': vk_id})
+            if sql_result:
+                cheater_info.vk_id = sql_result[0]['vk_id']
+                cheater_info.fifty = sql_result[0]['fifty']
+
+            sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                     columns=['screen_name'],
+                                                     condition_dict={'vk_id': vk_id, 'changed': 'False'})
+            if sql_result:
+                cheater_info.screen_name = sql_result[0]['screen_name']
+
+            sql_result = self.db.get_dict_from_table(table='telephones',
+                                                     columns=['telephone'],
+                                                     condition_dict={'vk_id': vk_id})
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
+
+            sql_result = self.db.get_dict_from_table(table='cards',
+                                                     columns=['card'],
+                                                     condition_dict={'vk_id': vk_id})
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
+
+            sql_result = self.db.get_dict_from_table(table='proof_links',
+                                                     columns=['proof_link'],
+                                                     condition_dict={'vk_id': vk_id})
+            if sql_result:
+                items_list = []
+                for item in sql_result:
+                    items_list += item.values()
+                cheater_info.proof_link = items_list
+            if not cheater_info:
+                result = None
+            else:
+                result = cheater_info
+        else:
+            result = None
         return result
 
 

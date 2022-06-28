@@ -24,6 +24,22 @@ REGEXP_CHEATER = {
 }
 
 
+def merge_list(l1: list, l2: list):
+    """
+    Функция сливает два списка, исключая повторы.
+
+    :param l1: Первый список.
+    :param l2: Второй список. Добавится в конец первого без повторов.
+    :return: Суммарный список.
+    """
+    result = l1
+    set_l1 = set(l1)
+    for el in l2:
+        if el not in set_l1:
+            result.append(l2)
+    return result
+
+
 def get_regexp(*args: 'str') -> str:
     """
     Возвращает регулярку с нужными строками для парсинга. В качестве аргументов принимает значения регулярок,
@@ -138,6 +154,37 @@ class Cheater:
                 result += str(self.__getattribute__(f.name)) + sep
         result += '\n'
         return result
+
+    def update(self,
+               vk_id: str = None,
+               screen_name: str = None,
+               fifty: bool = None,
+               telephone: List[str] = None,
+               card: List[str] = None,
+               proof_link: List[str] = None):
+        """
+        Метод позволяет обновить поля объекта в меньшее количество строк.
+        Ничего не удаляет
+
+        :param vk_id: Новый ID.
+        :param screen_name: Новое имя.
+        :param fifty: Новое значение полтинника.
+        :param telephone: Добавляются новые телефоны.
+        :param card: Добавляются новые карты.
+        :param proof_link:  Добавляются новые пруфлинки.
+        """
+        if vk_id:
+            self.vk_id = vk_id
+        if screen_name:
+            self.screen_name = screen_name
+        if fifty:
+            self.fifty = fifty
+        if telephone:
+            merge_list(self.telephone, telephone)
+        if card:
+            merge_list(self.card, card)
+        if proof_link:
+            merge_list(self.proof_link, proof_link)
 
 
 class Backend:

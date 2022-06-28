@@ -412,71 +412,68 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 # Если еще не создан шаблон кидалы для админа - создаём.
                 cheater = backend.Cheater()
 
-            if match.lastgroup == 'vk_id':
-                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
-                    match[match.lastgroup])
+            api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
+                match[match.lastgroup])
 
-                if is_banned:
-                    await message.answer(dialogs.add_cheater_id_delete)
+            if is_banned:
+                await message.answer(dialogs.add_cheater_id_delete)
 
-                if api_vk_id is None:
-                    await message.answer(dialogs.add_cheater_no_id)
+            if api_vk_id is None:
+                return dialogs.add_cheater_no_id
+
+            if match.lastgroup == 'screen_name':
+                cheater_db = bot.get_cheater_from_db(match[match.lastgroup])
+                if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
+                    await bot.send_message_to_admins(str(cheater_db))
+                    return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
+                           'Пропусти и продолжи добавление других кидал.'
+                # Если в БД есть такой screen_name.
+                if cheater_db:
+                    # Если совпадают ID.
+                    if cheater_db.vk_id == api_vk_id:
+                        pass
+                    else:
+                        await bot.update_db_screen_name(cheater_db.vk_id)
+                        # TODO поиск api_vk_id в БД
+                # Если нет записей в БД
                 else:
-                    pass
+                    cheater.vk_id = api_vk_id
+                    cheater.screen_name = api_screen_name
 
+            elif match.lastgroup == 'vk_id':
+                cheater_db = bot.get_cheater_from_db(match[match.lastgroup])
+                if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
+                    await bot.send_message_to_admins(str(cheater_db))
+                    return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
+                           'Пропусти и продолжи добавление других кидал.'
+                # TODO отрефакторить.
+                # Если vk_id в базе
+                if cheater_db:
+                    # Если у него есть имя
+                    if cheater.screen_name:
+                        # Если оно актуально
+                        if cheater.screen_name == api_screen_name:
+                            pass
+                        # Если не актуально
+                        else:
+                            # Меняем имя
+                            await bot.update_db_screen_name(cheater_db.vk_id, api_screen_name)
+                            cheater_db.screen_name = api_screen_name
+                    # Если в базе нет имени
+                    else:
+                        # Ставим имя
+                        await bot.update_db_screen_name(cheater_db.vk_id, api_screen_name)
+                        cheater_db.screen_name = api_screen_name
 
-            if match.lastgroup in {'vk_id', 'screen_name'}:
-                # Обращение к API за vk_id и short_name
-                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
-                    match[match.lastgroup])
-                if is_banned:
-                    await message.answer(dialogs.add_cheater_id_delete)
-                if api_vk_id is None:
-                    await message.answer(dialogs.add_cheater_no_id)
+                    cheater.update(vk_id=cheater_db.vk_id,
+                                   screen_name=cheater.screen_name)
+                    cheater.vk_id = cheater_db.vk_id
+                    cheater.screen_name = api_screen_name
+                # Если нет vk_id в базе.
                 else:
-                    # Если пользователь ВК есть - запрашиваем нашу БД.
-                    cheater_db = bend.get_cheater_info(match[match.lastgroup])
-                    if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
-                        await bot.send_message_to_admins(str(cheater_db))
-                        return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
-                               'Пропусти и продолжи добавление других кидал.'
-                    if match.lastgroup == 'vk_id':
-                        if cheater_db:
-                            if cheater_db.screen_name != api_screen_name:
-                                await bot.update_db_screen_name(cheater_db.vk_id)
-                                cheater_db.screen_name = api_screen_name
-                            cheater.vk_id = cheater_db.vk_id
-                            cheater.screen_name = api_screen_name
-                        else:
-                            cheater_db = bend.get_cheater_info(api_screen_name)
-                            if cheater_db:
-                                await bot.update_db_screen_name(cheater_db.vk_id)
-                                cheater_db.screen_name = api_screen_name
-                            cheater.vk_id = api_vk_id
-                            cheater.screen_name = api_screen_name
-                    elif match.lastgroup == 'screen_name':
-                        if cheater_db:
-                            if cheater_db.vk_id == api_vk_id:
-                                cheater.vk_id = api_vk_id
-                                cheater.screen_name = api_screen_name
-                            else:
-                                await bot.update_db_screen_name(cheater_db.vk_id)
-                                cheater_db.screen_name = api_screen_name
-                                cheater_db_2 = bend.get_cheater_info(api_vk_id)
-                                if cheater_db_2:
-                                    await bot.update_db_screen_name(cheater_db_2.vk_id)
-                                cheater.vk_id = api_vk_id
-                                cheater.screen_name = api_screen_name
-                        else:
-                            cheater_db = bend.get_cheater_info(api_vk_id)
-                            if cheater_db:
-                                await bot.update_db_screen_name(cheater_db.vk_id)
-                                cheater_db.screen_name = api_screen_name
-                                cheater.vk_id = cheater_db.vk_id
-                                cheater.screen_name = cheater.screen_name
-                            else:
-                                cheater.vk_id = api_vk_id
-                                cheater.screen_name = api_screen_name
+                    cheater.vk_id = api_vk_id
+                    cheater.screen_name = api_screen_name
+
             elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
                 # Список значений 'card', 'telephone' или 'proof_link'
                 list_values = cheater.get(match.lastgroup)
@@ -641,4 +638,3 @@ if __name__ == '__main__':
 # TODO Убрать пользователей из БД, оставить только админов группы.
 # TODO Убрать из бекэнда все операции с БД.
 # TODO Сделать проверку обновления кода в папке.
-
