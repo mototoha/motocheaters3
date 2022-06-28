@@ -400,11 +400,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или 50.
         """
+        formatted_message_text = message.text.lower().replace(' ', '')
         cheater = message.state_peer.payload.get('cheater')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
 
-        # Ищем совпадение с регуляркой.
-        match = re.match(backend.get_regexp('all'), message.text.replace(' ', ''))
+        match = re.match(backend.get_regexp('all'), formatted_message_text)
 
         # Есть совпадение.
         if match:
@@ -412,9 +412,23 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 # Если еще не создан шаблон кидалы для админа - создаём.
                 cheater = backend.Cheater()
 
+            if match.lastgroup == 'vk_id':
+                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
+                    match[match.lastgroup])
+
+                if is_banned:
+                    await message.answer(dialogs.add_cheater_id_delete)
+
+                if api_vk_id is None:
+                    await message.answer(dialogs.add_cheater_no_id)
+                else:
+                    pass
+
+
             if match.lastgroup in {'vk_id', 'screen_name'}:
                 # Обращение к API за vk_id и short_name
-                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name(match[match.lastgroup])
+                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
+                    match[match.lastgroup])
                 if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete)
                 if api_vk_id is None:
