@@ -8,7 +8,6 @@ import re
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
-    FromPeerRule,
     PayloadRule,
     CommandRule,
     StateRule,
@@ -132,7 +131,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         message_text = dialogs.cheater_story_to_admin.format(str(users_info[0].screen_name))
         await bot.api.messages.send(
             message=message_text,
-            user_ids=bot.admins_from_db,
+            user_ids=await bot.get_group_admins(),
             forward_messages=message.id,
             random_id=0,
         )
@@ -210,7 +209,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 message_text = 'Запрос, который некорректно отработал'
                 await bot.api.messages.send(
                     message=message_text,
-                    user_ids=bot.admins_from_db,
+                    user_ids=await bot.get_group_admins(),
                     forward_messages=message.id,
                     random_id=0,
                 )
@@ -413,15 +412,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 # Если еще не создан шаблон кидалы для админа - создаём.
                 cheater_add = backend.Cheater()
 
-            api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(match[match.lastgroup])
-
-            if is_banned:
-                await message.answer(dialogs.add_cheater_id_delete)
-
-            if api_vk_id is None:
-                return dialogs.add_cheater_no_id
-
             if match.lastgroup in ('vk_id', 'screen_name'):
+                # Если в запросе vk_id или screen_name - запрашиваем vk_api.
+                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
+                    match[match.lastgroup])
+
+                if is_banned:
+                    await message.answer(dialogs.add_cheater_id_delete.format(api_vk_id))
+
+                if api_vk_id is None:
+                    return dialogs.add_cheater_no_id
+
                 cheater_db = bot.get_cheater_from_db(match[match.lastgroup])
                 if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
                     await bot.send_message_to_admins(str(cheater_db))
@@ -444,7 +445,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     # Если vk_id в базе
                     if cheater_db:
                         # Если имя в БД не актуально.
-                        if cheater_db.screen_name is None or (cheater_db.screen_name != api_screen_name):
+                        if cheater_db.screen_name != api_screen_name:
                             # Устанавливаем корректное имя.
                             await bot.update_db_screen_name(cheater_db.vk_id, api_screen_name)
                             cheater_db.screen_name = api_screen_name
@@ -473,7 +474,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                                message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
                 await bot.api.messages.send(
                     message=message_text,
-                    user_ids=bot.admins_from_db,
+                    user_ids=await bot.get_group_admins(),
                     forward_messages=message.id,
                     random_id=0,
                 )
@@ -524,7 +525,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         return dialogs.admin_common
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
-    @bot.on.message(FromPeerRule(bot.admins_from_db), text="group_id")
+    @bot.on.message(AdminUserRule(bot), text="group_id")
     async def debug_get_my_group_id_handler(message: Message):
         """
         Вывести group_id.
@@ -536,7 +537,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    @bot.on.message(FromPeerRule(bot.admins_from_db), text="members", state=None, )
+    @bot.on.message(AdminUserRule(bot), text="members", state=None, )
     async def debug_get_members_handler(message: Message):
         """
         Вывести членов группы.
@@ -552,7 +553,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    @bot.on.message(FromPeerRule(bot.admins_from_db), text="dialogstate")
+    @bot.on.message(AdminUserRule(bot), text="dialogstate")
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
@@ -566,7 +567,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message,
         )
 
-    @bot.on.message(FromPeerRule(bot.admins_from_db), text="admins")
+    @bot.on.message(AdminUserRule(bot), text="admins")
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
@@ -592,7 +593,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].screen_name))
         await bot.api.messages.send(
             message=message_text,
-            user_ids=bot.admins_from_db,
+            user_ids=await bot.get_group_admins(),
             forward_messages=message.id,
             random_id=0,
         )

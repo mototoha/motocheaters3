@@ -50,7 +50,8 @@ add_cheater_id = 'Введи адрес страницы, телефон или 
 add_cheater_tel = 'Введи телефоны (каждый с новой строчки)'
 add_cheater_card = 'Введи номера карт (каждую с новой строчки)'
 add_cheater_proof = 'Введи ссылку на страницу'
-add_cheater_id_delete = 'Этот пользователь(сообщество) пока под баном.'
+# TODO Указать на id пользователя/группы.
+add_cheater_id_delete = 'Этот пользователь(сообщество) @{} пока под баном.'
 add_cheater_no_id = 'Такого id Вконтакте нет. Лучше возьми другой.'
 add_cheater_exist = 'Уже есть чел с параметрами:\n id: {vk_id}, screen_name: {screen_name} '
 add_cheater_new_screen_name = 'Кидала старый - имя новое. Вот известный чел: \n id: {vk_id}, screen_name: {screen_name}'

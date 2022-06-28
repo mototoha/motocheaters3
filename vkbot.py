@@ -10,7 +10,6 @@ from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
-import backend
 import database
 import dialogs
 import vk_keyboards
@@ -305,7 +304,7 @@ class VKBot(Bot):
         :param message_forward_id : пересылаемое сообщение.
         :return: None
         """
-        vk_admin_ids = self.admins_from_db
+        vk_admin_ids = await self.get_group_admins()
         message_text = message
         await self.api.messages.send(
             message=message_text,
@@ -327,11 +326,16 @@ class VKBot(Bot):
         :return: получилось или нет
         """
         if not screen_name:
+            # Если имя не предано, берём из API.
             user_info = await self.api.users.get([vk_id], fields=['screen_name'])
             screen_name = user_info[0].screen_name
-        self.db.update_table('screen_names', {'changed': True}, {'screen_name': screen_name})
-        self.db.add_screen_name(screen_name, vk_id)
 
+        # Помечаем старые имена как сменённые.
+        self.db.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
+
+        # Если таки есть новое имя - назначаем.
+        if screen_name:
+            self.db.add_screen_name(screen_name, vk_id)
 
     async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool]]:
         """
@@ -387,7 +391,6 @@ class VKBot(Bot):
         result = []
         for member in members.items:
             result.append(str(member.id))
-        result += self.admins_from_db
         return result
 
     async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
@@ -543,6 +546,7 @@ class VKBot(Bot):
         else:
             result = None
         return result
+
 
 if __name__ == '__main__':
     #  Тут будет тест

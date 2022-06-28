@@ -207,6 +207,8 @@ class DBCheaters:
         self._connection.commit()
         return None
 
+    # TODO Сделать заготовку для инсерта в БД.
+
     def get_admins(self) -> List[int]:
         """
         Return all users from table admins
