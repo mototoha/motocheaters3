@@ -10,7 +10,7 @@ from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
-
+import backend
 import database
 import dialogs
 import vk_keyboards
@@ -292,7 +292,7 @@ class VKBot(Bot):
         group_admins = await self.get_group_admins()
         for count, value in enumerate(group_admins):
             group_admins[count] = int(value)
-        if peer_id in self.admins_from_db or peer_id in group_admins:
+        if peer_id in group_admins:
             return True
         else:
             return False
@@ -335,10 +335,10 @@ class VKBot(Bot):
 
     async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool]]:
         """
-        Метод возвращает id и screen_name в виде кортежа из двух значений.
+        Метод возвращает id, screen_name и banned в виде кортежа.
 
         :param id_name: vk_id или screen_name
-        :return: vk_id, screen_name, deleted
+        :return: vk_id, screen_name, banned/deleted.
         """
         result_vk_id = None
         result_screen_name = None
@@ -355,6 +355,7 @@ class VKBot(Bot):
                 group = await self.api.groups.get_by_id(group_id=id_name,
                                                         fields=['screen_name']
                                                         )
+                # TODO Сделать group_types словарём
                 if group[0].type.value == 'group':
                     group_type = 'club'
                 elif group[0].type.value == 'page':
@@ -365,6 +366,7 @@ class VKBot(Bot):
                     group_type = 'club'
                 result_vk_id = group_type + str(group[0].id)
                 result_screen_name = group[0].screen_name
+                result_banned = group[0].ban_info
             except VKAPIError[100]:
                 pass
         return result_vk_id, result_screen_name, result_banned
@@ -541,7 +543,6 @@ class VKBot(Bot):
         else:
             result = None
         return result
-
 
 if __name__ == '__main__':
     #  Тут будет тест
