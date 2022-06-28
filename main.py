@@ -329,16 +329,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheater_db = message.state_peer.payload.get('cheater_db')
         if cheater:
             if cheater.get('vk_id'):
-                new_state = vkbot.AdminStates.MAIN
-                await bot.state_dispenser.set(message.from_id, vkbot.AdminStates.MAIN)
-                keyboard = vk_keyboards.get_keyboard(vkbot.AdminStates.MAIN)
                 answer_message = 'Добавляю кидалу\n' + str(cheater)
-                await bot.answer_to_peer(answer_message, message.peer_id, new_state)
+                await message.answer(answer_message)
                 update = bend.add_cheater(cheater, cheater_db)
                 await message.answer(
                     message='Добавил(обновил) следующие поля\n' + str(update),
-                    keyboard=keyboard,
                 )
+                message.state_peer.payload.clear()
             else:
                 return 'Нужен vk_id.'
         else:
