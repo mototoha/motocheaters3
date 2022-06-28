@@ -6,9 +6,12 @@ import requests
 import time
 from typing import List, Tuple, Optional, Union
 
+import vkbottle
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
+from vkbottle import BaseMiddleware
+from vkbottle.bot import Message
 
 import database
 import dialogs
@@ -30,6 +33,13 @@ REGEXP_ADMIN = (
     r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
     r'|(?P<fifty>50|fifty)'
 )
+
+
+class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
+    """
+    Класс для обработки сообщения до поиска хендлеров.
+    """
+    pass
 
 
 class DialogStates(BaseStateGroup):
