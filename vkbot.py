@@ -39,7 +39,12 @@ class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
     """
     Класс для обработки сообщения до поиска хендлеров.
     """
-    pass
+    async def pre(self):
+        """
+        Метод проверяет, что пользователь является админом группы.
+        :return:
+        """
+        self.view = None
 
 
 class DialogStates(BaseStateGroup):
@@ -74,6 +79,7 @@ class VKBot(Bot):
         self.admins_from_db = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
         self.group_id = ''
+        self.group_admins = []
 
     async def get_async_params(self):
         """

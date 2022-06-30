@@ -17,11 +17,11 @@ class AdminUserRule(ABCRule[Message]):
 
     async def check(self, event: Message) -> bool:
         """
-        Метод запрашивает админов группы и сравнивает текущего с ними.
+        Метод сравнивает текущего пользователя с админами группы.
         Если совпадет - возвращает True.
 
         :param event: Сообщение от пользователя.
         :return: bool
         """
-        result = await self.bot.is_admin(event.from_id)
+        result = event.from_id in self.bot.group_admins
         return result
