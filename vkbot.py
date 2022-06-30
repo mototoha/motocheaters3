@@ -90,6 +90,7 @@ class VKBot(Bot):
         """
         group_info = await self.api.groups.get_by_id()
         self.group_id = group_info[0].id
+        self.group_admins = await self.get_group_admins()
 
     async def update_cheaters_from_file(self, url: str):
         """
