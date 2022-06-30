@@ -217,7 +217,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
         AdminUserRule(bot),
-        CommandRule('Админ меню') | PayloadRule({"main": "admin"}),
+        PayloadRule({"main": "admin"}),
         StateRule(),
     )
     async def admin_menu_handler(message: Message):
@@ -520,7 +520,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         return dialogs.admin_common
 
     # Отладочные команды. ---------------------------------------------------------------------------------------
-    @bot.on.message(AdminUserRule(bot), text="group_id")
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('group_id')
     async def debug_get_my_group_id_handler(message: Message):
         """
         Вывести group_id.
@@ -532,7 +534,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    @bot.on.message(AdminUserRule(bot), text="members", state=None, )
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('members')
+    )
     async def debug_get_members_handler(message: Message):
         """
         Вывести членов группы.
@@ -548,7 +553,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             keyboard=keyboard,
         )
 
-    @bot.on.message(AdminUserRule(bot), text="dialogstate")
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule("dialogstate"),
+    )
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
@@ -562,7 +570,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message,
         )
 
-    @bot.on.message(AdminUserRule(bot), text="admins")
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule("admins"),
+    )
     async def debug_get_dialogstate_handler(message: Message):
         """
         Вывести state dispenser.
