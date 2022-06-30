@@ -331,7 +331,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             if cheater.get('vk_id'):
                 answer_message = 'Добавляю кидалу\n' + str(cheater)
                 await message.answer(answer_message)
-                update = bend.add_cheater(cheater, cheater_db)
+                update = bot.add_cheater(cheater, cheater_db)
                 await message.answer(
                     message='Добавил(обновил) следующие поля\n' + str(update),
                 )
