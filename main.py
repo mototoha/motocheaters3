@@ -13,6 +13,7 @@ from vkbottle.dispatch.rules.base import (
     StateRule,
     StateGroupRule,
     RegexRule,
+    FromPeerRule,
 )
 from vkbottle import DocMessagesUploader
 
@@ -154,6 +155,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Кинули файл с кидалами.
     @bot.on.message(
         AttachmentTypeRule('doc'),
+        FromPeerRule(bot.group_admins),
     )
     async def send_file_handler(message: Message):
         """
@@ -173,14 +175,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         vk.com/id3166 \n
         3215321532159999
         """
-        is_admin = message.peer_id in (await bot.get_group_admins())
-        if is_admin and (message.attachments[0].doc.title == bot.cheaters_filename):
+        if message.attachments[0].doc.title == bot.cheaters_filename:
             await message.answer(dialogs.update_db_from_file)
             attachments_url = message.attachments[0].doc.url
             answer_message = await bot.update_cheaters_from_file(attachments_url)
             await bot.answer_to_peer(answer_message, message.peer_id)
         else:
-            return 'Не бросайся файлами, я их не ем.'
+            return 'Не бросайся файлами, я такие не ем.'
 
     # Ловим кидалу.
     @bot.on.message(
