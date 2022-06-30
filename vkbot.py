@@ -34,6 +34,12 @@ REGEXP_ADMIN = (
     r'|(?P<fifty>50|fifty)'
 )
 
+GROUP_TYPES = {
+    'group': 'club',
+    'page': 'public',
+    'event': 'event',
+}
+
 
 class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
     """
@@ -376,15 +382,7 @@ class VKBot(Bot):
                 group = await self.api.groups.get_by_id(group_id=id_name,
                                                         fields=['screen_name']
                                                         )
-                # TODO Сделать group_types словарём
-                if group[0].type.value == 'group':
-                    group_type = 'club'
-                elif group[0].type.value == 'page':
-                    group_type = 'public'
-                elif group[0].type.value == 'event':
-                    group_type = 'event'
-                else:
-                    group_type = 'club'
+                group_type = GROUP_TYPES[group[0].type.value]
                 result_vk_id = group_type + str(group[0].id)
                 result_screen_name = group[0].screen_name
                 result_banned = group[0].ban_info
