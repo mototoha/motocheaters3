@@ -573,7 +573,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     # All others. -----------------------------------------------------------------------------------------------
-    @bot.on.message(state=None)
+    @bot.on.message(
+        StateRule()
+    )
     async def common_handler(message: Message):
         """
         Common message.
