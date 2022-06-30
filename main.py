@@ -65,8 +65,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheaters_filename,
     )
 
-    bend = backend.Backend({'type': 'sqlite', 'filename': db_filename})
-
     # Кнопка "Рассказать про кидалу".
     @bot.on.message(
         StateRule(),
