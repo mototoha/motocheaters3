@@ -323,7 +323,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы.
         Кнопка "Добавить".
         """
-        cheater = message.state_peer.payload.get('cheater')
+        cheater = message.state_peer.payload.get('cheater_add')
         cheater_db = message.state_peer.payload.get('cheater_db')
         if cheater:
             if cheater.get('vk_id'):
@@ -350,6 +350,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         new_state = vkbot.AdminStates.MAIN
         answer_message = dialogs.admin_menu
+        message.state_peer.payload.clear()
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
@@ -395,7 +396,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или 50.
         """
         formatted_message_text = message.text.lower().replace(' ', '')
-        cheater_add = message.state_peer.payload.get('cheater')  # кидала в процессе добавления
+        cheater_add = message.state_peer.payload.get('cheater_add')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
         repeat_search = False
 
@@ -480,7 +481,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             if cheater_db:
                 answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
             await bot.state_dispenser.set(message.from_id, message.state_peer.state,
-                                          cheater=cheater_add,
+                                          cheater_add=cheater_add,
                                           cheater_db=cheater_db)
         # Нет совпадения.
         else:
@@ -522,7 +523,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Отладочные команды. ---------------------------------------------------------------------------------------
     @bot.on.message(
         AdminUserRule(bot),
-        CommandRule('group_id')
+        CommandRule('group_id'),
+    )
     async def debug_get_my_group_id_handler(message: Message):
         """
         Вывести group_id.
