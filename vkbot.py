@@ -444,11 +444,11 @@ class VKBot(Bot):
         cheaters_list = self.db.get_cheaters_full_list()
 
         for cheater in cheaters_list:
-            result += cheater.str_lines()
-
             if cheater.fifty and (not fifty):
-                result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
+                result += '\nDalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\nfifty\n'
                 fifty = True
+
+            result += cheater.str_lines()
             result += '\n'
 
         return result
