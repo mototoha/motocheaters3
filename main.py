@@ -159,6 +159,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def send_file_handler(message: Message):
         """
+        Импорт данных из текстового файла.
         Если в главном меню кинули файл с кидалами, то мы ео попробуем распарсить.
         Идет проверка, что это документ с конкретным именем.
 

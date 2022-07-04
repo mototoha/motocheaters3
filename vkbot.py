@@ -5,31 +5,26 @@ import re
 import requests
 import time
 from typing import List, Tuple, Optional, Union
+import logging
 
 import vkbottle
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
 
+import cheaters
 import database
 import dialogs
 import vk_keyboards
 from cheaters import Cheater
+
+logger = logging.getLogger(__name__)
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
     r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
     r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
     r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-)
-
-REGEXP_ADMIN = (
-    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)'
-    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-    r'|(?P<fifty>50|fifty)'
 )
 
 GROUP_TYPES = {
@@ -96,19 +91,21 @@ class VKBot(Bot):
         self.group_id = group_info[0].id
         self.group_admins = await self.get_group_admins()
 
-    async def update_cheaters_from_file(self, url: str):
+    async def update_cheaters_from_file(self, url: str) -> str:
         """
         Функция возьмет текстовый файл по ссылке, распарсит его, перенесет все данные в БД.
 
         :param url: ссылка на файл ВК
         :return: Ответ
         """
-        print('Сейчас начнем парсить файл', url)
+        logging.info('Сейчас начнем парсить файл: \n' + url + '\n')
+
         content = requests.get(url).content.decode()
         cheaters_list = await self._get_cheaters_list_from_file(content)  # Список кидал
+
         if cheaters_list:
-            result = await self._update_database_from_list(cheaters_list)  # Update DB
-            return result
+            await self._update_database_from_list(cheaters_list)  # Update DB
+            return dialogs.file_update_success
         else:  # если результат пустой
             return dialogs.no_data_in_file
 
@@ -122,16 +119,19 @@ class VKBot(Bot):
         """
         # TODO Неправильно привязались карты, надо рассмотреть
         fifty = False  # Идентификатор "Полтинников" - кто иногда кидает
-        cheater = {'vk_id': '', 'fifty': fifty, 'screen_name': '', 'telephone': [], 'card': []}  # Запись про кидалу
+        one_cheater = cheaters.Cheater()
+        cheater = {'vk_id': '', 'fifty': fifty, 'screen_name': '', 'telephone': [], 'card': []}  # TODO Удалить
         cheaters_list = []  # Список кидал
         for line in content.split('\n'):
-            print('Строка : \n', line)
+            logger.debug('Разбираем строку: \n' + line)
+
+            # Ищем в строке vk.com
             if re.search(r'vk\.com', line):
                 subline = line
             else:
                 # Если это не vk_id, все символы в строке делаем слитно, надеясь, что получится последовательность цифр.
                 subline = re.sub(r'[- +\r]', '', str(line))
-            match = re.search(REGEXP_MAIN, subline)
+            match = re.search(cheaters.get_regexp(), subline)
             if match:
                 print("Найдено совпадение из регулярки: \n", match.groupdict())
                 if match.lastgroup in ['vk_id', 'screen_name']:
