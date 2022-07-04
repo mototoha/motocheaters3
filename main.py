@@ -260,13 +260,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AdminUserRule(bot),
         PayloadRule({"admin": "main"}),
-        StateRule(vkbot.AdminStates.SPAM),
     )
-    async def admin_spam_change_mind_handler(message: Message):
+    async def admin_return_to_admin_menu_handler(message: Message):
         """
-        Спам меню. Кнопка "Передумал".
+        Кнопка "Передумал". Для всех.
         """
         new_state = vkbot.AdminStates.MAIN
+        message.state_peer.payload.clear()
         answer_message = dialogs.admin_menu
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
@@ -339,33 +339,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 return 'Нужен vk_id.'
         else:
             return 'Введи параметры кидалы.'
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.ADD_CHEATER),
-        PayloadRule({"admin": "main"}),
-    )
-    async def admin_return_from_add_cheater_handler(message: Message):
-        """
-        Добавление кидалы. Передумал добавлять кидалу.
-        """
-        new_state = vkbot.AdminStates.MAIN
-        answer_message = dialogs.admin_menu
-        message.state_peer.payload.clear()
-        await bot.answer_to_peer(answer_message, message.from_id, new_state)
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.DEL_CHEATER),
-        PayloadRule({"admin": "main"}),
-    )
-    async def admin_return_from_del_cheater_handler(message: Message):
-        """
-        Удаление кидалы. Передумал удалять что-то.
-        """
-        new_state = vkbot.AdminStates.MAIN
-        answer_message = dialogs.admin_menu
-        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         AdminUserRule(bot),
@@ -494,7 +467,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AdminUserRule(bot),
         StateGroupRule(vkbot.AdminStates),
-        text='экспорт'
     )
     async def admin_export_to_csv_handler(message: Message):
         """
