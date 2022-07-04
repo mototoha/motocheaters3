@@ -17,7 +17,7 @@ from vkbottle.dispatch.rules.base import (
 )
 from vkbottle import DocMessagesUploader
 
-import backend
+import cheaters
 import startup
 import dialogs
 import vk_keyboards
@@ -185,7 +185,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Ловим кидалу.
     @bot.on.message(
-        func=lambda message: bool(re.match(backend.get_regexp('search'),
+        func=lambda message: bool(re.match(cheaters.get_regexp('search'),
                                            message.text.lower().lstrip('+').replace(' ', ''))),
         state=None
     )
@@ -194,7 +194,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
         # TODO Объединить с обычным (нераспознанным) сообщением.
-        match = re.search(backend.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
+        match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         if result_check:  # found
             answer_message = dialogs.is_cheater
@@ -266,7 +266,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Кнопка "Передумал". Для всех.
         """
         new_state = vkbot.AdminStates.MAIN
-        message.state_peer.payload.clear()
+        if message.state_peer:
+            message.state_peer.payload.clear()
         answer_message = dialogs.admin_menu
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
@@ -349,7 +350,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Удаление кидалы. Парсим текст для удаления.
         """
         # Парсим строчку.
-        match = re.search(backend.get_regexp('del'), message.text)
+        match = re.search(cheaters.get_regexp('del'), message.text)
         if match:
             # TODO Удаление кидалы.
             pass
@@ -374,13 +375,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
         repeat_search = False
 
-        match = re.match(backend.get_regexp('all'), formatted_message_text)
+        match = re.match(cheaters.get_regexp('all'), formatted_message_text)
 
         # Есть совпадение.
         if match:
             if not cheater_add:
                 # Если еще не создан шаблон кидалы для админа - создаём.
-                cheater_add = backend.Cheater()
+                cheater_add = cheaters.Cheater()
 
             if match.lastgroup in ('vk_id', 'screen_name'):
                 # Если в запросе vk_id или screen_name - запрашиваем vk_api.
@@ -394,7 +395,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     return dialogs.add_cheater_no_id
 
                 cheater_db = bot.get_cheater_from_db(match[match.lastgroup])
-                if not isinstance(cheater_db, backend.Cheater) and (cheater_db is not None):
+                if not isinstance(cheater_db, cheaters.Cheater) and (cheater_db is not None):
                     await bot.send_message_to_admins(str(cheater_db))
                     return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
                            'Пропусти и продолжи добавление других кидал.'
@@ -467,16 +468,27 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AdminUserRule(bot),
         StateGroupRule(vkbot.AdminStates),
+        CommandRule('help') | CommandRule('помощь'),
+    )
+    async def admin_help_handler(message: Message):
+        """
+        Помощь.
+        """
+        await message.answer(message=dialogs.admin_help)
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        StateGroupRule(vkbot.AdminStates),
+        CommandRule('export') | CommandRule('экспорт')
     )
     async def admin_export_to_csv_handler(message: Message):
         """
         Экспорт базы данных в читаемый формат.
         """
-        csv_to_peer = bot.export_db()
+        file_to_peer = bot.export_db()
         uploader = DocMessagesUploader(bot.api)
-        uploader.generate_attachment_strings = True
-        doc = await uploader.upload('kidaly.csv',
-                                    csv_to_peer.encode(),
+        doc = await uploader.upload('kidaly.txt',
+                                    file_to_peer.encode(),
                                     peer_id=message.from_id,
                                     )
         await message.answer(

@@ -6,6 +6,7 @@ import os
 import sqlite3
 from typing import List
 
+import cheaters
 import sql_requests
 
 
@@ -400,32 +401,40 @@ class DBCheaters:
             old_fifty = vk_info['fifty']
             self.update_table('vk_ids', {'fifty': not old_fifty}, {'vk_id': vk_id})
 
-    def get_cheaters_full_list(self) -> List[dict]:
+    def get_cheaters_full_list(self) -> List[cheaters.Cheater]:
         """
-        Метод возвращает список со словарями кидал.
-        Возвращает JOIN таблицу с полями: \n
-        vk_id \n
-        screen_name \n
-        fifty \n
-        telephone \n
-        card \n
-        proof_link \n
+        Метод возвращает список с объектами кидал.
 
         :return: Список кидал.
         """
         vk_ids = self._cursor.execute(sql_requests.select_all_cheaters_full_info)
         result_tuple = vk_ids.fetchall()
+        db_dict = {
+            '0': 'vk_id',
+            '1': 'screen_name',
+            '2': 'fifty',
+            '3': 'card',
+            '4': 'telephone',
+            '5': 'proof_link',
+        }
+
         result = []
+        one_cheater = cheaters.Cheater()
+
         for cheater_record in result_tuple:
-            result.append(
-                {
-                    'vk_id': cheater_record[0],
-                    'screen_name' :cheater_record[1],
-                    'fifty': cheater_record[2],
-                    'card': cheater_record[3],
-                    'telephone:': cheater_record[4],
-                    'proof_link': cheater_record[5],
-                }
-            )
+            if one_cheater.vk_id != cheater_record[0]:
+                if one_cheater:
+                    result.append(one_cheater)
+                one_cheater = cheaters.Cheater(
+                    vk_id=cheater_record[0],
+                    screen_name=cheater_record[1],
+                    fifty=bool(cheater_record[2])
+                )
+            for i in range(3, 6):  # 3 - cards, 4 - tel, 5 - proof
+                if cheater_record[i]:
+                    one_cheater.__getattribute__(db_dict[str(i)]).append(cheater_record[i])
+
+        result.append(one_cheater)
+
         return result
 

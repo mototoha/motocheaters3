@@ -12,8 +12,6 @@ from typing import (
     Tuple,
 )
 
-from database import DBCheaters
-
 REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
@@ -22,6 +20,8 @@ REGEXP_CHEATER = {
     'telephone': r'\+?(?P<telephone>\d{10,15}(\s\n)?)',
     'fifty': r'(?P<fifty>50|fifty)'
 }
+
+VK_PREFIX = 'vk.com/'
 
 
 def merge_list(l1: list, l2: list):
@@ -153,6 +153,31 @@ class Cheater:
             if f.name != 'fifty':
                 result += str(self.__getattribute__(f.name)) + sep
         result += '\n'
+        return result
+
+    def str_lines(self) -> str:
+        """
+        Метод возвращает кидалу в следующем виде:
+        vk_id
+        (vk_screen_name)
+        telephones
+        cards
+        proof_links
+
+        :return: описание кидалы в строках
+        """
+        result = ''
+
+        result += VK_PREFIX + self.vk_id + '\n'
+        if self.screen_name and self.screen_name != self.vk_id:
+            result += VK_PREFIX + self.screen_name + '\n'
+        for tel in self.telephone:
+            result += tel + '\n'
+        for card in self.card:
+            result += card + '\n'
+        for link in self.proof_link:
+            result += VK_PREFIX + link + '\n'
+
         return result
 
     def update(self,

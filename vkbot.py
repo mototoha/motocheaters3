@@ -10,13 +10,11 @@ import vkbottle
 from vkbottle import BaseStateGroup
 from vkbottle.bot import Bot
 from vkbottle.exception_factory import VKAPIError
-from vkbottle import BaseMiddleware
-from vkbottle.bot import Message
 
 import database
 import dialogs
 import vk_keyboards
-from backend import Cheater
+from cheaters import Cheater
 
 REGEXP_MAIN = (
     r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
@@ -432,35 +430,26 @@ class VKBot(Bot):
 
     def export_db(self) -> str:
         """
-        Метод парсит БД и возвращает строку в csv формате для отправки пользователю.
-        :return : str in csv format (separates TAB)
+        Метод парсит БД и возвращает строки.
+        vk_id/Screen_name
+        telephones
+        cards
+        proof_links
+
+        :return : Текст с кидалами
         """
-        result = 'vk_id;screen_name;telephones;cards;proof_links\n'
+        result = ''
         fifty = False
 
         cheaters_list = self.db.get_cheaters_full_list()
-        one_cheater = Cheater()
 
         for cheater in cheaters_list:
-            if one_cheater.vk_id != cheater['vk_id']:
-                result += one_cheater.str_csv()
-                if one_cheater:
-                    if cheater['fifty'] and (not fifty):
-                        result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
-                        fifty = True
+            result += cheater.str_lines()
 
-                one_cheater = Cheater()
-                one_cheater.vk_id = cheater['vk_id']
-
-            if cheater['screen_name']:
-                one_cheater.screen_name = cheater['screen_name']
-
-            for param in ('telephone', 'card', 'proof_link'):
-                if cheater.get(param):
-                    one_cheater.__getattribute__(param).append(cheater.get(param))
-
-        if one_cheater:
-            result += one_cheater.str_csv()
+            if cheater.fifty and (not fifty):
+                result += 'Dalee idut poltinniky: realnye prodavcy - rabotayut, kak povezet.\n'
+                fifty = True
+            result += '\n'
 
         return result
 
@@ -535,7 +524,7 @@ class VKBot(Bot):
                 items_list = []
                 for item in sql_result:
                     items_list += item.values()
-                cheater_info.proof_link = items_list
+                cheater_info.telephone = items_list
 
             sql_result = self.db.get_dict_from_table(table='cards',
                                                      columns=['card'],
@@ -544,7 +533,7 @@ class VKBot(Bot):
                 items_list = []
                 for item in sql_result:
                     items_list += item.values()
-                cheater_info.proof_link = items_list
+                cheater_info.card = items_list
 
             sql_result = self.db.get_dict_from_table(table='proof_links',
                                                      columns=['proof_link'],
