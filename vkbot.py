@@ -479,11 +479,13 @@ class VKBot(Bot):
             if id_name.startswith(('id', 'club', 'public', 'event')):
                 vk_id = id_name
             else:
+                # TODO сделать отдельный метод
                 sql_result = self.db.get_dict_from_table(table='screen_names',
                                                          columns=['vk_id'],
                                                          condition_dict={'screen_name': id_name,
                                                                          'changed': 'False'})
-                id_name = sql_result['vk_id']
+                if sql_result:
+                    id_name = sql_result['vk_id']
         else:
             if telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',
