@@ -358,16 +358,19 @@ class VKBot(Bot):
         if screen_name:
             self.db.add_screen_name(screen_name, vk_id)
 
-    async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool]]:
+    async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool, str]]:
         """
-        Метод возвращает id, screen_name и banned в виде кортежа.
+        Метод возвращает id, screen_name, banned и name в виде кортежа.
+        Для пользователя name: Имя+Фамилия.
+        Для группы: имя.
 
         :param id_name: vk_id или screen_name
         :return: vk_id, screen_name, banned/deleted.
         """
-        result_vk_id = None
-        result_screen_name = None
+        result_vk_id = ''
+        result_screen_name = ''
         result_banned = False
+        result_name = ''
         users_info = await self.api.users.get(id_name, fields=['screen_name'])
         if users_info:
             if users_info[0].deactivated:
@@ -375,6 +378,7 @@ class VKBot(Bot):
                 result_banned = True
             result_vk_id = 'id' + str(users_info[0].id)
             result_screen_name = users_info[0].screen_name
+            result_name = users_info[0].first_name + ' ' + users_info[0].last_name
         else:
             try:
                 group = await self.api.groups.get_by_id(group_id=id_name,
@@ -384,9 +388,10 @@ class VKBot(Bot):
                 result_vk_id = group_type + str(group[0].id)
                 result_screen_name = group[0].screen_name
                 result_banned = group[0].ban_info
+                result_name = group[0].name
             except VKAPIError[100]:
                 pass
-        return result_vk_id, result_screen_name, result_banned
+        return result_vk_id, result_screen_name, result_banned, result_name
 
     async def get_group_admins(self, group_id: str = None) -> List[str]:
         """
