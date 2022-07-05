@@ -386,7 +386,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
             if match.lastgroup in ('vk_id', 'screen_name'):
                 # Если в запросе vk_id или screen_name - запрашиваем vk_api.
-                api_vk_id, api_screen_name, is_banned = await bot.get_from_api_id_screen_name_banned(
+                api_vk_id, api_screen_name, is_banned, vk_name = await bot.get_from_api_id_screen_name_banned(
                     match[match.lastgroup])
 
                 if is_banned:
@@ -402,7 +402,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                            'Пропусти и продолжи добавление других кидал.'
 
                 if match.lastgroup == 'screen_name':
-                    await message.answer(f'Имя {api_screen_name} сейчас принадлежит @{api_vk_id}\n'
+                    await message.answer(f'Имя {api_screen_name} сейчас принадлежит @{api_vk_id} ({vk_name})\n'
                                          f'Если тебе нужен другой пользователь/группа, придется найти старый id.')
                     # Если в БД есть такой screen_name.
                     if cheater_db:
