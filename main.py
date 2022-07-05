@@ -500,6 +500,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         AdminUserRule(bot),
         StateGroupRule(vkbot.AdminStates),
     )
+    # IDE ругается на неиспользуемый параметр. Если убрать - то программа будет ругаться при обработке сообщений.
     async def admin_common_message_handler(message: Message):
         """
         Любая другая хрень в админском меню.
@@ -623,4 +624,3 @@ if __name__ == '__main__':
 # TODO Статистика
 #  * Количество пользователей бота
 #  * Количество запросов кидал
-
