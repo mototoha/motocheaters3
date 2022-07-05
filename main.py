@@ -402,7 +402,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                            'Пропусти и продолжи добавление других кидал.'
 
                 if match.lastgroup == 'screen_name':
-                    await message.answer(f'Имя {api_screen_name} сейчас принадлежит @{api_vk_id} ({vk_name})\n'
+                    await message.answer(f'Имя {api_screen_name} сейчас принадлежит @{api_vk_id}, ({vk_name})\n'
                                          f'Если тебе нужен другой пользователь/группа, придется найти старый id.')
                     # Если в БД есть такой screen_name.
                     if cheater_db:
