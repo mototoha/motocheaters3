@@ -16,32 +16,33 @@ logger = logging.getLogger(__name__)
 
 DB_TEMPLATE = {
     'vk_ids': {
-        'pk': int,
-        'vk_id': str,
-        'fifty': bool,
+        'pk': 'integer',
+        'vk_id': 'text',
+        'fifty': 'bool',
     },
     'screen_names': {
-        'pk': int,
-        'screen_name': str,
-        'vk_id': str,
-        'changed': bool,
+        'pk': 'integer',
+        'screen_name': 'text',
+        'vk_id': 'text',
+        'changed': 'bool',
     },
     'telephone': {
-        'pk': int,
-        'telephone': str,
-        'vk_id': str,
+        'pk': 'integer',
+        'telephone': 'text',
+        'vk_id': 'text',
     },
     'cards': {
-        'pk': int,
-        'card': str,
-        'vk_id': str,
+        'pk': 'integer',
+        'card': 'text',
+        'vk_id': 'text',
     },
     'proof_links': {
-        'pk': int,
-        'proof_link': str,
-        'vk_id': str,
+        'pk': 'integer',
+        'proof_link': 'text',
+        'vk_id': 'text',
     }
 }
+
 
 class DBCheaters:
     """
@@ -177,6 +178,25 @@ class DBCheaters:
         return result
 
     @staticmethod
+    def construct_create_table(table_name: str) -> str:
+        """
+        Метод возвращает sql выражение для создания таблицы по шаблону.
+
+        :param table_name: Имя таблицы из шаблона.
+        :return: sql sequence.
+        """
+        table = DB_TEMPLATE[table_name]
+        result = 'create table ' + table_name + '('
+        for column in table:
+            result += column + ' ' + table[column]
+            if column == 'pk':
+                result += ' primary key'
+            result += ','
+        result.rstrip(',')
+        result += ')'
+        return result
+
+    @staticmethod
     def backup_db_file(filename):
         """
         Делает копию файла БД с добавлением текущей даты.
@@ -206,7 +226,17 @@ class DBCheaters:
         :return: Справился или нет.
         """
         result = True
-        query = 'select'
+        template_tables = set(DB_TEMPLATE.keys())
+        conn = sqlite3.Connection(filename)
+        cur = conn.cursor()
+        sql_res = cur.execute(sql_requests.select_table_names)
+        for table in sql_res:
+            if table[0] in template_tables:
+                # Проверка колонок в таблице
+                pass
+            else:
+                cur.execute(DBCheaters.construct_create_table(table[0]))
+                conn.commit()
         return result
 
     @staticmethod
