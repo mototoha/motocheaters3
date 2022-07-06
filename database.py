@@ -2,13 +2,46 @@
 Class for work with database.
 Now work with sqlite3.
 """
+import logging
+import shutil
 import os
 import sqlite3
-from typing import List
+import datetime
+from typing import List, Optional, Any
 
 import cheaters
 import sql_requests
 
+logger = logging.getLogger(__name__)
+
+DB_TEMPLATE = {
+    'vk_ids': {
+        'pk': int,
+        'vk_id': str,
+        'fifty': bool,
+    },
+    'screen_names': {
+        'pk': int,
+        'screen_name': str,
+        'vk_id': str,
+        'changed': bool,
+    },
+    'telephone': {
+        'pk': int,
+        'telephone': str,
+        'vk_id': str,
+    },
+    'cards': {
+        'pk': int,
+        'card': str,
+        'vk_id': str,
+    },
+    'proof_links': {
+        'pk': int,
+        'proof_link': str,
+        'vk_id': str,
+    }
+}
 
 class DBCheaters:
     """
@@ -17,30 +50,19 @@ class DBCheaters:
 
     def __init__(self, db_filename: str):
         self.db_filename = db_filename
-        # Check file existence
-        file_exist = False
-        if os.path.exists(self.db_filename):
-            if os.path.isfile(self.db_filename):
-                file_exist = True
-            else:
-                print('Уже есть каталог с таким именем!!!')
-                raise FileExistsError('Уже есть каталог с таким именем!!!')
+        file_exist = self.db_file_exist(self.db_filename)
+        integrity_check = False
+        if file_exist:
+            logger.info('DB file exist, check content')
+            integrity_check = self.check_integrity_tables(self.db_filename)
+            if not integrity_check:
+                logger.warning('БД не прошла проверку, создаю новую.')
+                shutil.move(self.db_filename, self.db_filename + '_' + datetime.date.today().isoformat())
+        if not file_exist or not integrity_check:
+            self.create_new_database(self.db_filename)
 
         self._connection = sqlite3.connect(self.db_filename)
         self._cursor = self._connection.cursor()
-        if file_exist:
-            # Check database
-            print('DB exist, checking')
-            # TODO Check parameters in table
-            # TODO If not pass checking, make backup and create new
-            print("Here some tables in current DB...")
-            print(self._cursor.execute(sql_requests.select_table_names).fetchall())
-        else:
-            print('No database file, create new.')
-            self._cursor.executescript(sql_requests.create_tables)
-            admin_id = input('Enter one admin id: ')
-            self.add_admin(admin_id)
-            self._connection.commit()
 
     def __del__(self):
         self._cursor.close()
@@ -117,11 +139,11 @@ class DBCheaters:
         Construct update query.
         UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
 
-        :param table: Таблица для апдейта.
-        :param set_params: Словарь параметров. set (param=value, param2=value2).
-        :param where_update: Условие апдейта. where (param=value, param2=value2).
-        :param operator: and или or
-        :return: SQL UPDATE
+        :param table: Таблица для апдейта;
+        :param set_params: Словарь параметров. set (param=value, param2=value2);
+        :param where_update: Условие апдейта. where (param=value, param2=value2);
+        :param operator: and или or;
+        :return: SQL UPDATE.
         """
         result = 'UPDATE {table} set '.format(table=table)
 
@@ -154,16 +176,66 @@ class DBCheaters:
 
         return result
 
-    def get_param(self, param: str):
+    @staticmethod
+    def backup_db_file(filename):
+        """
+        Делает копию файла БД с добавлением текущей даты.
+
+        :param filename: имя файла для бекапа.
+        """
+        pass
+
+    @staticmethod
+    def create_new_database(filename):
+        """
+        Метод создаёт таблицы в БД из шаблона.
+        """
+        conn = sqlite3.Connection(filename)
+        cur = conn.cursor()
+        cur.executescript(sql_requests.create_tables)
+        conn.commit()
+        conn.close()
+
+    @staticmethod
+    def check_integrity_tables(filename: str) -> bool:
+        """
+        Метод проверяет соответствие таблиц в БД шаблону.
+        Если чего-то нет - добавляет.
+        Если не может справиться - возвращает False.
+
+        :return: Справился или нет.
+        """
+        result = True
+        query = 'select'
+        return result
+
+    @staticmethod
+    def db_file_exist(filename) -> bool:
+        """
+        Проверка наличия файла.
+        Если есть такой каталог - вылетит с исключением.
+
+        :param filename: Имя файла.
+        :return: Есть или нет.
+        """
+        result = False
+        if os.path.exists(filename):
+            if os.path.isfile(filename):
+                result = True
+            else:
+                print('Уже есть каталог с таким именем!!!')
+                raise FileExistsError('Уже есть каталог с таким именем!!!')
+        return result
+
+    def get_param(self, param: str) -> Optional[Any]:
         """
         Return parameter from table 'parameters'.
         """
-        # TODO Check parameter exist
         sql_query = self._construct_select('parameters', ['value'], {'parameter': param})
         self._cursor.execute(sql_query)
         result = self._cursor.fetchone()
-        if result is None:
-            return result
+        if not result:
+            return None
         else:
             result = result[0]
             return result
@@ -172,7 +244,6 @@ class DBCheaters:
         """
         Set parameter to table 'parameters'
         """
-        # TODO Make exception check
         for param in dict_params:
             sql_query = self._construct_insert('parameters', {'parameter': param, 'value': dict_params[param]})
             self._cursor.execute(sql_query)
@@ -207,8 +278,6 @@ class DBCheaters:
         self._cursor.execute(sql_query)
         self._connection.commit()
         return None
-
-    # TODO Сделать заготовку для инсерта в БД.
 
     def get_admins(self) -> List[int]:
         """
@@ -339,7 +408,7 @@ class DBCheaters:
         result = self._cursor.fetchone()
         return result
 
-    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> dict:
+    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[dict]:
         """
         Возвращаем значения из таблицы.
         Из списка rows делаем словарь.
@@ -437,4 +506,3 @@ class DBCheaters:
         result.append(one_cheater)
 
         return result
-
