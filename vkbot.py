@@ -468,7 +468,7 @@ class VKBot(Bot):
         """
         Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаются параметры, по которым надо его найти.
         Сейчас используется только первый по порядку.\n
-        В результате вернется либо Cheater(), лио список Cheater()'ов, либо None.
+        В результате вернется либо Cheater(), либо список Cheater()'ов, либо None.
 
         :param id_name: id или screen_name VK,
         :param telephone: телефон,
@@ -484,7 +484,6 @@ class VKBot(Bot):
             if id_name.startswith(('id', 'club', 'public', 'event')):
                 vk_id = id_name
             else:
-                # TODO сделать отдельный метод
                 sql_result = self.db.get_dict_from_table(table='screen_names',
                                                          columns=['vk_id'],
                                                          condition_dict={'screen_name': id_name,
