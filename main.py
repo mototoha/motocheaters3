@@ -69,7 +69,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Кнопка "Рассказать про кидалу".
     @bot.on.message(
         StateRule(),
-        RegexRule('рассказать про кидалу') | PayloadRule({"main": "tell_about_cheater"}),
+        PayloadRule({"main": "tell_about_cheater"}),
     )
     async def press_tell_about_cheater_handler(message: Message):
         """
@@ -83,7 +83,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Кнопка 'Помочь нам'.
     @bot.on.message(
         StateRule(),
-        RegexRule('помочь нам') | PayloadRule({"main": "help_us"}),
+        PayloadRule({"main": "help_us"}),
     )
     async def press_help_us_handler(message: Message):
         """
@@ -95,7 +95,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Кнопка 'Как проверить'.
     @bot.on.message(
         StateRule(),
-        RegexRule('как проверить') | PayloadRule({"main": "how_check"})
+        PayloadRule({"main": "how_check"})
     )
     async def press_how_check_handler(message: Message):
         """
@@ -107,7 +107,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     # Кнопка "Передумал".
     @bot.on.message(
         StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE),
-        PayloadRule({"tell_about_cheater": "main"}) | RegexRule('передумал'),
+        PayloadRule({"tell_about_cheater": "main"}),
     )
     async def tell_about_cheater_press_change_mind_handler(message: Message):
         """
