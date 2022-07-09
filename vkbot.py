@@ -20,13 +20,6 @@ from cheaters import Cheater
 
 logger = logging.getLogger(__name__)
 
-REGEXP_MAIN = (
-    r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)'
-    r'|((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)'
-    r'|(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)'
-    r'|\+?(?P<telephone>\d{10,15}(\s\n)?)'
-)
-
 GROUP_TYPES = {
     'group': 'club',
     'page': 'public',
