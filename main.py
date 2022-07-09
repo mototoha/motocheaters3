@@ -215,6 +215,83 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         await bot.answer_to_peer(answer_message, message.peer_id)
 
+
+    # Отладочные команды. ---------------------------------------------------------------------------------------
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('group_id'),
+    )
+    async def debug_get_my_group_id_handler(message: Message):
+        """
+        Вывести group_id.
+        """
+        answer_message = bot.group_id
+        keyboard = vk_keyboards.get_keyboard(None, await bot.is_admin(message.from_id))
+        await message.answer(
+            answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('members')
+    )
+    async def debug_get_members_handler(message: Message):
+        """
+        Вывести членов группы.
+        """
+        group_info = await bot.group_info()
+        group_id = group_info[0].id
+        members = await bot.api.groups.get_members(group_id=group_id)
+        answer_message = str(group_id) + '\n'
+        answer_message += ' '.join(str(vk_id) for vk_id in members.items)
+        keyboard = vk_keyboards.get_keyboard(None, await bot.is_admin(message.from_id))
+        await message.answer(
+            answer_message,
+            keyboard=keyboard,
+        )
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule("dialogstate"),
+    )
+    async def debug_get_dialogstate_handler(message: Message):
+        """
+        Вывести state dispenser.
+        """
+        answer_message = await bot.state_dispenser.get(message.from_id)
+        print(type(answer_message))
+        print(answer_message)
+        if answer_message:
+            print(answer_message.state)
+        await message.answer(
+            answer_message,
+        )
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule("admins"),
+    )
+    async def debug_get_dialogstate_handler(message: Message):
+        """
+        Вывести state dispenser.
+        """
+        answer_message = await bot.get_group_admins()
+        await message.answer(
+            str(answer_message),
+        )
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('main'),
+    )
+    async def go_to_main_handler(message: Message):
+        """
+        Метод переносит тебя в главное меню.
+        """
+        await bot.state_dispenser.delete(message.from_id)
+        await bot.answer_to_peer(dialogs.return_to_main, message.from_id)
+
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
         AdminUserRule(bot),
@@ -506,71 +583,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         return dialogs.admin_common
 
-    # Отладочные команды. ---------------------------------------------------------------------------------------
-    @bot.on.message(
-        AdminUserRule(bot),
-        CommandRule('group_id'),
-    )
-    async def debug_get_my_group_id_handler(message: Message):
-        """
-        Вывести group_id.
-        """
-        answer_message = bot.group_id
-        keyboard = vk_keyboards.get_keyboard(None, await bot.is_admin(message.from_id))
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        CommandRule('members')
-    )
-    async def debug_get_members_handler(message: Message):
-        """
-        Вывести членов группы.
-        """
-        group_info = await bot.group_info()
-        group_id = group_info[0].id
-        members = await bot.api.groups.get_members(group_id=group_id)
-        answer_message = str(group_id) + '\n'
-        answer_message += ' '.join(str(vk_id) for vk_id in members.items)
-        keyboard = vk_keyboards.get_keyboard(None, await bot.is_admin(message.from_id))
-        await message.answer(
-            answer_message,
-            keyboard=keyboard,
-        )
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        CommandRule("dialogstate"),
-    )
-    async def debug_get_dialogstate_handler(message: Message):
-        """
-        Вывести state dispenser.
-        """
-        answer_message = await bot.state_dispenser.get(message.from_id)
-        print(type(answer_message))
-        print(answer_message)
-        if answer_message:
-            print(answer_message.state)
-        await message.answer(
-            answer_message,
-        )
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        CommandRule("admins"),
-    )
-    async def debug_get_dialogstate_handler(message: Message):
-        """
-        Вывести state dispenser.
-        """
-        answer_message = await bot.get_group_admins()
-        await message.answer(
-            str(answer_message),
-        )
-
     # All others. -----------------------------------------------------------------------------------------------
     @bot.on.message(
         StateRule()
@@ -586,13 +598,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         await bot.answer_to_peer(answer_message, message.from_id, None)
 
-        message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].screen_name))
-        await bot.api.messages.send(
-            message=message_text,
-            user_ids=await bot.get_group_admins(),
-            forward_messages=message.id,
-            random_id=0,
-        )
+        # Закомменчена отправка непонятных сообщений админам
+        # message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].screen_name))
+        # await bot.api.messages.send(
+        #     message=message_text,
+        #     user_ids=await bot.get_group_admins(),
+        #     forward_messages=message.id,
+        #     random_id=0,
+        # )
 
     bot.loop_wrapper.on_startup.append(bot_load(bot))
 
