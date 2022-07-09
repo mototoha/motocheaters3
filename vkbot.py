@@ -85,6 +85,7 @@ class VKBot(Bot):
         Метод получает значения для свойств объекта класса с помощью асинхронных методов.
         Список параметров:
         - group_id
+        - group_admins
         ...
         """
         group_info = await self.api.groups.get_by_id()
