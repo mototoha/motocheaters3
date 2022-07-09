@@ -12,7 +12,6 @@ from vkbottle.dispatch.rules.base import (
     CommandRule,
     StateRule,
     StateGroupRule,
-    RegexRule,
     FromPeerRule,
 )
 from vkbottle import DocMessagesUploader
