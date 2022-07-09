@@ -26,7 +26,7 @@ DB_TEMPLATE = {
         'vk_id': 'text',
         'changed': 'bool',
     },
-    'telephone': {
+    'telephones': {
         'pk': 'integer',
         'telephone': 'text',
         'vk_id': 'text',
@@ -55,7 +55,9 @@ class DBCheaters:
         integrity_check = False
         if file_exist:
             logger.info('DB file exist, check content')
-            integrity_check = self.check_integrity_tables(self.db_filename)
+            integrity_check = True
+            # TODO Проверка таблиц
+            # integrity_check = self.check_integrity_tables(self.db_filename)
             if not integrity_check:
                 logger.warning('БД не прошла проверку, создаю новую.')
                 shutil.move(self.db_filename, self.db_filename + '_' + datetime.date.today().isoformat())
@@ -230,8 +232,11 @@ class DBCheaters:
         conn = sqlite3.Connection(filename)
         cur = conn.cursor()
         sql_res = cur.execute(sql_requests.select_table_names)
-        for table in sql_res:
-            if table[0] in template_tables:
+        sql_tables = []
+        for table in sql_res.fetchall():
+            sql_tables.append(table)
+        for table in template_tables:
+            if table in sql_tables:
                 # Проверка колонок в таблице
                 pass
             else:
