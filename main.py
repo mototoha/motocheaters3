@@ -215,7 +215,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         await bot.answer_to_peer(answer_message, message.peer_id)
 
-
     # Отладочные команды. ---------------------------------------------------------------------------------------
     @bot.on.message(
         AdminUserRule(bot),
