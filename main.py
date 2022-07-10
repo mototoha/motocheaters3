@@ -446,10 +446,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или 50.
         """
-        formatted_message_text = message.text.lower().replace(' ', '')
+        formatted_message_text = message.text.lower().replace(' ', '').split('\n')
         cheater_add = message.state_peer.payload.get('cheater_add')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
+
         repeat_search = False
+
+        for line in formatted_message_text:
+            match = re.match(cheaters.get_regexp('all'), line)
 
         match = re.match(cheaters.get_regexp('all'), formatted_message_text)
 
