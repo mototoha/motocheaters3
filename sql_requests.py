@@ -58,3 +58,5 @@ LEFT JOIN telephones on vk_ids.vk_id = telephones.vk_id
 LEFT JOIN proof_links on vk_ids.vk_id = proof_links.vk_id
 ORDER by fifty, vk_ids.vk_id
 """
+
+select_publics = 'select vk_id from vk_ids where vk_id like "public%"'

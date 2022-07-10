@@ -285,7 +285,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     @bot.on.message(
-        AdminUserRule(bot),
+        FromPeerRule(bot.group_admins),
         CommandRule('main'),
     )
     async def go_to_main_handler(message: Message):
@@ -296,7 +296,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(dialogs.return_to_main, message.from_id)
 
     @bot.on.message(
-        AdminUserRule(bot),
+        FromPeerRule(bot.group_admins),
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
