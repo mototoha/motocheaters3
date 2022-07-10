@@ -587,6 +587,11 @@ class VKBot(Bot):
 
         return cheater_update
 
+    def public_to_club(self):
+        """
+        Метод переделывает все записи public% в club%.
+        """
+        self.db.publics_to_clubs()
 
 if __name__ == '__main__':
     #  Тут будет тест

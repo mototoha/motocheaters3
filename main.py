@@ -300,7 +300,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
-        pass
+        bot.public_to_club()
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(

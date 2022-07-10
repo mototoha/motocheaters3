@@ -539,5 +539,25 @@ class DBCheaters:
                     one_cheater.__getattribute__(db_dict[str(i)]).append(cheater_record[i])
 
         result.append(one_cheater)
-
         return result
+
+    def get_vk_publics(self) -> List[str]:
+        """
+        Метод возвращает список записей, начинающихся на public.
+        :return: List[str]
+        """
+        result = []
+        sql_result = self._cursor.execute(sql_requests.select_publics)
+        for item in sql_result:
+            result.append(item[0])
+        return result
+
+    def publics_to_clubs(self):
+        """
+        Метод меняет в таблице vk_ids записи с publuc% на club%
+        """
+        publics_list = []
+        sql_result = self._cursor.execute(sql_requests.select_publics)
+        for item in sql_result:
+            id_num = item[0].lstrip('public')
+            self.update_table('vk_ids', {'vk_id': 'club'+id_num}, {'vk_id': item[0]})
