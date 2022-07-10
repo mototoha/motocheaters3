@@ -13,7 +13,8 @@ from typing import (
 )
 
 REGEXP_CHEATER = {
-    'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(id|club|public|event)\d+(\s\n)?)',
+    'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>id\d+(\s\n)?)',
+    'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(club|public|event)\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
     'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
     'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
@@ -57,7 +58,6 @@ def get_regexp(*args: 'str') -> str:
     :param args: Указываем параметры, которые хотим парсить регуляркой.
     :return: Регулярка.
     """
-    result = ''
     # Группы регулярок.
     regexp_group_list = tuple(REGEXP_CHEATER.keys())
     # Запрошенные группы регулярок.
@@ -65,15 +65,17 @@ def get_regexp(*args: 'str') -> str:
     if args[0] == 'all':
         request_group_list = tuple(REGEXP_CHEATER.keys())
     elif args[0] in ('main', 'search'):
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone'])
+        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone'])
     elif args[0] == 'add':
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone', 'proof_link', 'fifty'])
+        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone', 'proof_link', 'fifty'])
     elif args[0] == 'del':
-        request_group_list = tuple(['vk_id', 'screen_name', 'card', 'telephone', 'proof_link'])
+        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone', 'proof_link'])
     elif args:
         request_group_list = args
     else:
         request_group_list = tuple(REGEXP_CHEATER.keys())
+    # Собираем регулярку
+    result = ''
     for group in request_group_list:
         if group in regexp_group_list:
             if result:
