@@ -593,6 +593,12 @@ class VKBot(Bot):
         """
         self.db.publics_to_clubs()
 
+    def delete_duplicate(self):
+        """
+        Метод удаляет дубликаты из БД.
+        """
+        self.db.delete_duplicate()
+
 if __name__ == '__main__':
     #  Тут будет тест
     pass

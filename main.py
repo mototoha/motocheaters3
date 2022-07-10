@@ -2,8 +2,9 @@
 Main bot file.
 python3 main.py [config_filename.json]
 """
-
+import datetime
 import re
+import shutil
 
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
@@ -300,7 +301,19 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
+        shutil.copyfile('cheaters.db', 'cheaters_bak.db'+datetime.datetime.now().isoformat())
         bot.public_to_club()
+
+    @bot.on.message(
+        FromPeerRule(bot.group_admins),
+        CommandRule('delete_duplicate'),
+    )
+    async def delete_duplicate_handler(message: Message):
+        """
+        Метод удаляет дубликаты в таблицах vk_ids и screen_names.
+        """
+        shutil.copyfile('cheaters.db', 'cheaters_bak.db' + datetime.datetime.now().isoformat())
+        bot.delete_duplicate()
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
@@ -598,3 +611,4 @@ if __name__ == '__main__':
 #  * Количество запросов кидал
 # TODO Ответ на спасибо
 # TODO Просьба про деньги после успешного ответа
+# TODO Удалять пустые строчки в screen_names

@@ -176,7 +176,35 @@ class DBCheaters:
                     result += '"' + where_update[value] + '"'
                 else:
                     result += where_update[value]
+        return result
 
+    @staticmethod
+    def _construct_delete(table: str, where_delete: dict, operator: str = 'and') -> str:
+        """
+        Construct delete query.
+        DELETE from {table} where {where_param} = "{where_value}"
+
+        :param table: Таблица для удаления;
+        :param where delete: словарь с условиями. Если значение начинается на "!", то ставится !=
+        :param operator: and или or;
+        :return: SQL DELETE.
+        """
+        result = 'DELETE from {table} '.format(table=table)
+
+        if where_delete:
+            result += ' where '
+            for count, value in enumerate(where_delete):
+                if count:
+                    result += ' ' + operator + ' '
+                if value.startwith('!'):
+                    result += value + '!='
+                else:
+                    result += value + '='
+                # strings must be with "
+                if type(where_delete[value]) == str:
+                    result += '"' + where_delete[value] + '"'
+                else:
+                    result += where_delete[value]
         return result
 
     @staticmethod
@@ -556,8 +584,33 @@ class DBCheaters:
         """
         Метод меняет в таблице vk_ids записи с publuc% на club%
         """
-        publics_list = []
-        sql_result = self._cursor.execute(sql_requests.select_publics)
+        sql_result = self._cursor.execute(sql_requests.select_publics).fetchall()
         for item in sql_result:
             id_num = item[0].lstrip('public')
             self.update_table('vk_ids', {'vk_id': 'club'+id_num}, {'vk_id': item[0]})
+        self._connection.commit()
+
+    def delete_duplicate(self):
+        """
+        Метод удаляет из таблиц vk_ids и screen_names дубликаты.
+        """
+        # vk_ids
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_vk_id).fetchall()
+        for row in sql_result:
+            # pk | vk_id | fifty | count
+            first_pk = row[0]
+            duplicate_id = row[1]
+            sql_query = self._construct_delete('vk_ids', {'vk_id': duplicate_id, 'pk': '!' + first_pk})
+            self._cursor.execute(sql_query)
+        self._connection.commit()
+
+        # screen_names
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names).fetchall()
+        for row in sql_result:
+            # pk | screen_name | vk_id | changed | count
+            first_pk = row[0]
+            duplicate_name = row[1]
+            sql_query = self._construct_delete('screen_names', {'screen_name': duplicate_name, 'pk': '!' + first_pk})
+            self._cursor.execute(sql_query)
+
+        self._connection.commit()
