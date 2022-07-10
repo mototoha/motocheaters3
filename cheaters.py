@@ -14,7 +14,7 @@ from typing import (
 
 REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>id\d+(\s\n)?)',
-    'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>(club|public|event)\d+(\s\n)?)',
+    'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(club|public|event)(?P<vk_id>\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
     'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
     'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
@@ -47,9 +47,9 @@ def get_regexp(*args: 'str') -> str:
     которые надо использовать. Если ничего не передали - берется все.\n
     Можно передать ключевые слова:\n
     all -все;\n
-    main, search - vk_id, screen_name, card, telephone;\n
-    add - vk_id, screen_name, card, telephone, proof_link, fifty;\n
-    del - vk_id, screen_name, card, telephone, proof_link.
+    main, search - vk_id, 'group_id', screen_name, card, telephone;\n
+    add - vk_id, 'group_id', screen_name, card, telephone, proof_link, fifty;\n
+    del - vk_id, 'group_id', screen_name, card, telephone, proof_link.
 
     Либо перечисляем группы регулярок.\n
     Если сначала идут ключевые слова - остальное игнорируется.\n
@@ -186,9 +186,9 @@ class Cheater:
                vk_id: str = None,
                screen_name: str = None,
                fifty: bool = None,
-               telephone: List[str] = None,
-               card: List[str] = None,
-               proof_link: List[str] = None):
+               telephone: str | List[str] = None,
+               card: str | List[str] = None,
+               proof_link: str | List[str] = None):
         """
         Метод позволяет обновить поля объекта в меньшее количество строк.
         Ничего не удаляет
@@ -207,8 +207,38 @@ class Cheater:
         if fifty:
             self.fifty = fifty
         if telephone:
-            merge_list(self.telephone, telephone)
+            if isinstance(telephone, str):
+                self.telephone.append(telephone)
+            else:
+                merge_list(self.telephone, telephone)
         if card:
-            merge_list(self.card, card)
+            if isinstance(card, str):
+                self.card.append(telephone)
+            else:
+                merge_list(self.card, card)
         if proof_link:
-            merge_list(self.proof_link, proof_link)
+            if isinstance(proof_link, str):
+                self.telephone.append(proof_link)
+            else:
+                merge_list(self.proof_link, proof_link)
+
+    def update2(self, param_to_update, value):
+        """
+        Метод обновляет указанный параметр.
+        
+        :param param_to_update: Что обновить. 
+        :param value: На что обновить.
+        """
+        if hasattr(self, param_to_update):
+            match param_to_update:
+                case 'vk_id' | 'screen_name':
+                    self.vk_id = value
+                case 'fifty':
+                    self.fifty = bool(value)
+                case 'telephone' | 'card' | 'proof_link':
+                    if isinstance(value, str):
+                        self.__setattr__(param_to_update, self.__getattribute__(param_to_update).append(value))
+                    elif isinstance(value, list):
+                        merge_list(self.__getattribute__(param_to_update), value)
+                    else:
+                        pass

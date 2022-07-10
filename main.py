@@ -194,8 +194,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
         # TODO Объединить с обычным (нераспознанным) сообщением.
+        # Если это группа и начинается на club, то это может быть как имя, так и псевдоним.
         match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
+        if not result_check and match[match.lastgroup].startswith('club'):
+            result_check = bot.check_cheater(match.lastgroup, )
         if result_check:  # found
             answer_message = dialogs.is_cheater
         else:  # not found
@@ -211,6 +214,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     user_ids=await bot.get_group_admins(),
                     forward_messages=message.id,
                     random_id=0,
+
                 )
 
         await bot.answer_to_peer(answer_message, message.peer_id)
@@ -290,6 +294,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         await bot.state_dispenser.delete(message.from_id)
         await bot.answer_to_peer(dialogs.return_to_main, message.from_id)
+
+    @bot.on.message(
+        AdminUserRule(bot),
+        CommandRule('public_to_club')
+    )
+    async def public_to_club_handler(message: Message):
+        pass
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
@@ -446,101 +457,61 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Добавление кидалы.
         Тут распарсится vk_id, screen_name, телефон, карта, пруфлинк или 50.
         """
-        formatted_message_text = message.text.lower().replace(' ', '').split('\n')
+        # Берем сохраненных кидал (если есть)
         cheater_add = message.state_peer.payload.get('cheater_add')  # кидала в процессе добавления
         cheater_db = message.state_peer.payload.get('cheater_db')  # кидала из БД
 
-        repeat_search = False
+        formatted_message_text = message.text.lower().replace(' ', '').split('\n')
+        regexp = cheaters.get_regexp('all')
+        #  При разборе выражения будет учитываться только первый vk_id/screen_name
+        id_found = False  # Если в присланном пользователе тексте нашелся id, то значение станет True
 
         for line in formatted_message_text:
-            match = re.match(cheaters.get_regexp('all'), line)
+            reg_match = re.match(regexp, line)
 
-        match = re.match(cheaters.get_regexp('all'), formatted_message_text)
-
-        # Есть совпадение.
-        if match:
-            if not cheater_add:
-                # Если еще не создан шаблон кидалы для админа - создаём.
-                cheater_add = cheaters.Cheater()
-
-            if match.lastgroup in ('vk_id', 'screen_name'):
+            # Собираем параметры из API (если надо).
+            if not id_found and reg_match and (reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name')):
                 # Если в запросе vk_id или screen_name - запрашиваем vk_api.
                 api_vk_id, api_screen_name, is_banned, vk_name = await bot.get_from_api_id_screen_name_banned(
-                    match[match.lastgroup])
-
+                    reg_match[reg_match.lastgroup])
+                # Если пользователь/группа забанены - выводим предупреждение, чтоб не пугаться пустого screen_name.
                 if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete.format(api_vk_id))
-
+                # Если пользователь/группа удалены - нефиг их добавлять.
                 if api_vk_id is None:
                     return dialogs.add_cheater_no_id
 
-                cheater_db = bot.get_cheater_from_db(match[match.lastgroup])
-                if not isinstance(cheater_db, cheaters.Cheater) and (cheater_db is not None):
-                    await bot.send_message_to_admins(str(cheater_db))
-                    return 'Таких записей в нашей БД больше одной. Этого не должно быть. ' \
-                           'Пропусти и продолжи добавление других кидал.'
+            # Обновляем шаблон добавляемого кидалы.
+            if reg_match:
+                # Если еще ничего не было - создаём новый шаблон.
+                if cheater_add is None:
+                    cheater_add = cheaters.Cheater()
 
-                if match.lastgroup == 'screen_name':
-                    await message.answer(f'Имя {api_screen_name} сейчас принадлежит @{api_vk_id}, ({vk_name})\n'
-                                         f'Если тебе нужен другой пользователь/группа, придется найти старый id.')
-                    # Если в БД есть такой screen_name.
-                    if cheater_db:
-                        # Если не совпадают ID.
-                        if cheater_db.vk_id != api_vk_id:
-                            # Актуализируем имя у старого пользователя и отмечаем, что нужен поиск по vk_id.
+                cheater_add.update2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
+                if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
+                    id_found = True
+
+                # Смотрим в нашу БД
+                if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
+                    cheater_db = bot.get_cheater_from_db(reg_match[reg_match.lastgroup])
+                    if reg_match.lastgroup == 'screen_name':
+                        # Если имя сменило владельца - обновляем имя у старого и меняем cheaters_db
+                        if cheater_db.vk_id != cheater_add.vk_id:
                             await bot.update_db_screen_name(cheater_db.vk_id)
-                            cheater_db = bot.get_cheater_from_db(api_vk_id)
-                            repeat_search = True
-
-                if match.lastgroup == 'vk_id' or repeat_search:
-                    # Если vk_id в базе
-                    if cheater_db:
-                        # Если имя в БД не актуально.
-                        if cheater_db.screen_name != api_screen_name:
-                            # Устанавливаем корректное имя.
-                            await bot.update_db_screen_name(cheater_db.vk_id, api_screen_name)
-                            cheater_db.screen_name = api_screen_name
-
-                # Запоминаем введенные параметры кидалы.
-                cheater_add.update(vk_id=api_vk_id,
-                                   screen_name=api_screen_name)
-
-            elif match.lastgroup in {'card', 'telephone', 'proof_link'}:
-                # Список значений 'card', 'telephone' или 'proof_link'
-                list_values = cheater_add.get(match.lastgroup)
-                if list_values:
-                    if match[match.lastgroup] in list_values:
-                        await message.answer('Такой параметр ' + match.lastgroup + ' уже введен!\n')
-                    else:
-                        list_values.append(match[match.lastgroup])
-                else:
-                    list_values = [match[match.lastgroup]]
-                cheater_add.__setattr__(match.lastgroup, list_values)
-            elif match.lastgroup == 'fifty':
-                cheater_add.fifty = not cheater_add.fifty
-            elif match.lastgroup == 'proof_link_user':
-                await message.answer('Ссылки на стены пользователей не публикуются. Их могут удалить в любой момент.')
+                            cheater_db = bot.get_cheater_from_db(cheater_add.vk_id)
+                    if cheater_db.screen_name != cheater_add.screen_name:
+                        await bot.update_db_screen_name(cheater_db.vk_id, cheater_add.screen_name)
             else:
-                message_text = 'При добавлении кидалы распарсилось непонятно что:\n' + \
-                               message.text + '\n' + match.lastgroup + ' ' + match[match.lastgroup]
-                await bot.api.messages.send(
-                    message=message_text,
-                    user_ids=await bot.get_group_admins(),
-                    forward_messages=message.id,
-                    random_id=0,
-                )
+                return dialogs.add_cheater_error_value
 
-            answer_message = 'Ты ввел ' + match.lastgroup + ' со значением ' + match[match.lastgroup] + '\n\n'
-            if cheater_add:
-                answer_message += 'Твой кидала:\n' + str(cheater_add) + '\n'
-            if cheater_db:
-                answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
-            await bot.state_dispenser.set(message.from_id, message.state_peer.state,
-                                          cheater_add=cheater_add,
-                                          cheater_db=cheater_db)
-        # Нет совпадения.
-        else:
-            answer_message = dialogs.add_cheater_error_value
+        answer_message = 'Ты ввел ' + reg_match.lastgroup + ' со значением ' + reg_match[reg_match.lastgroup] + '\n\n'
+        if cheater_add:
+            answer_message += 'Твой кидала:\n' + str(cheater_add) + '\n'
+        if cheater_db:
+            answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
+        await bot.state_dispenser.set(message.from_id, message.state_peer.state,
+                                      cheater_add=cheater_add,
+                                      cheater_db=cheater_db)
         await message.answer(
             message=answer_message,
         )
@@ -600,15 +571,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message += dialogs.samples
 
         await bot.answer_to_peer(answer_message, message.from_id, None)
-
-        # Закомменчена отправка непонятных сообщений админам
-        # message_text = dialogs.dont_understand_to_admin.format(str(users_info[0].screen_name))
-        # await bot.api.messages.send(
-        #     message=message_text,
-        #     user_ids=await bot.get_group_admins(),
-        #     forward_messages=message.id,
-        #     random_id=0,
-        # )
 
     bot.loop_wrapper.on_startup.append(bot_load(bot))
 

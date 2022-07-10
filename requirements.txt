@@ -1,2 +1,2 @@
-vkbottle>=4.3.4
-requests>=2.27.1
+vkbottle==4.3.4
+requests==2.27.1

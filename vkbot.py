@@ -359,7 +359,7 @@ class VKBot(Bot):
         Для группы: имя.
 
         :param id_name: vk_id или screen_name
-        :return: vk_id, screen_name, banned/deleted.
+        :return: vk_id, screen_name, banned/deleted, имя-фамилия.
         """
         result_vk_id = ''
         result_screen_name = ''
@@ -378,8 +378,7 @@ class VKBot(Bot):
                 group = await self.api.groups.get_by_id(group_id=id_name,
                                                         fields=['screen_name']
                                                         )
-                group_type = GROUP_TYPES[group[0].type.value]
-                result_vk_id = group_type + str(group[0].id)
+                result_vk_id = 'club' + str(group[0].id)
                 result_screen_name = group[0].screen_name
                 result_banned = group[0].ban_info
                 result_name = group[0].name
@@ -468,7 +467,7 @@ class VKBot(Bot):
         :param telephone: телефон,
         :param card: номер карт,
         :param proof_link: ссылка на пруф,
-        :param return_fields: поля, которые требуется вернуть,
+        :param return_fields: поля, которые требуется вернуть, (сейчас возвращаются все)
         :return: объект (список объектов) Cheater или None, если ничего не нашел.
         """
         sql_result = []
