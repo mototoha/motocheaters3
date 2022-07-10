@@ -185,7 +185,7 @@ class DBCheaters:
         DELETE from {table} where {where_param} = "{where_value}"
 
         :param table: Таблица для удаления;
-        :param where delete: словарь с условиями. Если значение начинается на "!", то ставится !=
+        :param where_delete: словарь с условиями. Если значение начинается на "!", то ставится !=
         :param operator: and или or;
         :return: SQL DELETE.
         """
