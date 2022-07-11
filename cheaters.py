@@ -14,7 +14,7 @@ from typing import (
 
 REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>id\d+(\s\n)?)',
-    'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(club|public|event)(?P<vk_id>\d+(\s\n)?)',
+    'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(club|public|event)(?P<group_id>\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
     'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
     'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
