@@ -199,7 +199,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         if not result_check and match[match.lastgroup].startswith('club'):
-            result_check = bot.check_cheater(match.lastgroup, )
+            result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         if result_check:  # found
             answer_message = dialogs.is_cheater
         else:  # not found
@@ -264,10 +264,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Вывести state dispenser.
         """
         answer_message = await bot.state_dispenser.get(message.from_id)
-        print(type(answer_message))
-        print(answer_message)
         if answer_message:
-            print(answer_message.state)
+            answer_message = answer_message.state
+        else:
+            answer_message = str(answer_message)
         await message.answer(
             answer_message,
         )
@@ -278,7 +278,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     )
     async def debug_get_dialogstate_handler(message: Message):
         """
-        Вывести state dispenser.
+        Вывести админов группы.
         """
         answer_message = await bot.get_group_admins()
         await message.answer(
@@ -507,17 +507,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 # Смотрим в нашу БД
                 if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
                     cheater_db = bot.get_cheater_from_db(reg_match[reg_match.lastgroup])
-                    if reg_match.lastgroup == 'screen_name':
-                        # Если имя сменило владельца - обновляем имя у старого и меняем cheaters_db
-                        if cheater_db.vk_id != cheater_add.vk_id:
-                            await bot.update_db_screen_name(cheater_db.vk_id)
-                            cheater_db = bot.get_cheater_from_db(cheater_add.vk_id)
-                    if cheater_db.screen_name != cheater_add.screen_name:
-                        await bot.update_db_screen_name(cheater_db.vk_id, cheater_add.screen_name)
+                    if cheater_db:
+                        if reg_match.lastgroup == 'screen_name':
+                            # Если имя сменило владельца - обновляем имя у старого и меняем cheaters_db
+                            if cheater_db.vk_id != cheater_add.vk_id:
+                                await bot.update_db_screen_name(cheater_db.vk_id)
+                                cheater_db = bot.get_cheater_from_db(cheater_add.vk_id)
+                        if cheater_db.screen_name != cheater_add.screen_name:
+                            await bot.update_db_screen_name(cheater_db.vk_id, cheater_add.screen_name)
             else:
                 return dialogs.add_cheater_error_value
 
-        answer_message = 'Ты ввел ' + reg_match.lastgroup + ' со значением ' + reg_match[reg_match.lastgroup] + '\n\n'
         if cheater_add:
             answer_message += 'Ты собираешься добавить:\n' + str(cheater_add) + '\n'
         if cheater_db:
@@ -613,3 +613,5 @@ if __name__ == '__main__':
 # TODO Ответ на спасибо
 # TODO Просьба про деньги после успешного ответа
 # TODO Удалять пустые строчки в screen_names
+# TODO Поиск по всем значениям, а не только по адресу страницы
+# TODO Отладочные команды перед всеми другими

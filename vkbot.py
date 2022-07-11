@@ -386,7 +386,7 @@ class VKBot(Bot):
                 pass
         return result_vk_id, result_screen_name, result_banned, result_name
 
-    async def get_group_admins(self, group_id: str = None) -> List[str]:
+    async def get_group_admins(self, group_id: str = None) -> List[int]:
         """
         Метод возвращает список администраторов группы.
         Если имя группы не передано - берется своя группа (от имени котрой запущен бот).
@@ -401,7 +401,7 @@ class VKBot(Bot):
             members = await self.api.groups.get_members(group_id=group_id, filter='managers')
         result = []
         for member in members.items:
-            result.append(str(member.id))
+            result.append(member.id)
         return result
 
     async def answer_to_peer(self, text: str, peer_id: int, new_state: BaseStateGroup = None):
