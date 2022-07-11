@@ -31,6 +31,7 @@ class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
     """
     Класс для обработки сообщения до поиска хендлеров.
     """
+
     async def pre(self):
         """
         Метод проверяет, что пользователь является админом группы.
@@ -550,6 +551,109 @@ class VKBot(Bot):
             result = None
         return result
 
+    def get_cheater_from_db2(self,
+                             param: str,
+                             value: str,
+                             ) -> List[Cheater]:
+        """
+        Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаются параметры, по которым надо его найти.
+        В результате вернется либо Cheater(), либо список Cheater()'ов, либо None.
+
+        :param param: по какому параметру искать,
+        :param value: значение,
+        :return: объект (список объектов) Cheater или None, если ничего не нашел.
+        """
+        # Первое: надо определиться, по каким id нам искать.
+        vk_id_list = []
+        match param:
+            case 'vk_id' | 'group_id':
+                if param == 'vk_id':
+                    prefix = 'id'
+                else:
+                    prefix = 'club'
+                vk_id_list = [prefix + value]
+            case 'screen_name':
+                sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'screen_name': value,
+                                                                         'changed': 'False'})
+                for item in sql_result:
+                    vk_id_list.append(item['vk_id'])
+            case 'fifty':
+                sql_result = self.db.get_dict_from_table(table='vk_ids',
+                                                         columns=['vk_id'],
+                                                         condition_dict={'fifty': value})
+                for item in sql_result:
+                    vk_id_list.append(item['vk_id'])
+            case 'card' | 'telephone' | 'proof_link':
+                sql_result = self.db.get_dict_from_table(table=param + 's',
+                                                         columns=['vk_id'],
+                                                         condition_dict={param: value})
+                for item in sql_result:
+                    vk_id_list.append(item['vk_id'])
+
+        result = []
+        for vk_id in vk_id_list:
+            result.append(self.get_cheater_by_id(vk_id))
+        return result
+
+    def get_cheater_by_id(self, vk_id: str) -> Optional[Cheater]:
+        """
+        Метод вернет объект Cheater с данными из БД по vk_id.
+        :param vk_id: user_id или group_id.
+        :return: Cheater or None
+        """
+        if not vk_id:
+            return None
+        cheater_info = Cheater()
+
+        # VK_IDS
+        sql_result = self.db.get_dict_from_table(table='vk_ids',
+                                                 columns=['vk_id', 'fifty'],
+                                                 condition_dict={'vk_id': vk_id})
+        if sql_result:
+            cheater_info.vk_id = sql_result[0]['vk_id']
+            cheater_info.fifty = sql_result[0]['fifty']
+        # SCREEN_NAMES
+        sql_result = self.db.get_dict_from_table(table='screen_names',
+                                                 columns=['screen_name'],
+                                                 condition_dict={'vk_id': vk_id, 'changed': 'False'})
+        if sql_result:
+            cheater_info.screen_name = sql_result[0]['screen_name']
+        # TELEPHONES
+        sql_result = self.db.get_dict_from_table(table='telephones',
+                                                 columns=['telephone'],
+                                                 condition_dict={'vk_id': vk_id})
+        if sql_result:
+            items_list = []
+            for item in sql_result:
+                items_list += item.values()
+            cheater_info.telephone = items_list
+        # CARDS
+        sql_result = self.db.get_dict_from_table(table='cards',
+                                                 columns=['card'],
+                                                 condition_dict={'vk_id': vk_id})
+        if sql_result:
+            items_list = []
+            for item in sql_result:
+                items_list += item.values()
+            cheater_info.card = items_list
+        # PROOF_LINKS
+        sql_result = self.db.get_dict_from_table(table='proof_links',
+                                                 columns=['proof_link'],
+                                                 condition_dict={'vk_id': vk_id})
+        if sql_result:
+            items_list = []
+            for item in sql_result:
+                items_list += item.values()
+            cheater_info.proof_link = items_list
+
+        if not cheater_info:
+            result = None
+        else:
+            result = cheater_info
+        return result
+
     def add_cheater(self, cheater: Cheater, cheater_db: Cheater = None) -> Cheater:
         """
         Метод добавляет (обновляет) данные в БД.
@@ -570,7 +674,7 @@ class VKBot(Bot):
             if cheater.screen_name != cheater_db.screen_name:
                 cheater_update.screen_name = cheater.screen_name
 
-            cheater_update.telephone = list(set(cheater.telephone)-set(cheater_db.telephone))
+            cheater_update.telephone = list(set(cheater.telephone) - set(cheater_db.telephone))
             cheater_update.card = list(set(cheater.card) - set(cheater_db.card))
             cheater_update.proof_link = list(set(cheater.proof_link) - set(cheater_db.proof_link))
 
@@ -598,6 +702,7 @@ class VKBot(Bot):
         Метод удаляет дубликаты из БД.
         """
         self.db.delete_duplicate()
+
 
 if __name__ == '__main__':
     #  Тут будет тест

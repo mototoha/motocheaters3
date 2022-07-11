@@ -195,8 +195,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
         # TODO Объединить с обычным (нераспознанным) сообщением.
-        # Если это группа и начинается на club, то это может быть как имя, так и псевдоним.
+        answer_message = ''
         match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
+        cheates_db = bot.get_cheater_from_db(match.lastgroup, match[match.lastgroup])
+        if isinstance(cheates_db, list):
+            for cheater in cheates_db:
+                pass
+
+
         result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
         if not result_check and match[match.lastgroup].startswith('club'):
             result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
@@ -206,17 +212,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             answer_message = dialogs.not_cheater
             if answer_message:
                 answer_message = answer_message.format(match[match.lastgroup])
-            else:
-                # Not correct sql.
-                answer_message = 'Ничего не найдено.'
-                message_text = 'Запрос, который некорректно отработал'
-                await bot.api.messages.send(
-                    message=message_text,
-                    user_ids=await bot.get_group_admins(),
-                    forward_messages=message.id,
-                    random_id=0,
-
-                )
 
         await bot.answer_to_peer(answer_message, message.peer_id)
 
@@ -286,7 +281,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         )
 
     @bot.on.message(
-        FromPeerRule(bot.group_admins),
+        AdminUserRule(bot),
         CommandRule('main'),
     )
     async def go_to_main_handler(message: Message):
@@ -297,7 +292,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.answer_to_peer(dialogs.return_to_main, message.from_id)
 
     @bot.on.message(
-        FromPeerRule(bot.group_admins),
+        AdminUserRule(bot),
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
@@ -305,7 +300,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         bot.public_to_club()
 
     @bot.on.message(
-        FromPeerRule(bot.group_admins),
+        AdminUserRule(bot),
         CommandRule('delete_duplicate'),
     )
     async def delete_duplicate_handler(message: Message):
@@ -506,7 +501,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
                 # Смотрим в нашу БД
                 if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
-                    cheater_db = bot.get_cheater_from_db(reg_match[reg_match.lastgroup])
+                    # Берем первого, он должен быть один в списке
+                    cheater_db = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])[0]
                     if cheater_db:
                         if reg_match.lastgroup == 'screen_name':
                             # Если имя сменило владельца - обновляем имя у старого и меняем cheaters_db
@@ -517,7 +513,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                             await bot.update_db_screen_name(cheater_db.vk_id, cheater_add.screen_name)
             else:
                 return dialogs.add_cheater_error_value
-
+        answer_message = ''
         if cheater_add:
             answer_message += 'Ты собираешься добавить:\n' + str(cheater_add) + '\n'
         if cheater_db:

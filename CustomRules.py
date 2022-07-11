@@ -22,5 +22,5 @@ class AdminUserRule(ABCRule[Message]):
         :param event: Сообщение от пользователя.
         :return: bool
         """
-        result = str(event.from_id) in self.bot.group_admins
+        result = event.from_id in self.bot.group_admins
         return result

@@ -471,7 +471,7 @@ class DBCheaters:
         result = self._cursor.fetchone()
         return result
 
-    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[dict]:
+    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[List[dict]]:
         """
         Возвращаем значения из таблицы.
         Из списка rows делаем словарь.

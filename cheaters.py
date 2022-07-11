@@ -13,7 +13,7 @@ from typing import (
 )
 
 REGEXP_CHEATER = {
-    'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(?P<vk_id>id\d+(\s\n)?)',
+    'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}id(?P<vk_id>\d+(\s\n)?)',
     'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(club|public|event)(?P<group_id>\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
     'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
@@ -225,6 +225,8 @@ class Cheater:
     def update2(self, param_to_update, value):
         """
         Метод обновляет указанный параметр.
+        Имя, 50 или ИД - заменяет.
+        Телефон, пруфлинк, карта - добавляет.
         
         :param param_to_update: Что обновить. 
         :param value: На что обновить.
