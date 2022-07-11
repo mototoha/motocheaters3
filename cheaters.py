@@ -233,13 +233,15 @@ class Cheater:
         """
         if hasattr(self, param_to_update):
             match param_to_update:
-                case 'vk_id' | 'screen_name':
+                case 'vk_id':
                     self.vk_id = value
+                case  'screen_name':
+                    self.screen_name = value
                 case 'fifty':
                     self.fifty = bool(value)
                 case 'telephone' | 'card' | 'proof_link':
                     if isinstance(value, str):
-                        self.__setattr__(param_to_update, self.__getattribute__(param_to_update).append(value))
+                        self.__getattribute__(param_to_update).append(value)
                     elif isinstance(value, list):
                         merge_list(self.__getattribute__(param_to_update), value)
                     else:

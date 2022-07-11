@@ -150,20 +150,17 @@ class DBCheaters:
         """
         result = 'UPDATE {table} set '.format(table=table)
 
-        s_params = '('
-        s_values = '('
         for count, param in enumerate(set_params):
             if count:
-                s_params += ', '
-                s_values += ', '
-            s_params += param
+                result += ','
+            s_param = param
             if type(set_params[param]) == bool:
-                set_params[param] = str(set_params[param])
-            s_values += set_params[param]
-        s_params += ')'
-        s_values += ')'
-
-        result += s_params + ' = ' + s_values
+                s_value = str(set_params[param])
+            elif type(set_params[param]) == str:
+                s_value = '"' + set_params[param] + '"'
+            else:
+                s_value = set_params[param]
+            result += s_param + ' = ' + s_value
 
         if where_update:
             result += ' where '
@@ -185,7 +182,7 @@ class DBCheaters:
         DELETE from {table} where {where_param} = "{where_value}"
 
         :param table: Таблица для удаления;
-        :param where_delete: словарь с условиями. Если значение начинается на "!", то ставится !=
+        :param where_delete: словарь с условиями. Если ключ начинается на "!", то ставится !=
         :param operator: and или or;
         :return: SQL DELETE.
         """
@@ -196,15 +193,16 @@ class DBCheaters:
             for count, value in enumerate(where_delete):
                 if count:
                     result += ' ' + operator + ' '
-                if value.startwith('!'):
-                    result += value + '!='
+                if value.startswith('!'):
+                    not_value = value.lstrip('!')
+                    result += not_value + ' != '
                 else:
-                    result += value + '='
+                    result += value + ' = '
                 # strings must be with "
                 if type(where_delete[value]) == str:
                     result += '"' + where_delete[value] + '"'
                 else:
-                    result += where_delete[value]
+                    result += str(where_delete[value])
         return result
 
     @staticmethod
@@ -584,10 +582,16 @@ class DBCheaters:
         """
         Метод меняет в таблице vk_ids записи с publuc% на club%
         """
+        # vk_ids
         sql_result = self._cursor.execute(sql_requests.select_publics).fetchall()
         for item in sql_result:
             id_num = item[0].lstrip('public')
             self.update_table('vk_ids', {'vk_id': 'club'+id_num}, {'vk_id': item[0]})
+        # screen_names
+        sql_result = self._cursor.execute(sql_requests.select_publics_from_table.format('screen_names')).fetchall()
+        for item in sql_result:
+            id_num = item[0].lstrip('public')
+            self.update_table('screen_names', {'vk_id': 'club' + id_num}, {'vk_id': item[0]})
         self._connection.commit()
 
     def delete_duplicate(self):
@@ -600,9 +604,8 @@ class DBCheaters:
             # pk | vk_id | fifty | count
             first_pk = row[0]
             duplicate_id = row[1]
-            sql_query = self._construct_delete('vk_ids', {'vk_id': duplicate_id, 'pk': '!' + first_pk})
+            sql_query = self._construct_delete('vk_ids', {'vk_id': duplicate_id, '!pk': first_pk})
             self._cursor.execute(sql_query)
-        self._connection.commit()
 
         # screen_names
         sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names).fetchall()
@@ -610,7 +613,7 @@ class DBCheaters:
             # pk | screen_name | vk_id | changed | count
             first_pk = row[0]
             duplicate_name = row[1]
-            sql_query = self._construct_delete('screen_names', {'screen_name': duplicate_name, 'pk': '!' + first_pk})
+            sql_query = self._construct_delete('screen_names', {'screen_name': duplicate_name, '!pk': first_pk})
             self._cursor.execute(sql_query)
 
         self._connection.commit()

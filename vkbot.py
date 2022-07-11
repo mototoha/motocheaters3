@@ -565,6 +565,7 @@ class VKBot(Bot):
         """
         # Первое: надо определиться, по каким id нам искать.
         vk_id_list = []
+        sql_result = None
         match param:
             case 'vk_id' | 'group_id':
                 if param == 'vk_id':
@@ -577,21 +578,17 @@ class VKBot(Bot):
                                                          columns=['vk_id'],
                                                          condition_dict={'screen_name': value,
                                                                          'changed': 'False'})
-                for item in sql_result:
-                    vk_id_list.append(item['vk_id'])
             case 'fifty':
                 sql_result = self.db.get_dict_from_table(table='vk_ids',
                                                          columns=['vk_id'],
                                                          condition_dict={'fifty': value})
-                for item in sql_result:
-                    vk_id_list.append(item['vk_id'])
             case 'card' | 'telephone' | 'proof_link':
                 sql_result = self.db.get_dict_from_table(table=param + 's',
                                                          columns=['vk_id'],
                                                          condition_dict={param: value})
-                for item in sql_result:
-                    vk_id_list.append(item['vk_id'])
-
+        if sql_result:
+            for item in sql_result:
+                vk_id_list.append(item['vk_id'])
         result = []
         for vk_id in vk_id_list:
             result.append(self.get_cheater_by_id(vk_id))

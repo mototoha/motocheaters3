@@ -60,6 +60,7 @@ ORDER by fifty, vk_ids.vk_id
 """
 
 select_publics = 'select vk_id from vk_ids where vk_id like "public%"'
+select_publics_from_table = 'select vk_id from {}  where vk_id like "public%"'
 
 select_duplicate_vk_id = """
 select *, count(vk_id) as count  from vk_ids
@@ -68,7 +69,7 @@ having count(*) > 1
 """
 
 select_duplicate_screen_names = """
-select screen_name, count(vk_id) as count  from screen_names
+select *, count(vk_id) as count  from screen_names
 group by vk_id
 having count(*) > 1
 """

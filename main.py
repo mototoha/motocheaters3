@@ -194,24 +194,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
-        # TODO Объединить с обычным (нераспознанным) сообщением.
         answer_message = ''
-        match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
-        cheates_db = bot.get_cheater_from_db(match.lastgroup, match[match.lastgroup])
-        if isinstance(cheates_db, list):
-            for cheater in cheates_db:
-                pass
-
-
-        result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
-        if not result_check and match[match.lastgroup].startswith('club'):
-            result_check = bot.check_cheater(match.lastgroup, match[match.lastgroup])
-        if result_check:  # found
-            answer_message = dialogs.is_cheater
-        else:  # not found
+        reg_match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
+        cheaters_db = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
+        if isinstance(cheaters_db, list):
+            for cheater in cheaters_db:
+                answer_message += str(cheater)
+        if not answer_message:
             answer_message = dialogs.not_cheater
-            if answer_message:
-                answer_message = answer_message.format(match[match.lastgroup])
 
         await bot.answer_to_peer(answer_message, message.peer_id)
 
@@ -296,8 +286,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
-        shutil.copyfile('cheaters.db', 'cheaters_bak.db'+datetime.datetime.now().isoformat())
+        shutil.copyfile('cheaters.db', './cheaters_bak_.db')
         bot.public_to_club()
+        return 'Обновил'
 
     @bot.on.message(
         AdminUserRule(bot),
@@ -307,8 +298,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Метод удаляет дубликаты в таблицах vk_ids и screen_names.
         """
-        shutil.copyfile('cheaters.db', 'cheaters_bak.db' + datetime.datetime.now().isoformat())
+        shutil.copyfile('cheaters.db', 'cheaters_bak.db')
         bot.delete_duplicate()
+        return 'Удалил'
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
@@ -473,6 +465,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         regexp = cheaters.get_regexp('all')
         #  При разборе выражения будет учитываться только первый vk_id/screen_name
         id_found = False  # Если в присланном пользователе тексте нашелся id, то значение станет True
+        #  Если ничего не распарсится, надо вывести предупреждение
+        no_result = True
 
         for line in formatted_message_text:
             reg_match = re.match(regexp, line)
@@ -491,13 +485,17 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
             # Обновляем шаблон добавляемого кидалы.
             if reg_match:
+                no_result = False
                 # Если еще ничего не было - создаём новый шаблон.
                 if cheater_add is None:
                     cheater_add = cheaters.Cheater()
 
-                cheater_add.update2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
                 if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
+                    cheater_add.update2('vk_id', api_vk_id)
+                    cheater_add.update2('screen_name', api_screen_name)
                     id_found = True
+                else:
+                    cheater_add.update2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
 
                 # Смотрим в нашу БД
                 if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
@@ -512,7 +510,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                         if cheater_db.screen_name != cheater_add.screen_name:
                             await bot.update_db_screen_name(cheater_db.vk_id, cheater_add.screen_name)
             else:
-                return dialogs.add_cheater_error_value
+                pass
+        if no_result:
+            return dialogs.add_cheater_error_value
         answer_message = ''
         if cheater_add:
             answer_message += 'Ты собираешься добавить:\n' + str(cheater_add) + '\n'
@@ -521,7 +521,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         await bot.state_dispenser.set(message.from_id, message.state_peer.state,
                                       cheater_add=cheater_add,
                                       cheater_db=cheater_db)
-        answer_message += 'Чтобы записать кидалу в базу, нажми "Добавить"'
+        answer_message += '\nЧтобы записать кидалу в базу, нажми "Добавить"'
         await message.answer(
             message=answer_message,
         )
