@@ -519,12 +519,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         answer_message = 'Ты ввел ' + reg_match.lastgroup + ' со значением ' + reg_match[reg_match.lastgroup] + '\n\n'
         if cheater_add:
-            answer_message += 'Твой кидала:\n' + str(cheater_add) + '\n'
+            answer_message += 'Ты собираешься добавить:\n' + str(cheater_add) + '\n'
         if cheater_db:
             answer_message += 'В базе уже есть запись:\n ' + str(cheater_db)
         await bot.state_dispenser.set(message.from_id, message.state_peer.state,
                                       cheater_add=cheater_add,
                                       cheater_db=cheater_db)
+        answer_message += 'Чтобы записать кидалу в базу, нажми "Добавить"'
         await message.answer(
             message=answer_message,
         )
