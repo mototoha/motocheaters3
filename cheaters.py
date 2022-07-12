@@ -6,10 +6,6 @@ from dataclasses import dataclass, field, fields
 from typing import (
     Any,
     List,
-    Optional,
-    Union,
-    Literal,
-    Tuple,
 )
 
 REGEXP_CHEATER = {

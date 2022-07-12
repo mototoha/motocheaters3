@@ -532,7 +532,7 @@ class DBCheaters:
             self.update_table('vk_ids', {'fifty': fifty}, {'vk_id': vk_id})
         else:
             vk_info = self.get_dict_from_table('vk_ids', ['fifty'], {'vk_id': vk_id})
-            old_fifty = vk_info['fifty']
+            old_fifty = vk_info[0]['fifty']
             self.update_table('vk_ids', {'fifty': not old_fifty}, {'vk_id': vk_id})
 
     def get_cheaters_full_list(self) -> List[cheaters.Cheater]:

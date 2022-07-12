@@ -2,7 +2,6 @@
 Main bot file.
 python3 main.py [config_filename.json]
 """
-import datetime
 import re
 import shutil
 
@@ -278,7 +277,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Метод переносит тебя в главное меню.
         """
-        await bot.state_dispenser.delete(message.from_id)
+        if await bot.state_dispenser.get(message.from_id):
+            await bot.state_dispenser.delete(message.from_id)
         await bot.answer_to_peer(dialogs.return_to_main, message.from_id)
 
     @bot.on.message(
@@ -486,7 +486,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     bot.delete_cheater(list(item_to_del.keys())[0])
             case 'card' | 'telephone' | 'proof_link':
                 for cheater in cheaters_to_del:
-                    bot.delete_cheater_item(list(item_to_del.keys())[0], list(item_to_del.keys())[0])
+                    bot.delete_cheater_item(list(item_to_del.keys())[0], list(item_to_del.keys())[0], cheater.vk_id)
         new_state = vkbot.AdminStates.DEL_CHEATER
         bot.state_dispenser.set(message.from_id, new_state)
         message.state_peer.payload.clear()
@@ -533,8 +533,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             # Собираем параметры из API (если надо).
             if not id_found and reg_match and (reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name')):
                 # Если в запросе vk_id или screen_name - запрашиваем vk_api.
+                match reg_match.lastgroup:
+                    case 'vk_id' | 'group_id':
+                        search_name = cheaters.PREFIX[reg_match.lastgroup] + reg_match[reg_match.lastgroup]
+                    case _:
+                        search_name = reg_match[reg_match.lastgroup]
                 api_vk_id, api_screen_name, is_banned, vk_name = await bot.get_from_api_id_screen_name_banned(
-                    reg_match[reg_match.lastgroup])
+                    search_name)
                 # Если пользователь/группа забанены - выводим предупреждение, чтоб не пугаться пустого screen_name.
                 if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete.format(api_vk_id))
@@ -671,3 +676,4 @@ if __name__ == '__main__':
 # TODO Поиск по всем значениям, а не только по адресу страницы
 # TODO Отладочные команды перед всеми другими
 # TODO Проверить парсинг экспортного файла
+# TODO Поиск по стене
