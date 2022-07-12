@@ -544,7 +544,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete.format(api_vk_id))
                 # Если пользователь/группа удалены - нефиг их добавлять.
-                if api_vk_id is None:
+                if not api_vk_id:
                     return dialogs.add_cheater_no_id
 
             # Обновляем шаблон добавляемого кидалы.

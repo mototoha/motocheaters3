@@ -593,7 +593,9 @@ class VKBot(Bot):
                 vk_id_list.append(item['vk_id'])
         result = []
         for vk_id in vk_id_list:
-            result.append(self.get_cheater_by_id(vk_id))
+            db_found = self.get_cheater_by_id(vk_id)
+            if db_found:
+                result.append(db_found)
         return result
 
     def get_cheater_by_id(self, vk_id: str) -> Optional[Cheater]:
