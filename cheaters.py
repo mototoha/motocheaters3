@@ -24,6 +24,11 @@ REGEXP_CHEATER = {
 
 VK_PREFIX = 'vk.com/'
 
+PREFIX = {
+    'vk_id': 'id',
+    'group_id': 'club',
+}
+
 
 def merge_list(l1: list, l2: list):
     """

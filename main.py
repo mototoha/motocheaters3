@@ -261,7 +261,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         AdminUserRule(bot),
         CommandRule("admins"),
     )
-    async def debug_get_dialogstate_handler(message: Message):
+    async def debug_get_admins_handler(message: Message):
         """
         Вывести админов группы.
         """
@@ -437,16 +437,19 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Удаление кидалы. Парсим текст для удаления.
         """
         # Парсим строчку.
-        match = re.search(cheaters.get_regexp('del'), message.text)
-        if match:
-            # TODO Удаление кидалы.
-            pass
+        reg_match = re.search(cheaters.get_regexp('del'), message.text)
+        if reg_match:
+            cheaters_to_del = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
         else:
-            return dialogs.del_cheater_error_value
+            return dialogs.dont_understand
 
-        new_state = vkbot.AdminStates.MAIN
-        answer_message = dialogs.del_success
-        await bot.answer_to_peer(answer_message, message.from_id, new_state)
+        if cheaters_to_del:
+            if len(cheaters_to_del) == 1:
+                new_state = vkbot.AdminStates.DEL_CHEATER_COMMIT
+                answer_message = dialogs.del_cheater_commit.format(str(cheaters_to_del[0]))
+                await bot.answer_to_peer(answer_message, message.from_id, new_state)
+        else:
+            return dialogs.del_cheater_not_found
 
     @bot.on.message(
         StateRule(vkbot.AdminStates.ADD_CHEATER),
@@ -611,3 +614,4 @@ if __name__ == '__main__':
 # TODO Удалять пустые строчки в screen_names
 # TODO Поиск по всем значениям, а не только по адресу страницы
 # TODO Отладочные команды перед всеми другими
+# TODO Проверить парсинг экспортного файла

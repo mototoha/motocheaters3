@@ -55,6 +55,7 @@ class AdminStates(BaseStateGroup):
     SPAM = 'admin_spam'
     ADD_CHEATER = 'add_cheater'
     DEL_CHEATER = 'del_cheater'
+    DEL_CHEATER_COMMIT = 'del_cheater_commit'
 
 
 class VKBot(Bot):
@@ -704,3 +705,5 @@ class VKBot(Bot):
 if __name__ == '__main__':
     #  Тут будет тест
     pass
+
+# TODO Сделать один метод get_cheater_from_db2, het_cheater_by_id сделать приватным.
