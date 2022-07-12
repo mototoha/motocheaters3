@@ -429,6 +429,13 @@ class VKBot(Bot):
             random_id=0,
         )
 
+    def backup_db(self, backup_name: str = None):
+        """
+        Метод делает бекап БД
+        :param backup_name: Имя резервной копии
+        """
+        self.db.backup_db_file(backup_name)
+
     def export_db(self) -> str:
         """
         Метод парсит БД и возвращает строки.

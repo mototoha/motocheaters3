@@ -99,11 +99,16 @@ class TestDatabase(unittest.TestCase):
     def test_backup_db_file(self):
         nowtime = datetime.datetime.now().isoformat(timespec='minutes')
         new_name = (self.db.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
-        print(new_name)
         self.db.backup_db_file()
         self.assertTrue(os.path.isfile(new_name))
         self.assertTrue(filecmp.cmp(self.db.db_filename, new_name))
         os.remove(new_name)
+
+        backup_name = 'cheaters_public_bak.db'
+        self.db.backup_db_file(backup_name)
+        self.assertTrue(os.path.isfile(backup_name))
+        self.assertTrue(filecmp.cmp(self.db.db_filename, backup_name))
+        os.remove(backup_name)
 
 
 if __name__ == '__main__':

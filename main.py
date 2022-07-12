@@ -286,7 +286,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         CommandRule('public_to_club')
     )
     async def public_to_club_handler(message: Message):
-        shutil.copyfile('cheaters.db', './cheaters_bak_.db')
+        """
+        Метод меняет все public на club в БД.
+        """
+        bot.backup_db('cheaters_public_bak.db')
         bot.public_to_club()
         return 'Обновил'
 

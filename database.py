@@ -284,12 +284,18 @@ class DBCheaters:
                 raise FileExistsError('Уже есть каталог с таким именем!!!')
         return result
 
-    def backup_db_file(self):
+    def backup_db_file(self, backup_name: str = None):
         """
         Делает копию файла БД с добавлением текущей даты.
+        Если передано имя - делает с этим именем.
+
+        :param backup_name: Имя резервной БД.
         """
-        nowtime = datetime.datetime.now().isoformat(timespec='minutes')
-        new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
+        if backup_name:
+            new_name = backup_name
+        else:
+            nowtime = datetime.datetime.now().isoformat(timespec='minutes')
+            new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
         shutil.copyfile(self.db_filename, new_name)
 
     def get_param(self, param: str) -> Optional[Any]:
