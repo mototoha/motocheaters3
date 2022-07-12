@@ -457,7 +457,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 bot.state_dispenser.set(message.from_id,
                                         new_state,
                                         cheaters_to_del=cheaters_to_del,
-                                        item_to_del=reg_match.lastgroup)
+                                        item_to_del={reg_match.lastgroup: reg_match})
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
             elif len(cheaters_to_del) > 1:
                 new_state = vkbot.AdminStates.DEL_CHEATER_CHOICE
@@ -465,7 +465,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 bot.state_dispenser.set(message.from_id,
                                         new_state,
                                         cheaters_to_del=cheaters_to_del,
-                                        item_to_del=reg_match.lastgroup)
+                                        item_to_del={reg_match.lastgroup: reg_match})
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
         else:
             return dialogs.del_cheater_not_found
