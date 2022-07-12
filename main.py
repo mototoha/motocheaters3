@@ -445,11 +445,66 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         if cheaters_to_del:
             if len(cheaters_to_del) == 1:
+                match reg_match.lastgroup:
+                    case 'vk_id' | 'group_id' | 'screen_name':
+                        answer_message = dialogs.del_cheater_user_commit.format(str(cheaters_to_del[0]))
+                    case 'card' | 'telephone' | 'proof_link':
+                        answer_message = dialogs.del_cheater_item_commit.format(reg_match.lastgroup,
+                                                                                str(cheaters_to_del[0]))
+                    case _:
+                        return dialogs.dont_understand
                 new_state = vkbot.AdminStates.DEL_CHEATER_COMMIT
-                answer_message = dialogs.del_cheater_commit.format(str(cheaters_to_del[0]))
+                bot.state_dispenser.set(message.from_id,
+                                        new_state,
+                                        cheaters_to_del=cheaters_to_del,
+                                        item_to_del=reg_match.lastgroup)
+                await bot.answer_to_peer(answer_message, message.from_id, new_state)
+            elif len(cheaters_to_del) > 1:
+                new_state = vkbot.AdminStates.DEL_CHEATER_CHOICE
+                answer_message = dialogs.del_cheater_choice
+                bot.state_dispenser.set(message.from_id,
+                                        new_state,
+                                        cheaters_to_del=cheaters_to_del,
+                                        item_to_del=reg_match.lastgroup)
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
         else:
             return dialogs.del_cheater_not_found
+
+    @bot.on.message(
+        StateRule(vkbot.AdminStates.DEL_CHEATER_COMMIT),
+        PayloadRule({"del_cheater": "yes"})
+    )
+    async def admin_del_cheater_yes(message: Message):
+        """
+        Удаляем из БД
+        """
+        cheaters_to_del = message.state_peer.payload.get('cheaters_to_del')
+        item_to_del = message.state_peer.payload.get('item_to_del')
+        match item_to_del:
+            case 'vk_id' | 'group_id' | 'screen_name':
+                for cheater in cheaters_to_del:
+                    bot.delete_cheater(cheater.vk_id)
+            case 'card' | 'telephone' | 'proof_link':
+                pass
+        new_state = vkbot.AdminStates.DEL_CHEATER
+        bot.state_dispenser.set(message.from_id, new_state)
+        message.state_peer.payload.clear()
+        answer_message = 'Удалили (нет)'
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
+
+    @bot.on.message(
+        StateRule(vkbot.AdminStates.DEL_CHEATER_COMMIT),
+        PayloadRule({"del_cheater": "no"})
+    )
+    async def admin_del_cheater_no(message: Message):
+        """
+        Не удаляем.
+        """
+        new_state = vkbot.AdminStates.DEL_CHEATER
+        bot.state_dispenser.set(message.from_id, new_state)
+        message.state_peer.payload.clear()
+        answer_message = 'Ок, не удаляем.'
+        await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         StateRule(vkbot.AdminStates.ADD_CHEATER),

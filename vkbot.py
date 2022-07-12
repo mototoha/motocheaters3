@@ -55,6 +55,7 @@ class AdminStates(BaseStateGroup):
     SPAM = 'admin_spam'
     ADD_CHEATER = 'add_cheater'
     DEL_CHEATER = 'del_cheater'
+    DEL_CHEATER_CHOICE = 'del_cheater_choice'
     DEL_CHEATER_COMMIT = 'del_cheater_commit'
 
 
@@ -688,6 +689,16 @@ class VKBot(Bot):
             self.db.add_proof_links(cheater_update.proof_link, cheater.vk_id)
 
         return cheater_update
+
+    def delete_cheater(self, vk_id: str) -> bool:
+        """
+        Метод удаляет из БД запись о кидале.
+        Возвращает True, если удалился и False, если не нашел запись.
+
+        :param vk_id: идентификатор страницы.
+        :return: успех.
+        """
+        self.db.delete_cheater(vk_id=vk_id)
 
     def public_to_club(self):
         """

@@ -617,3 +617,10 @@ class DBCheaters:
             self._cursor.execute(sql_query)
 
         self._connection.commit()
+
+    def delete_cheater(self, vk_id: str):
+        """
+        Метод удаляет все записи из всех таблиц с данным vk_id.
+        :param vk_id: идентификатор страницы
+        """
+        pass
