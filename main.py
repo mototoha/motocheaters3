@@ -563,9 +563,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
                 # Смотрим в нашу БД
                 if reg_match.lastgroup in ('vk_id', 'group_id', 'screen_name'):
-                    # Берем первого, он должен быть один в списке
-                    cheater_db = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])[0]
-                    if cheater_db:
+                    cheater_db_list = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
+                    if cheater_db_list:
+                        cheater_db = cheater_db_list[0]
                         if reg_match.lastgroup == 'screen_name':
                             # Если имя сменило владельца - обновляем имя у старого и меняем cheaters_db
                             if cheater_db.vk_id != cheater_add.vk_id:
@@ -677,3 +677,5 @@ if __name__ == '__main__':
 # TODO Отладочные команды перед всеми другими
 # TODO Проверить парсинг экспортного файла
 # TODO Поиск по стене
+# TODO Удалить дубликаты со всех таблиц
+# TODO Удалить id141125841
