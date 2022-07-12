@@ -228,6 +228,7 @@ class Cheater:
         Метод обновляет указанный параметр.
         Имя, 50 или ИД - заменяет.
         Телефон, пруфлинк, карта - добавляет.
+        Если это дубль - ничего не делает.
         
         :param param_to_update: Что обновить. 
         :param value: На что обновить.
@@ -242,8 +243,10 @@ class Cheater:
                     self.fifty = bool(value)
                 case 'telephone' | 'card' | 'proof_link':
                     if isinstance(value, str):
-                        self.__getattribute__(param_to_update).append(value)
+                        if value not in self.__getattribute__(param_to_update):
+                            self.__getattribute__(param_to_update).append(value)
                     elif isinstance(value, list):
-                        merge_list(self.__getattribute__(param_to_update), value)
+                        if set(value).issubset(self.__getattribute__(param_to_update)):
+                            merge_list(self.__getattribute__(param_to_update), value)
                     else:
                         pass
