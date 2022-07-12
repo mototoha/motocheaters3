@@ -128,7 +128,13 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(self.db.get_param(param1), value1)
         self.assertEqual(self.db.get_param(param2), value2)
 
-
+    def test_del_param(self):
+        param1 = 'prampram'
+        param2 = 'test_p'
+        self.db.del_param(param1)
+        self.db.del_param(param2)
+        self.assertEqual(self.db.get_param(param1), None)
+        self.assertEqual(self.db.get_param(param2), None)
 
 
 if __name__ == '__main__':

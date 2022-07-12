@@ -321,6 +321,16 @@ class DBCheaters:
         self._connection.commit()
         return None
 
+    def del_param(self, param: str):
+        """
+        Метод удаляет параметр из одноименной таблицы.
+
+        :param param: параметр для удаления.
+        """
+        sql_query = self._construct_delete('parameters', {'parameter': param})
+        self._cursor.execute(sql_query)
+        self._connection.commit()
+
     def check_the_existence(self, table: str, parameter_list: dict) -> bool:
         """
         Проверяем наличие ключа словаря в таблице table по условию ключ=значение.
