@@ -333,7 +333,7 @@ class DBCheaters:
 
     def check_the_existence(self, table: str, parameter_list: dict) -> bool:
         """
-        Проверяем наличие ключа словаря в таблице table по условию ключ=значение.
+        Проверяем наличие строки в таблице table по условию ключ=значение.
 
         :param table: таблица, где ищем.
         :param parameter_list: Словарь со значениями.

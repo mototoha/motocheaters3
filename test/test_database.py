@@ -136,6 +136,10 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(self.db.get_param(param1), None)
         self.assertEqual(self.db.get_param(param2), None)
 
+    def test_check_the_existence(self):
+        self.assertTrue(self.db.check_the_existence('vk_ids', {'vk_id': 'id5683273'}))
+        self.assertTrue(self.db.check_the_existence('screen_names', {'vk_id': 'id5683273', 'screen_name': 'k262kk'}))
+        self.assertFalse(self.db.check_the_existence('cards', {'card': 1234}))
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)
