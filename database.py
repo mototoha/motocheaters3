@@ -624,3 +624,12 @@ class DBCheaters:
         :param vk_id: идентификатор страницы
         """
         pass
+
+    def delete_cheater_item(self, item: str, value: str, vk_id: str):
+        """
+        Метод удаляет записи про параметр из БД для определенного vk_id.
+        :param item: что удалить.
+        :param value: значение.
+        :param vk_id: у кого удалить.
+        """
+        pass

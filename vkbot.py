@@ -690,7 +690,7 @@ class VKBot(Bot):
 
         return cheater_update
 
-    def delete_cheater(self, vk_id: str) -> bool:
+    def delete_cheater(self, vk_id: str):
         """
         Метод удаляет из БД запись о кидале.
         Возвращает True, если удалился и False, если не нашел запись.
@@ -699,6 +699,16 @@ class VKBot(Bot):
         :return: успех.
         """
         self.db.delete_cheater(vk_id=vk_id)
+
+    def delete_cheater_item(self, param: str, value: str, vk_id: str):
+        """
+        Метод удаляет из БД все упоминания параметра param для определенного vk_id.
+
+        :param param: какой параметр удалить,
+        :param value: значение параметра,
+        :param vk_id: у кого удалить.
+        """
+        self.db.delete_cheater_item(param, value, vk_id)
 
     def public_to_club(self):
         """

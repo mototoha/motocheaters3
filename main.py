@@ -480,12 +480,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         cheaters_to_del = message.state_peer.payload.get('cheaters_to_del')
         item_to_del = message.state_peer.payload.get('item_to_del')
-        match item_to_del:
+        match list(item_to_del.keys())[0]:
             case 'vk_id' | 'group_id' | 'screen_name':
                 for cheater in cheaters_to_del:
-                    bot.delete_cheater(cheater.vk_id)
+                    bot.delete_cheater(list(item_to_del.keys())[0])
             case 'card' | 'telephone' | 'proof_link':
-                pass
+                for cheater in cheaters_to_del:
+                    bot.delete_cheater_item(list(item_to_del.keys())[0], list(item_to_del.keys())[0])
         new_state = vkbot.AdminStates.DEL_CHEATER
         bot.state_dispenser.set(message.from_id, new_state)
         message.state_peer.payload.clear()
