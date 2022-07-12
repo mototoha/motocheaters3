@@ -298,7 +298,7 @@ class DBCheaters:
             new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
         shutil.copyfile(self.db_filename, new_name)
 
-    def get_param(self, param: str) -> Optional[Any]:
+    def get_param(self, param: str) -> Optional[str]:
         """
         Return parameter from table 'parameters'.
         """
@@ -308,7 +308,7 @@ class DBCheaters:
         if not result:
             return None
         else:
-            result = result[0]
+            result = str(result[0])
             return result
 
     def add_param(self, dict_params):

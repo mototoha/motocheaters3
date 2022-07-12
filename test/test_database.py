@@ -110,6 +110,15 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(filecmp.cmp(self.db.db_filename, backup_name))
         os.remove(backup_name)
 
+    def test_get_param(self):
+        param = 'param'
+        value = 'pampam'
+        self.assertEqual(self.db.get_param(param), value)
+
+        param = 'pararam'
+        value = None
+        self.assertEqual(self.db.get_param(param), value)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)
