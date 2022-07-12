@@ -75,6 +75,7 @@ class DBCheaters:
     def _construct_insert(table: str, values_dict: dict) -> str:
         """
         Construct INSERT queue.
+        INSERT into {table} ({values.keys}) values ({values.values})
 
         :param table:
         :param values_dict: {column: value}
@@ -98,7 +99,7 @@ class DBCheaters:
 
     @staticmethod
     def _construct_select(table: str,
-                          what_select: list,
+                          what_select: str | List[str],
                           where_select: dict = None,
                           operator: str = 'and'
                           ) -> str:
@@ -133,7 +134,7 @@ class DBCheaters:
                 elif type(where_select[value]) == bool:
                     result += str(where_select[value])
                 else:
-                    result += where_select[value]
+                    result += str(where_select[value])
         return result
 
     @staticmethod
@@ -152,15 +153,15 @@ class DBCheaters:
 
         for count, param in enumerate(set_params):
             if count:
-                result += ','
+                result += ', '
             s_param = param
             if type(set_params[param]) == bool:
                 s_value = str(set_params[param])
             elif type(set_params[param]) == str:
                 s_value = '"' + set_params[param] + '"'
             else:
-                s_value = set_params[param]
-            result += s_param + ' = ' + s_value
+                s_value = str(set_params[param])
+            result += s_param + '=' + s_value
 
         if where_update:
             result += ' where '
@@ -172,7 +173,7 @@ class DBCheaters:
                 if type(where_update[value]) == str:
                     result += '"' + where_update[value] + '"'
                 else:
-                    result += where_update[value]
+                    result += str(where_update[value])
         return result
 
     @staticmethod
@@ -186,7 +187,7 @@ class DBCheaters:
         :param operator: and или or;
         :return: SQL DELETE.
         """
-        result = 'DELETE from {table} '.format(table=table)
+        result = 'DELETE from {table}'.format(table=table)
 
         if where_delete:
             result += ' where '
@@ -195,9 +196,9 @@ class DBCheaters:
                     result += ' ' + operator + ' '
                 if value.startswith('!'):
                     not_value = value.lstrip('!')
-                    result += not_value + ' != '
+                    result += not_value + '!='
                 else:
-                    result += value + ' = '
+                    result += value + '='
                 # strings must be with "
                 if type(where_delete[value]) == str:
                     result += '"' + where_delete[value] + '"'
@@ -206,32 +207,27 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def construct_create_table(table_name: str) -> str:
+    def _construct_create_table(table_name: str) -> Optional[str]:
         """
         Метод возвращает sql выражение для создания таблицы по шаблону.
+        CREATE TABLE {table_name} ...
 
         :param table_name: Имя таблицы из шаблона.
         :return: sql sequence.
         """
-        table = DB_TEMPLATE[table_name]
-        result = 'create table ' + table_name + '('
-        for column in table:
-            result += column + ' ' + table[column]
-            if column == 'pk':
-                result += ' primary key'
-            result += ','
-        result.rstrip(',')
-        result += ')'
+        table = DB_TEMPLATE.get(table_name)
+        if table:
+            result = 'create table ' + table_name + '('
+            for column in table:
+                result += column + ' ' + table[column]
+                if column == 'pk':
+                    result += ' primary key'
+                result += ','
+            result = result.rstrip(',')
+            result += ')'
+        else:
+            result = None
         return result
-
-    @staticmethod
-    def backup_db_file(filename):
-        """
-        Делает копию файла БД с добавлением текущей даты.
-
-        :param filename: имя файла для бекапа.
-        """
-        pass
 
     @staticmethod
     def create_new_database(filename):
@@ -266,7 +262,7 @@ class DBCheaters:
                 # Проверка колонок в таблице
                 pass
             else:
-                cur.execute(DBCheaters.construct_create_table(table[0]))
+                cur.execute(DBCheaters._construct_create_table(table[0]))
                 conn.commit()
         return result
 
@@ -287,6 +283,14 @@ class DBCheaters:
                 print('Уже есть каталог с таким именем!!!')
                 raise FileExistsError('Уже есть каталог с таким именем!!!')
         return result
+
+    def backup_db_file(self):
+        """
+        Делает копию файла БД с добавлением текущей даты.
+        """
+        nowtime = datetime.datetime.now().isoformat(timespec='minutes')
+        new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
+        shutil.copyfile(self.db_filename, new_name)
 
     def get_param(self, param: str) -> Optional[Any]:
         """
