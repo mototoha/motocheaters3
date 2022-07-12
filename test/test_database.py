@@ -119,6 +119,17 @@ class TestDatabase(unittest.TestCase):
         value = None
         self.assertEqual(self.db.get_param(param), value)
 
+    def test_add_param(self):
+        param1 = 'prampram'
+        value1 = 'pram'
+        param2 = 'test_p'
+        value2 = 'test_v'
+        self.db.add_param({param1: value1, param2: value2})
+        self.assertEqual(self.db.get_param(param1), value1)
+        self.assertEqual(self.db.get_param(param2), value2)
+
+
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)
