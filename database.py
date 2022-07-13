@@ -653,3 +653,15 @@ class DBCheaters:
         :param vk_id: у кого удалить.
         """
         pass
+
+    def update_db_screen_name(self, vk_id: str, screen_name: str = None):
+        """
+        Метод обновляет screen_name в БД для конкретного vk_id.
+        Старые помечаются как смененные changed = True и ставится новое.
+        Если нового нет - новой записи не создается (только помечаются старые).
+
+        :param vk_id: Кому поменять.
+        :param screen_name: Новое имя.
+        """
+        # Помечаем старые имена как сменённые.
+        self.db.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})

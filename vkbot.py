@@ -348,12 +348,7 @@ class VKBot(Bot):
             user_info = await self.api.users.get([vk_id], fields=['screen_name'])
             screen_name = user_info[0].screen_name
 
-        # Помечаем старые имена как сменённые.
-        self.db.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
-
-        # Если таки есть новое имя - назначаем.
-        if screen_name:
-            self.db.add_screen_name(screen_name, vk_id)
+        self.db.update_db_screen_name(vk_id=vk_id, screen_name=screen_name)
 
     async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool, str]]:
         """

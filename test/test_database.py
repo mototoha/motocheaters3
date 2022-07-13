@@ -4,15 +4,23 @@
 import datetime
 import os
 import filecmp
+import shutil
 import unittest
 
 import database
 
+TEMPLATE_DB = 'cheaters.db'
+TEST_DB = 'test-cheaters.db'
 
 
 class TestDatabase(unittest.TestCase):
     def setUp(self) -> None:
-        self.db = database.DBCheaters('test_cheaters.db')
+        shutil.copyfile(TEMPLATE_DB, TEST_DB)
+        self.db = database.DBCheaters(TEST_DB)
+
+    def tearDown(self) -> None:
+        del self.db
+        os.remove(TEST_DB)
 
     def test_construct_insert(self):
         test_table = 'parameters'
