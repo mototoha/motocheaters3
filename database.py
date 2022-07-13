@@ -7,7 +7,7 @@ import shutil
 import os
 import sqlite3
 import datetime
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Literal
 
 import cheaters
 import sql_requests
@@ -128,10 +128,15 @@ class DBCheaters:
         :return: SELECT str
         """
         result = 'SELECT '
-        if what_select == '*':
+        if isinstance(what_select, str):
+            select_tables = [what_select]
+        else:
+            select_tables = what_select
+
+        if select_tables == '*':
             result += what_select
         else:
-            for count, value in enumerate(what_select):
+            for count, value in enumerate(select_tables):
                 if count:
                     result += ', '
                 result += value
@@ -374,16 +379,16 @@ class DBCheaters:
         self._connection.commit()
         return None
 
-    def _select_from_table(self,
-                           table: str,
-                           what_select: str | List[str],
-                           where_select: dict = None,
-                           operate: str = 'and') -> List[dict]:
+    def _select_dict_from_table(self,
+                                table: str,
+                                what_select: str | List[str] = '*',
+                                where_select: dict = None,
+                                operate: str = 'and') -> List[dict]:
         """
         Выбор из таблицы.
 
         :param table: Имя таблицы.
-        :param what_select: Имена атрибутов (столбцов).
+        :param what_select: Имена атрибутов (столбцов). По умолчанию - все.
         :param where_select: Условия.
         :param operate: оператор между условиями (по умолчанию "и")
         :return: Список словарей из таблицы
@@ -392,14 +397,49 @@ class DBCheaters:
         sql_query = self._construct_select(table, what_select, where_select, operate)
         sql_result = self._cursor.execute(sql_query).fetchall()
         if what_select == '*':
-            rows_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
-            rows = self.tuple_list_to_list(rows_tuple)
+            fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
+            fields = self.tuple_list_to_list(fields_tuple)
+        elif isinstance(what_select, str):
+            fields = [what_select]
         else:
-            rows = what_select
+            fields = what_select
         for count_row, row in enumerate(sql_result):
             one_row = {}
-            for count, value in enumerate(rows):
-                one_row[value] = sql_result[count_row][count]
+            for count, field in enumerate(fields):
+                one_row[field] = sql_result[count_row][count]
+            result.append(one_row)
+        return result
+
+    def _select_list_from_table(self,
+                                table: str,
+                                what_select: str | List[str] = '*',
+                                where_select: dict = None,
+                                operate: str = 'and') -> List[list]:
+        """
+        Выбор из таблицы.
+        Вернется список списков значений.
+        Атрибутов не будет.
+
+        :param table: Имя таблицы.
+        :param what_select: Имена атрибутов (столбцов). По умолчанию - все.
+        :param where_select: Условия.
+        :param operate: оператор между условиями (по умолчанию "и")
+        :return: Список списков из таблицы (без атрибутов таблицы)
+        """
+        result = []
+        sql_query = self._construct_select(table, what_select, where_select, operate)
+        sql_result = self._cursor.execute(sql_query).fetchall()
+        if what_select == '*':
+            fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
+            fields = self.tuple_list_to_list(fields_tuple)
+        elif isinstance(what_select, str):
+            fields = [what_select]
+        else:
+            fields = what_select
+        for count_row, row in enumerate(sql_result):
+            one_row = []
+            for count, value in enumerate(fields):
+                one_row.append(sql_result[count_row][count])
             result.append(one_row)
         return result
 
