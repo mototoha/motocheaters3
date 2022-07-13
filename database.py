@@ -417,7 +417,6 @@ class DBCheaters:
         )
         self._cursor.execute(sql_query)
         self._connection.commit()
-        return None
 
     def add_telephones(self, telephones: list, vk_id: str = ''):
         """
@@ -664,4 +663,8 @@ class DBCheaters:
         :param screen_name: Новое имя.
         """
         # Помечаем старые имена как сменённые.
-        self.db.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
+        self.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
+
+        # Если таки есть новое имя - назначаем.
+        if screen_name:
+            self.add_screen_name(screen_name, vk_id)
