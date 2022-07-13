@@ -57,6 +57,16 @@ class TestDatabase(unittest.TestCase):
         result = 'SELECT screen_name, changed from screen_names where vk_id="club111" or changed=1'
         self.assertEqual(self.db._construct_select(test_table, what_select, where_select, operator), result)
 
+        test_table = 'cards'
+        what_select = 'vk_id'
+        where_select = {'vk_id': 'id349587984',
+                        }
+        result = 'SELECT vk_id from cards where vk_id="id349587984"'
+        self.assertEqual(self.db._construct_select(table=test_table,
+                                                   what_select=what_select,
+                                                   where_select=where_select),
+                         result)
+
     def test_construct_update(self):
         table = 'telephones'
         set_param = {'telephone': '+8789665544'}
