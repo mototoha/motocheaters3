@@ -220,6 +220,9 @@ class TestDatabase(unittest.TestCase):
                                                          where_select={'fifty': 1}),
                          [['id225692215'], ['id212339925'], ['id408341851']])
 
+        self.db._update_table('vk_id', {'vk_id': vk_id2, 'fifty': True})
+        self.assertEqual(self.db._select_list_from_table('vk_id', ['vk_id', 'fifty'], {'vk_id': vk_id2}))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=1)

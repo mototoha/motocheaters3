@@ -443,6 +443,17 @@ class DBCheaters:
             result.append(one_row)
         return result
 
+    def _insert_into_table(self, table: str, values: dict):
+        """
+        Метод добавляет в таблицу новое отношение.
+
+        :param table: Куда добавлять.
+        :param values: Что добавлять.
+        """
+        sql_query = self._construct_insert(table, values)
+        self._cursor.execute(sql_query)
+        self._connection.commit()
+
     def get_admins(self) -> List[int]:
         """
         Return all users from table admins
