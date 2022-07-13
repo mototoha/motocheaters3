@@ -350,9 +350,6 @@ class VKBot(Bot):
 
         self.db.update_db_screen_name(vk_id=vk_id, screen_name=screen_name)
 
-
-
-
     async def get_from_api_id_screen_name_banned(self, id_name: str = None) -> Optional[Tuple[str, str, bool, str]]:
         """
         Метод возвращает id, screen_name, banned и name в виде кортежа.
