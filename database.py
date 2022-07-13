@@ -51,7 +51,7 @@ class DBCheaters:
 
     def __init__(self, db_filename: str):
         self.db_filename = db_filename
-        file_exist = self.db_file_exist(self.db_filename)
+        file_exist = self.check_db_file_exist(self.db_filename)
         integrity_check = False
         if file_exist:
             logger.info('DB file exist, check content')
@@ -267,7 +267,7 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def db_file_exist(filename) -> bool:
+    def check_db_file_exist(filename) -> bool:
         """
         Проверка наличия файла.
         Если есть такой каталог - вылетит с исключением.
@@ -280,7 +280,7 @@ class DBCheaters:
             if os.path.isfile(filename):
                 result = True
             else:
-                print('Уже есть каталог с таким именем!!!')
+                logging.critical('Уже есть каталог с таким именем БД!!!')
                 raise FileExistsError('Уже есть каталог с таким именем!!!')
         return result
 

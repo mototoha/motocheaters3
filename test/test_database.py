@@ -146,5 +146,23 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(self.db.check_the_existence('screen_names', {'vk_id': 'id5683273', 'screen_name': 'k262kk'}))
         self.assertFalse(self.db.check_the_existence('cards', {'card': 1234}))
 
+    @unittest.skip("Доделать создание и проверку БД")
+    def test_create_new_database(self):
+        pass
+
+    @unittest.skip("Доделать проверку БД")
+    def test_check_integrity_tables(self):
+        pass
+
+    def test_check_db_file_exist(self):
+        db_filename = TEST_DB
+        dir_name = 'cheaters_dir.db'
+        no_file = 'cheaters_no_file.db'
+        self.assertTrue(self.db.check_db_file_exist(db_filename))
+        with self.assertRaises(FileExistsError):
+            self.db.check_db_file_exist(dir_name)
+        self.assertFalse(self.db.check_db_file_exist(no_file))
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=1)
