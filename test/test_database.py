@@ -22,6 +22,11 @@ class TestDatabase(unittest.TestCase):
         del self.db
         os.remove(TEST_DB)
 
+    def test_tuple_list_to_list(self):
+        tl1 = [('pk',), ('vk_id',), ('fifty',)]
+        l1 = ['pk', 'vk_id', 'fifty']
+        self.assertEqual(self.db.tuple_list_to_list(tl1), l1)
+
     def test_construct_insert(self):
         test_table = 'parameters'
         values_dict = {'param1': '123',
@@ -162,6 +167,17 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(FileExistsError):
             self.db.check_db_file_exist(dir_name)
         self.assertFalse(self.db.check_db_file_exist(no_file))
+
+    def test_select_update_delete_tables(self):
+        vk_id1 = 'id406387506'
+        vk_id2 = 'id5073667751111'
+        vk_id3 = 'club59181434'
+        vk_id4 = 'testid'
+        screen_name1 = 'ksinchugov'
+        screen_name2 = None
+        screen_name3 = 'club59181434'
+        screen_name4 = 'Hertz'
+
 
 
 if __name__ == '__main__':

@@ -72,6 +72,20 @@ class DBCheaters:
         self._connection.close()
 
     @staticmethod
+    def tuple_list_to_list(tl: List[tuple]) -> list:
+        """
+        Метод принимает список кортежей (как при fetchall()) и возвращает просто список из всех элементов.
+
+        :param tl: Список кортежей.
+        :return: Список из всех элементов.
+        """
+        result = []
+        for item in tl:
+            for val in item:
+                result.append(val)
+        return result
+
+    @staticmethod
     def _construct_insert(table: str, values_dict: dict) -> str:
         """
         Construct INSERT queue.
@@ -344,7 +358,7 @@ class DBCheaters:
         result = bool(self._cursor.fetchall())
         return result
 
-    def update_table(self, table: str, set_params: dict, where: dict):
+    def _update_table(self, table: str, set_params: dict, where: dict):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
@@ -359,6 +373,35 @@ class DBCheaters:
         self._cursor.execute(sql_query)
         self._connection.commit()
         return None
+
+    def _select_from_table(self,
+                           table: str,
+                           what_select: str | List[str],
+                           where_select: dict = None,
+                           operate: str = 'and') -> List[dict]:
+        """
+        Выбор из таблицы.
+
+        :param table: Имя таблицы.
+        :param what_select: Имена атрибутов (столбцов).
+        :param where_select: Условия.
+        :param operate: оператор между условиями (по умолчанию "и")
+        :return: Список словарей из таблицы
+        """
+        result = []
+        sql_query = self._construct_select(table, what_select, where_select, operate)
+        sql_result = self._cursor.execute(sql_query).fetchall()
+        if what_select == '*':
+            rows_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
+            rows = self.tuple_list_to_list(rows_tuple)
+        else:
+            rows = what_select
+        for count_row, row in enumerate(sql_result):
+            one_row = {}
+            for count, value in enumerate(rows):
+                one_row[value] = sql_result[count_row][count]
+            result.append(one_row)
+        return result
 
     def get_admins(self) -> List[int]:
         """
@@ -544,11 +587,11 @@ class DBCheaters:
         :param fifty: Новый параметр.
         """
         if fifty:
-            self.update_table('vk_ids', {'fifty': fifty}, {'vk_id': vk_id})
+            self._update_table('vk_ids', {'fifty': fifty}, {'vk_id': vk_id})
         else:
             vk_info = self.get_dict_from_table('vk_ids', ['fifty'], {'vk_id': vk_id})
             old_fifty = vk_info[0]['fifty']
-            self.update_table('vk_ids', {'fifty': not old_fifty}, {'vk_id': vk_id})
+            self._update_table('vk_ids', {'fifty': not old_fifty}, {'vk_id': vk_id})
 
     def get_cheaters_full_list(self) -> List[cheaters.Cheater]:
         """
@@ -605,12 +648,12 @@ class DBCheaters:
         sql_result = self._cursor.execute(sql_requests.select_publics).fetchall()
         for item in sql_result:
             id_num = item[0].lstrip('public')
-            self.update_table('vk_ids', {'vk_id': 'club'+id_num}, {'vk_id': item[0]})
+            self._update_table('vk_ids', {'vk_id': 'club' + id_num}, {'vk_id': item[0]})
         # screen_names
         sql_result = self._cursor.execute(sql_requests.select_publics_from_table.format('screen_names')).fetchall()
         for item in sql_result:
             id_num = item[0].lstrip('public')
-            self.update_table('screen_names', {'vk_id': 'club' + id_num}, {'vk_id': item[0]})
+            self._update_table('screen_names', {'vk_id': 'club' + id_num}, {'vk_id': item[0]})
         self._connection.commit()
 
     def delete_duplicate(self):
@@ -663,7 +706,7 @@ class DBCheaters:
         :param screen_name: Новое имя.
         """
         # Помечаем старые имена как сменённые.
-        self.update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
+        self._update_table('screen_names', {'changed': True}, {'vk_id': vk_id})
 
         # Если таки есть новое имя - назначаем.
         if screen_name:

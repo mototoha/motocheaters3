@@ -73,3 +73,5 @@ select *, count(vk_id) as count  from screen_names
 group by vk_id
 having count(*) > 1
 """
+
+select_row_names = "select name from pragma_table_info('{}')"
