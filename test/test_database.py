@@ -110,27 +110,24 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(filecmp.cmp(self.db.db_filename, backup_name))
         os.remove(backup_name)
 
-    def test_get_param(self):
-        param = 'param'
-        value = 'pampam'
-        self.assertEqual(self.db.get_param(param), value)
-
-        param = 'pararam'
-        value = None
-        self.assertEqual(self.db.get_param(param), value)
-
-    def test_add_param(self):
+    def test_get_add_del_param(self):
         param1 = 'prampram'
         value1 = 'pram'
         param2 = 'test_p'
         value2 = 'test_v'
+        param3 = 'param'
+        value3 = 'pampam'
+        param4 = 'pararam'
+        value4 = None
+        self.assertEqual(self.db.get_param(param1), None)
+        self.assertEqual(self.db.get_param(param2), None)
+        self.assertEqual(self.db.get_param(param3), value3)
+        self.assertEqual(self.db.get_param(param4), value4)
+
         self.db.add_param({param1: value1, param2: value2})
         self.assertEqual(self.db.get_param(param1), value1)
         self.assertEqual(self.db.get_param(param2), value2)
 
-    def test_del_param(self):
-        param1 = 'prampram'
-        param2 = 'test_p'
         self.db.del_param(param1)
         self.db.del_param(param2)
         self.assertEqual(self.db.get_param(param1), None)
