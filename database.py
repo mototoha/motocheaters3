@@ -561,6 +561,7 @@ class DBCheaters:
             self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
 
     def get_cheater_id_list_by_param(self,
+                                     fifty: bool = None,
                                      screen_name: str = None,
                                      telephone: str | List[str] = None,
                                      card: str | List[str] = None,
@@ -576,12 +577,20 @@ class DBCheaters:
         """
         result = set()
 
+        if isinstance(fifty, bool):
+            sql_result = self._select_list_from_table(table='vk_ids',
+                                                      what_select='vk_id',
+                                                      where_select={'fifty': fifty})
+            result = set(self._tuple_list_to_list(sql_result))
         # Поиск по всем значениям, втч пустым
         if isinstance(screen_name, str):
             sql_result = self._select_list_from_table(table='screen_names',
                                                       what_select='vk_id',
-                                                      where_select={'screen_name': screen_name})
-            result = set(self._tuple_list_to_list(sql_result))
+                                                      where_select={'screen_name': screen_name, 'changed': False})
+            if result:
+                result &= set(set(self._tuple_list_to_list(sql_result)))
+            else:
+                result = set(self._tuple_list_to_list(sql_result))
         dict_attr = {
             'telephone': telephone,
             'card': card,
