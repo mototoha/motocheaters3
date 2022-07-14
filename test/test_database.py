@@ -216,11 +216,11 @@ class TestDatabaseBasic(unittest.TestCase):
                          [])
         self.assertEqual(self.db._select_list_from_table(table='screen_names',
                                                          where_select={'vk_id': vk_id3}),
-                         [[98, 'danilbelyu', 'club131677023', 'False']])
+                         [[98, 'danilbelyu', 'club131677023', 0]])
         self.assertEqual(self.db._select_dict_from_table(table='screen_names',
                                                          where_select={'vk_id': vk_id3, 'screen_name': screen_name3},
                                                          operate='or'),
-                         [{'pk': 98, 'screen_name': 'danilbelyu', 'vk_id': 'club131677023', 'changed': 'False'}])
+                         [{'pk': 98, 'screen_name': 'danilbelyu', 'vk_id': 'club131677023', 'changed': 0}])
         self.assertEqual(self.db._select_dict_from_table(table='vk_ids',
                                                          where_select={'fifty': True}),
                          [{'pk': 8, 'vk_id': 'id225692215', 'fifty': 1},
@@ -424,7 +424,7 @@ class TestDatabaseMakeCheater(unittest.TestCase):
         vk_id = 'id267462630'
         fifty = False
 
-        self.assertEqual(self.db.get_cheater_id_list_by_param(card='4476246177018575'), ['id8292913', 'id123'])
+        self.assertEqual(self.db.get_cheater_id_list_by_param(card='4476246177018575'), ['id123', 'id8292913'])
         self.assertEqual(self.db.get_cheater_id_list_by_param(card='123'), [])
         self.assertEqual(self.db.get_cheater_id_list_by_param(screen_name=screen_name,
                                                               proof_link=proof_link),

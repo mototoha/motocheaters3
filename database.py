@@ -616,7 +616,9 @@ class DBCheaters:
                     result &= temp_res
                 else:
                     result = temp_res
-        return list(result)
+        result = list(result)
+        result.sort()
+        return result
 
     def get_cheaters_full_list(self) -> List[cheaters.Cheater]:
         """
