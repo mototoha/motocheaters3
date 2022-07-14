@@ -480,48 +480,34 @@ class DBCheaters:
         """
         Добавляем screen_name.
         """
-        sql_query = self._construct_insert(
-            table='screen_names',
-            values_dict={
-                'screen_name': screen_name,
-                'vk_id': vk_id,
-                'changed': str(changed)
-            }
-        )
-        self._cursor.execute(sql_query)
-        self._connection.commit()
+        self._insert_into_table(table='screen_names',
+                                values={
+                                    'screen_name': screen_name,
+                                    'vk_id': vk_id,
+                                    'changed': str(changed),
+                                })
 
-    def add_telephones(self, telephones: list, vk_id: str = ''):
+    def add_telephones(self, telephones: List[str], vk_id: str = ''):
         """
         Добавляем телефоны.
         """
         for tel in telephones:
-            sql_query = self._construct_insert(
-                table='telephones',
-                values_dict={
-                    'telephone': tel,
-                    'vk_id': vk_id,
-                }
-            )
-            self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
+            self._insert_into_table(table='telephones',
+                                    values={
+                                        'telephone': tel,
+                                        'vk_id': vk_id,
+                                    })
 
-    def add_cards(self, cards: list, vk_id: str = ''):
+    def add_cards(self, cards: List[str], vk_id: str = ''):
         """
         Добавляем телефоны.
         """
         for card in cards:
-            sql_query = self._construct_insert(
-                table='cards',
-                values_dict={
-                    'card': card,
-                    'vk_id': vk_id,
-                }
-            )
-            self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
+            self._insert_into_table(table='cards',
+                                    values={
+                                        'card': card,
+                                        'vk_id': vk_id,
+                                    })
 
     def add_proof_links(self, proof_links: List[str], vk_id: str) -> None:
         """
@@ -531,16 +517,11 @@ class DBCheaters:
         :param vk_id: На кого ссылается.
         """
         for link in proof_links:
-            sql_query = self._construct_insert(
-                table='proof_links',
-                values_dict={
-                    'proof_link': link,
-                    'vk_id': vk_id,
-                }
-            )
-            self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
+            self._insert_into_table(table='proof_links',
+                                    values={
+                                        'proof_link': link,
+                                        'vk_id': vk_id,
+                                    })
 
     def get_cheater_id(self, table: str, params: dict) -> str:
         """
