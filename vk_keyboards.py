@@ -4,7 +4,7 @@ JSON для клавиатур
 
 from vkbottle import Keyboard, KeyboardButtonColor, Text
 from vkbottle import BaseStateGroup
-from vkbot import DialogStates, AdminStates
+from dialogstates import DialogStates, AdminStates
 
 
 def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> str:

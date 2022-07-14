@@ -40,30 +40,10 @@ class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
         self.view = None
 
 
-class DialogStates(BaseStateGroup):
-    """
-    Уровни диалога.
-    """
-    TELL_ABOUT_CHEATER_STATE = 'tell_about_cheater'
-
-
-class AdminStates(BaseStateGroup):
-    """
-    Уровни админского меню.
-    """
-    MAIN = 'admin'
-    SPAM = 'admin_spam'
-    ADD_CHEATER = 'add_cheater'
-    DEL_CHEATER = 'del_cheater'
-    DEL_CHEATER_CHOICE = 'del_cheater_choice'
-    DEL_CHEATER_COMMIT = 'del_cheater_commit'
-
-
 class VKBot(Bot):
     """
     Main bot class.
     """
-    dialog_states = DialogStates
 
     def __init__(self, vk_token: str, db_filename: str, cheaters_filename: str):
         super().__init__(vk_token)
@@ -279,25 +259,6 @@ class VKBot(Bot):
 
         return 'Я закончил обновлять БД!'
 
-    def check_cheater(self, parameter: str, value: str) -> str | None:
-        """
-        Проверяем наличие кидалы в БД.
-        Если возвращается пустая строка, то запрос некорректно отработал.
-
-        :return vk_id, False.
-        """
-        if parameter == 'vk_id':
-            check_result = self.db.get_cheater_id('vk_ids', {parameter: value})
-        elif parameter == 'screen_name':
-            check_result = self.db.get_cheater_id('screen_names', {parameter: value})
-        elif parameter == 'card':
-            check_result = self.db.get_cheater_id('cards', {parameter: value})
-        elif parameter == 'telephone':
-            check_result = self.db.get_cheater_id('telephones', {parameter: value})
-        else:
-            check_result = None
-        return check_result
-
     async def is_admin(self, peer_id: int) -> bool:
         """
         Определяет, является ли пользователь админом.
@@ -485,7 +446,7 @@ class VKBot(Bot):
                                                          condition_dict={'screen_name': id_name,
                                                                          'changed': 'False'})
                 if sql_result:
-                    vk_id = sql_result['vk_id']
+                    vk_id = sql_result[0]['vk_id']
         else:
             if telephone:
                 sql_result = self.db.get_dict_from_table(table='telephones',

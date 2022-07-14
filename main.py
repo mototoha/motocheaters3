@@ -15,6 +15,7 @@ from vkbottle.dispatch.rules.base import (
     FromPeerRule,
 )
 from vkbottle import DocMessagesUploader
+from dialogstates import DialogStates, AdminStates
 
 import cheaters
 import startup
@@ -76,7 +77,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Переходим в меню "Рассказ про кидалу".
         """
         answer_message = dialogs.tell_about_cheater
-        new_state = bot.dialog_states.TELL_ABOUT_CHEATER_STATE
+        new_state = DialogStates.TELL_ABOUT_CHEATER_STATE
         await bot.answer_to_peer(answer_message, message.peer_id, new_state)
 
     # Кнопка 'Помочь нам'.
@@ -105,7 +106,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Кнопка "Передумал".
     @bot.on.message(
-        StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE),
+        StateRule(DialogStates.TELL_ABOUT_CHEATER_STATE),
         PayloadRule({"tell_about_cheater": "main"}),
     )
     async def tell_about_cheater_press_change_mind_handler(message: Message):
@@ -117,7 +118,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # История про кидалу.
     @bot.on.message(
-        StateRule(bot.dialog_states.TELL_ABOUT_CHEATER_STATE)
+        StateRule(DialogStates.TELL_ABOUT_CHEATER_STATE)
     )
     async def tell_about_cheater_story_handler(message: Message):
         """
@@ -315,14 +316,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Переход в админское меню.
         """
-        new_state = vkbot.AdminStates.MAIN
+        new_state = AdminStates.MAIN
         answer_message = dialogs.admin_menu
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     # Кнопка "Вернуться на главную".
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.MAIN),
+        StateRule(AdminStates.MAIN),
         PayloadRule({"admin": "return_to_main"}),
     )
     async def admin_return_to_main_handler(message: Message):
@@ -336,14 +337,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
     @bot.on.message(
         AdminUserRule(bot),
         PayloadRule({"admin": "mass_sending"}),
-        StateRule(vkbot.AdminStates.MAIN),
+        StateRule(AdminStates.MAIN),
     )
     async def admin_spam_handler(message: Message):
         """
         Кнопка "Разослать всем что-то".
         Админское меню. Переход в рассылку.
         """
-        new_state = vkbot.AdminStates.SPAM
+        new_state = AdminStates.SPAM
         answer_message = dialogs.spam_header
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
@@ -355,7 +356,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Кнопка "Передумал". Для всех.
         """
-        new_state = vkbot.AdminStates.MAIN
+        new_state = AdminStates.MAIN
         if message.state_peer:
             message.state_peer.payload.clear()
         answer_message = dialogs.admin_menu
@@ -363,14 +364,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.SPAM),
+        StateRule(AdminStates.SPAM),
     )
     async def admin_start_spam_handler(message: Message):
         """
         Админское меню.
         Начало рассылки всем членам группы.
         """
-        new_state = vkbot.AdminStates.MAIN
+        new_state = AdminStates.MAIN
         # Выбираем всех пользователей. Я знаю, что комментировать код - плохо.
         # Пока эта тема не в приоритете.
         # group_info = await bot.api.groups.get_by_id()
@@ -381,33 +382,33 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.MAIN),
+        StateRule(AdminStates.MAIN),
         PayloadRule({"admin": "add_cheater"}),
     )
     async def admin_add_cheater_handler(message: Message):
         """
         Админ меню. Кнопка "Добавить кидалу".
         """
-        new_state = vkbot.AdminStates.ADD_CHEATER
+        new_state = AdminStates.ADD_CHEATER
         answer_message = dialogs.add_cheater_id
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.MAIN),
+        StateRule(AdminStates.MAIN),
         PayloadRule({"admin": "del_cheater"}),
     )
     async def admin_del_cheater_handler(message: Message):
         """
         Админ меню. Кнопка "Удалить кидалу".
         """
-        new_state = vkbot.AdminStates.DEL_CHEATER
+        new_state = AdminStates.DEL_CHEATER
         answer_message = dialogs.del_cheater_start
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.ADD_CHEATER),
+        StateRule(AdminStates.ADD_CHEATER),
         PayloadRule({"admin": "add"}),
     )
     async def admin_add_cheater_to_db_handler(message: Message):
@@ -433,7 +434,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateRule(vkbot.AdminStates.DEL_CHEATER),
+        StateRule(AdminStates.DEL_CHEATER),
     )
     async def admin_del_cheater_text_handler(message: Message):
         """
@@ -456,14 +457,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                                                                                 str(cheaters_to_del[0]))
                     case _:
                         return dialogs.dont_understand
-                new_state = vkbot.AdminStates.DEL_CHEATER_COMMIT
+                new_state = AdminStates.DEL_CHEATER_COMMIT
                 bot.state_dispenser.set(message.from_id,
                                         new_state,
                                         cheaters_to_del=cheaters_to_del,
                                         item_to_del={reg_match.lastgroup: reg_match})
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
             elif len(cheaters_to_del) > 1:
-                new_state = vkbot.AdminStates.DEL_CHEATER_CHOICE
+                new_state = AdminStates.DEL_CHEATER_CHOICE
                 answer_message = dialogs.del_cheater_choice
                 bot.state_dispenser.set(message.from_id,
                                         new_state,
@@ -474,7 +475,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             return dialogs.del_cheater_not_found
 
     @bot.on.message(
-        StateRule(vkbot.AdminStates.DEL_CHEATER_COMMIT),
+        StateRule(AdminStates.DEL_CHEATER_COMMIT),
         PayloadRule({"del_cheater": "yes"})
     )
     async def admin_del_cheater_yes(message: Message):
@@ -490,28 +491,28 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             case 'card' | 'telephone' | 'proof_link':
                 for cheater in cheaters_to_del:
                     bot.delete_cheater_item(list(item_to_del.keys())[0], list(item_to_del.keys())[0], cheater.vk_id)
-        new_state = vkbot.AdminStates.DEL_CHEATER
+        new_state = AdminStates.DEL_CHEATER
         bot.state_dispenser.set(message.from_id, new_state)
         message.state_peer.payload.clear()
         answer_message = 'Удалили (нет)'
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        StateRule(vkbot.AdminStates.DEL_CHEATER_COMMIT),
+        StateRule(AdminStates.DEL_CHEATER_COMMIT),
         PayloadRule({"del_cheater": "no"})
     )
     async def admin_del_cheater_no(message: Message):
         """
         Не удаляем.
         """
-        new_state = vkbot.AdminStates.DEL_CHEATER
+        new_state = AdminStates.DEL_CHEATER
         bot.state_dispenser.set(message.from_id, new_state)
         message.state_peer.payload.clear()
         answer_message = 'Ок, не удаляем.'
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
-        StateRule(vkbot.AdminStates.ADD_CHEATER),
+        StateRule(AdminStates.ADD_CHEATER),
         AdminUserRule(bot),
     )
     async def admin_add_cheater_text_handler(message: Message):
@@ -598,7 +599,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateGroupRule(vkbot.AdminStates),
+        StateGroupRule(AdminStates),
         CommandRule('help') | CommandRule('помощь'),
     )
     async def admin_help_handler(message: Message):
@@ -609,7 +610,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateGroupRule(vkbot.AdminStates),
+        StateGroupRule(AdminStates),
         CommandRule('export') | CommandRule('экспорт')
     )
     async def admin_export_to_csv_handler(message: Message):
@@ -628,7 +629,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     @bot.on.message(
         AdminUserRule(bot),
-        StateGroupRule(vkbot.AdminStates),
+        StateGroupRule(AdminStates),
     )
     # IDE ругается на неиспользуемый параметр. Если убрать - то программа будет ругаться при обработке сообщений.
     async def admin_common_message_handler(message: Message):
