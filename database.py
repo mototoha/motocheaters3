@@ -77,6 +77,7 @@ class DBCheaters:
         Метод преобразует переменные в строки, пригодные для SQL выражений.
         str -> "str"
         None -> NULL
+        0 | 1 -> False | True
         Прочее - преобразует в строку.
 
         :param value: Что преобразовать.
@@ -86,6 +87,8 @@ class DBCheaters:
             result = '"' + value + '"'
         elif value is None:
             result = 'NULL'
+        elif isinstance(value, bool):
+            result = int(value)
         else:
             result = str(value)
         return result
