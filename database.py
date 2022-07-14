@@ -452,7 +452,7 @@ class DBCheaters:
         self._cursor.execute(sql_query)
         self._connection.commit()
 
-    def _delete_from_table(self, table: str, where_delete: {}):
+    def _delete_from_table(self, table: str, where_delete: dict):
         """
         Метод удаляет строки из таблицы.
         Если условия не переданы, ничего не удалит.
@@ -465,34 +465,6 @@ class DBCheaters:
             sql_query = self._construct_delete(table, where_delete)
             self._cursor.execute(sql_query)
             self._connection.commit()
-
-    def get_admins(self) -> List[int]:
-        """
-        Return all users from table admins
-
-        :return: list of id [int]
-        """
-        result = []
-        sql_query = self._construct_select('admins', ['id'])
-        for line in self._cursor.execute(sql_query).fetchall():
-            result.append(int(line[0]))
-        return result
-
-    def add_admin(self, vk_id: str):
-        """
-        Add new admin id
-        """
-        sql_query = self._construct_insert('admins', {'id': int(vk_id)})
-        self._cursor.execute(sql_query)
-        self._connection.commit()
-
-    def del_admin(self, vk_id: str):
-        """
-        Deleting admin from DB.
-
-        :param vk_id: admin id
-        """
-        pass
 
     def add_vk_id(self, vk_id: str, fifty: bool = False):
         """

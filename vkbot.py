@@ -71,7 +71,6 @@ class VKBot(Bot):
         self.db_filename = db_filename
         self.cheaters_filename = cheaters_filename
         self.db = database.DBCheaters(self.db_filename)
-        self.admins_from_db = self.db.get_admins()
         self.group_info = self.api.groups.get_by_id
         self.group_id = ''
         self.group_admins = []

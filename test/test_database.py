@@ -236,13 +236,9 @@ class TestDatabase(unittest.TestCase):
                                                          where_select={'fifty': 1}),
                          [['id225692215'], ['id212339925'], ['id408341851']])
 
-    def test_insert_delete_table(self):
+    def test_update_table(self):
         vk_id1 = 'id406387506'
-        vk_id2 = 'id5073667751111'
-        vk_id3 = 'club131677023'
         screen_name1 = 'ksinchugov'
-        screen_name2 = None
-        screen_name3 = 'club59181434'
 
         self.assertEqual(self.db._select_list_from_table('screen_names', 'vk_id', {'screen_name': screen_name1}),
                          [[vk_id1]])
@@ -250,6 +246,18 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(self.db._select_dict_from_table('screen_names', 'screen_name', {'vk_id': vk_id1}),
                          [{'screen_name': 'abracadabra'}])
 
+        self.db._update_table('screen_names', {'screen_name': '123'}, None)
+        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': 123}), [])
+
+    def test_insert_update(self):
+        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'vk_id': 'id009988'}), [])
+
+        self.db._insert_into_table('screen_names', {'vk_id': 'id009988', 'screen_name': 'qqq'})
+        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'vk_id': 'id009988'}),
+                         [['qqq']])
+
+        self.db._delete_from_table('screen_names', {'screen_name': 'qqq'})
+        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': 'qqq'}), [])
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
