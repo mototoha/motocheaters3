@@ -472,7 +472,7 @@ class VKBot(Bot):
                                                      condition_dict={'vk_id': vk_id})
             if sql_result:
                 cheater_info.vk_id = sql_result[0]['vk_id']
-                cheater_info.fifty = sql_result[0]['fifty']
+                cheater_info.fifty = bool(sql_result[0]['fifty'])
 
             sql_result = self.db.get_dict_from_table(table='screen_names',
                                                      columns=['screen_name'],
@@ -572,11 +572,11 @@ class VKBot(Bot):
                                                  condition_dict={'vk_id': vk_id})
         if sql_result:
             cheater_info.vk_id = sql_result[0]['vk_id']
-            cheater_info.fifty = sql_result[0]['fifty']
+            cheater_info.fifty = bool(sql_result[0]['fifty'])
         # SCREEN_NAMES
         sql_result = self.db.get_dict_from_table(table='screen_names',
                                                  columns=['screen_name'],
-                                                 condition_dict={'vk_id': vk_id, 'changed': 'False'})
+                                                 condition_dict={'vk_id': vk_id, 'changed': False})
         if sql_result:
             cheater_info.screen_name = sql_result[0]['screen_name']
         # TELEPHONES

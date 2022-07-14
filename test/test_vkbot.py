@@ -5,7 +5,9 @@
 import unittest
 import cheaters
 import vkbot
+import shutil
 
+TEMPLATE_DB = 'cheaters.db'
 TEST_DB = 'test-cheaters.db'
 
 
@@ -14,6 +16,8 @@ class TestBot(unittest.TestCase):
         self.bot = vkbot.VKBot('123',
                                TEST_DB,
                                'kidaly.txt')
+        shutil.copyfile(TEMPLATE_DB, TEST_DB)
+
 
     def test_get_cheater_by_id(self):
         vk_id = 'id210886928'
