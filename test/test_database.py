@@ -18,7 +18,7 @@ def select_suite():
     suite.addTest()
 
 
-class TestDatabase(unittest.TestCase):
+class TestDatabaseBasic(unittest.TestCase):
     def setUp(self) -> None:
         shutil.copyfile(TEMPLATE_DB, TEST_DB)
         self.db = database.DBCheaters(TEST_DB)
@@ -258,6 +258,27 @@ class TestDatabase(unittest.TestCase):
 
         self.db._delete_from_table('screen_names', {'screen_name': 'qqq'})
         self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': 'qqq'}), [])
+
+
+class TestDatabaseAddingCheater(unittest.TestCase):
+    def setUp(self) -> None:
+        shutil.copyfile(TEMPLATE_DB, TEST_DB)
+        self.db = database.DBCheaters(TEST_DB)
+
+    def tearDown(self) -> None:
+        del self.db
+        os.remove(TEST_DB)
+
+    def test_get_cheater_id(self):
+        self.assertEqual(self.db.get_cheater_id('cards', {'card': '4476246177018575'}), 'id8292913')
+        self.assertEqual(self.db.get_cheater_id('cards', {'card': '123'}), None)
+
+    def test_add_cheater(self):
+        vk_id = 'club3322'
+        screen_name = 'poor_club'
+
+
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

@@ -523,24 +523,27 @@ class DBCheaters:
                                         'vk_id': vk_id,
                                     })
 
-    def get_cheater_id(self, table: str, params: dict) -> str:
+    def get_cheater_id(self, table: str, params: dict) -> str | None:
         """
         Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
         vk_id есть во всех таблицах про кидал.
         Словарь должен быть вида:
         {параметр: значение}.
         Найти в таблице table, где параметр=значение.
+        Если найдется несколько - вернется только первый.
 
-        :return: ID или 0, если ничего не найдено.
+        :return: ID или None, если ничего не найдено.
         """
         sql_query = self._construct_select(
             table=table,
             what_select=['vk_id'],
             where_select=params
         )
-        self._cursor.execute(sql_query)
-        result = self._cursor.fetchone()
-        return result
+        sql_result = self._cursor.execute(sql_query).fetchone()
+        if sql_result:
+            return sql_result[0]
+        else:
+            return None
 
     def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[List[dict]]:
         """

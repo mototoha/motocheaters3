@@ -277,7 +277,7 @@ class VKBot(Bot):
 
         return 'Я закончил обновлять БД!'
 
-    def check_cheater(self, parameter: str, value: str):
+    def check_cheater(self, parameter: str, value: str) -> str | None:
         """
         Проверяем наличие кидалы в БД.
         Если возвращается пустая строка, то запрос некорректно отработал.
@@ -293,11 +293,8 @@ class VKBot(Bot):
         elif parameter == 'telephone':
             check_result = self.db.get_cheater_id('telephones', {parameter: value})
         else:
-            check_result = False
-        if check_result:
-            return check_result[0]
-        else:
-            return False
+            check_result = None
+        return check_result
 
     async def is_admin(self, peer_id: int) -> bool:
         """
