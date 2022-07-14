@@ -1,4 +1,4 @@
-"""
+""""
 Тут будем проводить тестирование проекта.
 """
 import datetime
@@ -11,6 +11,11 @@ import database
 
 TEMPLATE_DB = 'cheaters.db'
 TEST_DB = 'test-cheaters.db'
+
+
+def select_suite():
+    suite = unittest.TestSuite()
+    suite.addTest()
 
 
 class TestDatabase(unittest.TestCase):
@@ -98,7 +103,7 @@ class TestDatabase(unittest.TestCase):
         result = 'DELETE from screen_names where pk=123 and vk_id!="club69" and changed=False'
         self.assertEqual(self.db._construct_delete(table, where_delete), result)
 
-    def test_create_table(self):
+    def test_construct_create_table(self):
         table = 'vk_ids'
         result = '''create table vk_ids(pk integer primary key,vk_id text,fifty bool)'''
         self.assertEqual(self.db._construct_create_table(table), result)
@@ -178,51 +183,58 @@ class TestDatabase(unittest.TestCase):
             self.db.check_db_file_exist(dir_name)
         self.assertFalse(self.db.check_db_file_exist(no_file))
 
-    def test_select_update_delete_tables(self):
+    def test_select_table(self):
         vk_id1 = 'id406387506'
         vk_id2 = 'id5073667751111'
         vk_id3 = 'club131677023'
-        vk_id4 = 'testid'
         screen_name1 = 'ksinchugov'
         screen_name2 = None
         screen_name3 = 'club59181434'
-        screen_name4 = 'Hertz'
         result_list1 = [[3, 'id406387506', 0]]
         result_dict1 = [{'pk': 3, 'vk_id': 'id406387506', 'fifty': 0}]
 
-        self.assertEqual(self.db._select_list_from_table('vk_ids', '*', {'vk_id': vk_id1}), result_list1)
+        self.assertEqual(self.db._select_list_from_table('vk_ids', '*', {'vk_id': vk_id1, 'fifty': False}),
+                         result_list1)
         self.assertEqual(self.db._select_dict_from_table('vk_ids', '*', {'vk_id': vk_id1}), result_dict1)
-
         self.assertEqual(self.db._select_dict_from_table('screen_names',
                                                          ['screen_name', 'pk'],
                                                          {'vk_id': vk_id2}),
                          [])
         self.assertEqual(self.db._select_dict_from_table('screen_names',
                                                          ['vk_id', 'screen_name'],
-                                                         {'vk_id': vk_id2}),
+                                                         {'screen_name': screen_name2}),
                          [])
-
         self.assertEqual(self.db._select_list_from_table(table='screen_names',
                                                          where_select={'vk_id': vk_id3}),
                          [[98, 'danilbelyu', 'club131677023', 'False']])
         self.assertEqual(self.db._select_dict_from_table(table='screen_names',
-                                                         where_select={'vk_id': vk_id3}),
+                                                         where_select={'vk_id': vk_id3, 'screen_name': screen_name3},
+                                                         operate='or'),
                          [{'pk': 98, 'screen_name': 'danilbelyu', 'vk_id': 'club131677023', 'changed': 'False'}])
-
         self.assertEqual(self.db._select_dict_from_table(table='vk_ids',
                                                          where_select={'fifty': True}),
                          [{'pk': 8, 'vk_id': 'id225692215', 'fifty': 1},
                           {'pk': 318, 'vk_id': 'id212339925', 'fifty': 1},
                           {'pk': 319, 'vk_id': 'id408341851', 'fifty': 1}])
-
         self.assertEqual(self.db._select_list_from_table(table='vk_ids',
                                                          what_select='vk_id',
                                                          where_select={'fifty': 1}),
                          [['id225692215'], ['id212339925'], ['id408341851']])
 
-        self.db._update_table('vk_id', {'vk_id': vk_id2, 'fifty': True})
-        self.assertEqual(self.db._select_list_from_table('vk_id', ['vk_id', 'fifty'], {'vk_id': vk_id2}))
+    def test_insert_delete_table(self):
+        vk_id1 = 'id406387506'
+        vk_id2 = 'id5073667751111'
+        vk_id3 = 'club131677023'
+        screen_name1 = 'ksinchugov'
+        screen_name2 = None
+        screen_name3 = 'club59181434'
+
+        self.assertEqual(self.db._select_list_from_table('screen_names', 'vk_id', {'screen_name': screen_name1}),
+                         [[vk_id1]])
+        self.db._update_table('screen_names', {'screen_name': 'abracadabra'}, {'vk_id': vk_id1})
+        self.assertEqual(self.db._select_dict_from_table('screen_names', 'screen_name', {'vk_id': vk_id1}),
+                         [{'screen_name': 'abracadabra'}])
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity=1)
+    unittest.main(verbosity=2)

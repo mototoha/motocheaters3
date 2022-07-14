@@ -72,6 +72,25 @@ class DBCheaters:
         self._connection.close()
 
     @staticmethod
+    def _type_conversion_sql(value: Any) -> str:
+        """
+        Метод преобразует переменные в строки, пригодные для SQL выражений.
+        str -> "str"
+        None -> NULL
+        Прочее - преобразует в строку.
+
+        :param value: Что преобразовать.
+        :return: Результат.
+        """
+        if isinstance(value, str):
+            result = '"' + value + '"'
+        elif value is None:
+            result = 'NULL'
+        else:
+            result = str(value)
+        return result
+
+    @staticmethod
     def tuple_list_to_list(tl: List[tuple]) -> list:
         """
         Метод принимает список кортежей (как при fetchall()) и возвращает просто список из всех элементов.
@@ -150,8 +169,8 @@ class DBCheaters:
                 # strings must be with "
                 if type(where_select[value]) == str:
                     result += '"' + where_select[value] + '"'
-                elif type(where_select[value]) == bool:
-                    result += str(where_select[value])
+                elif type(where_select[value]) == type(None):
+                    result += 'NULL'
                 else:
                     result += str(where_select[value])
         return result
@@ -367,17 +386,18 @@ class DBCheaters:
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
+        Если where не передан, ничего не изменится.
 
         :param table: Таблица, которую апдейтим.
         :param set_params: Словарь параметров, которые устанавливаем set (param1=value1, param2=value2).
         :param where: Словарь для условий where (param1=value1, param2=value2).
         """
-        sql_query = self._construct_update(table=table,
-                                           set_params=set_params,
-                                           where_update=where)
-        self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
+        if isinstance(where, dict):
+            sql_query = self._construct_update(table=table,
+                                               set_params=set_params,
+                                               where_update=where)
+            self._cursor.execute(sql_query)
+            self._connection.commit()
 
     def _select_dict_from_table(self,
                                 table: str,
