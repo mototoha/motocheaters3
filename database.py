@@ -87,8 +87,6 @@ class DBCheaters:
             result = '"' + value + '"'
         elif value is None:
             result = 'NULL'
-        elif isinstance(value, bool):
-            result = int(value)
         else:
             result = str(value)
         return result
@@ -550,15 +548,15 @@ class DBCheaters:
         :param cheater: Dict
         """
         if cheater.get('vk_id'):
-            if not cheater.get('fifty'):
+            if cheater.get('fifty') is None:
                 cheater['fifty'] = False
             self.add_vk_id(cheater['vk_id'], cheater['fifty'])
         if cheater.get('screen_name'):
             self.add_screen_name(cheater['screen_name'], cheater['vk_id'])
         if cheater.get('telephone'):
-            self.add_telephones(cheater['telephone'])
+            self.add_telephones(cheater['telephone'], cheater['vk_id'])
         if cheater.get('card'):
-            self.add_cards(cheater['card'])
+            self.add_cards(cheater['card'], cheater['vk_id'])
         if cheater.get('proof_link'):
             self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
 

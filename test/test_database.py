@@ -390,11 +390,36 @@ class TestDatabaseMakeCheater(unittest.TestCase):
             'card': ['1234', '5678', '121212'],
             'proof_link': ['wall-123', 'wall12345'],
         }
-
         self.db.add_cheater(cheater)
+
         self.assertEqual(
             self.db._select_list_from_table('vk_ids', ['vk_id', 'fifty'], {'vk_id': cheater['vk_id']}),
             [['club332211', 0]]
+        )
+        self.assertEqual(
+            self.db._select_dict_from_table('screen_names', ['screen_name', 'vk_id', 'changed'],
+                                            {'vk_id': cheater['vk_id']}),
+            [{'screen_name': cheater['screen_name'], 'vk_id': cheater['vk_id'], 'changed': 0}]
+        )
+        self.assertEqual(
+            self.db._select_dict_from_table('telephones', ['telephone', 'vk_id'],
+                                            {'vk_id': cheater['vk_id']}),
+            [{'telephone': '1234', 'vk_id': 'club332211'},
+             {'telephone': '4567', 'vk_id': 'club332211'},
+             {'telephone': '567', 'vk_id': 'club332211'}]
+        )
+        self.assertEqual(
+            self.db._select_dict_from_table('cards', ['card', 'vk_id'],
+                                            {'vk_id': cheater['vk_id']}),
+            [{'card': '1234', 'vk_id': 'club332211'},
+             {'card': '5678', 'vk_id': 'club332211'},
+             {'card': '121212', 'vk_id': 'club332211'}]
+        )
+        self.assertEqual(
+            self.db._select_dict_from_table('proof_links', ['proof_link', 'vk_id'],
+                                            {'vk_id': cheater['vk_id']}),
+            [{'proof_link': 'wall-123', 'vk_id': 'club332211'},
+             {'proof_link': 'wall12345', 'vk_id': 'club332211'}]
         )
 
 
