@@ -555,7 +555,7 @@ class VKBot(Bot):
 
     def get_cheater_from_db2(self,
                              param: str,
-                             value: str,
+                             value: str | bool,
                              ) -> List[Cheater]:
         """
         Метод возвращает всю инфу про кидалу, которая есть в БД. На вход подаются параметры, по которым надо его найти.
@@ -579,10 +579,12 @@ class VKBot(Bot):
                 sql_result = self.db.get_cheater_id_list_by_param(screen_name=value)
             case 'fifty':
                 sql_result = self.db.get_cheater_id_list_by_param(fifty=value)
-            case 'card' | 'telephone' | 'proof_link':
-                sql_result = self.db.get_dict_from_table(table=param + 's',
-                                                         columns=['vk_id'],
-                                                         condition_dict={param: value})
+            case 'card':
+                sql_result = self.db.get_cheater_id_list_by_param(card=value)
+            case 'telephone':
+                sql_result = self.db.get_cheater_id_list_by_param(telephone=value)
+            case 'proof_link':
+                sql_result = self.db.get_cheater_id_list_by_param(proof_link=value)
         if sql_result:
             for item in sql_result:
                 vk_id_list.append(item['vk_id'])
