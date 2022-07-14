@@ -91,7 +91,7 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def tuple_list_to_list(tl: List[tuple]) -> list:
+    def _tuple_list_to_list(tl: List[tuple]) -> list:
         """
         Метод принимает список кортежей (как при fetchall()) и возвращает просто список из всех элементов.
 
@@ -104,8 +104,7 @@ class DBCheaters:
                 result.append(val)
         return result
 
-    @staticmethod
-    def _construct_insert(table: str, values_dict: dict) -> str:
+    def _construct_insert(self, table: str, values_dict: dict) -> str:
         """
         Construct INSERT queue.
         INSERT into {table} ({values.keys}) values ({values.values})
@@ -122,16 +121,12 @@ class DBCheaters:
                 columns += ', '
                 values += ', '
             columns += value
-            # strings must be with "
-            if type(values_dict[value]) == str:
-                values += '"' + values_dict[value] + '"'
-            else:
-                values += str(values_dict[value])
+            values += self._type_conversion_sql(values_dict[value])
         result += '(' + columns + ') values (' + values + ')'
         return result
 
-    @staticmethod
-    def _construct_select(table: str,
+    def _construct_select(self,
+                          table: str,
                           what_select: str | List[str],
                           where_select: dict = None,
                           operator: str = 'and'
@@ -166,17 +161,10 @@ class DBCheaters:
                 if count:
                     result += ' ' + operator + ' '
                 result += value + '='
-                # strings must be with "
-                if type(where_select[value]) == str:
-                    result += '"' + where_select[value] + '"'
-                elif type(where_select[value]) == type(None):
-                    result += 'NULL'
-                else:
-                    result += str(where_select[value])
+                result += self._type_conversion_sql(where_select[value])
         return result
 
-    @staticmethod
-    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
+    def _construct_update(self, table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
         """
         Construct update query.
         UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
@@ -207,15 +195,10 @@ class DBCheaters:
                 if count:
                     result += ' ' + operator + ' '
                 result += value + '='
-                # strings must be with "
-                if type(where_update[value]) == str:
-                    result += '"' + where_update[value] + '"'
-                else:
-                    result += str(where_update[value])
+                result += self._type_conversion_sql(where_update[value])
         return result
 
-    @staticmethod
-    def _construct_delete(table: str, where_delete: dict, operator: str = 'and') -> str:
+    def _construct_delete(self, table: str, where_delete: dict, operator: str = 'and') -> str:
         """
         Construct delete query.
         DELETE from {table} where {where_param} = "{where_value}"
@@ -227,21 +210,16 @@ class DBCheaters:
         """
         result = 'DELETE from {table}'.format(table=table)
 
-        if where_delete:
-            result += ' where '
-            for count, value in enumerate(where_delete):
-                if count:
-                    result += ' ' + operator + ' '
-                if value.startswith('!'):
-                    not_value = value.lstrip('!')
-                    result += not_value + '!='
-                else:
-                    result += value + '='
-                # strings must be with "
-                if type(where_delete[value]) == str:
-                    result += '"' + where_delete[value] + '"'
-                else:
-                    result += str(where_delete[value])
+        result += ' where '
+        for count, value in enumerate(where_delete):
+            if count:
+                result += ' ' + operator + ' '
+            if value.startswith('!'):
+                not_value = value.lstrip('!')
+                result += not_value + '!='
+            else:
+                result += value + '='
+            result += self._type_conversion_sql(where_delete[value])
         return result
 
     @staticmethod
@@ -418,7 +396,7 @@ class DBCheaters:
         sql_result = self._cursor.execute(sql_query).fetchall()
         if what_select == '*':
             fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
-            fields = self.tuple_list_to_list(fields_tuple)
+            fields = self._tuple_list_to_list(fields_tuple)
         elif isinstance(what_select, str):
             fields = [what_select]
         else:
@@ -451,7 +429,7 @@ class DBCheaters:
         sql_result = self._cursor.execute(sql_query).fetchall()
         if what_select == '*':
             fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
-            fields = self.tuple_list_to_list(fields_tuple)
+            fields = self._tuple_list_to_list(fields_tuple)
         elif isinstance(what_select, str):
             fields = [what_select]
         else:

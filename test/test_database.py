@@ -42,11 +42,10 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(self.db._type_conversion_sql(value3), result3)
         self.assertEqual(self.db._type_conversion_sql(value4), result4)
 
-
     def test_tuple_list_to_list(self):
         tl1 = [('pk',), ('vk_id',), ('fifty',)]
         l1 = ['pk', 'vk_id', 'fifty']
-        self.assertEqual(self.db.tuple_list_to_list(tl1), l1)
+        self.assertEqual(self.db._tuple_list_to_list(tl1), l1)
 
     def test_construct_insert(self):
         test_table = 'parameters'
@@ -92,17 +91,16 @@ class TestDatabase(unittest.TestCase):
     def test_construct_update(self):
         table = 'telephones'
         set_param = {'telephone': '+8789665544'}
-        where_update = {'pk': None}
-        result = 'UPDATE telephones set telephone="+8789665544" where pk=NULL'
+        result = 'UPDATE telephones set telephone="+8789665544"'
         self.assertEqual(self.db._construct_update(table, set_param), result)
 
         table = 'screen_names'
         set_param = {'changed': True,
                      'pk': 123}
         where_update = {'screen_name': 'asdasdasd',
-                        'changed':0}
+                        'changed': None}
         operator = 'or'
-        result = 'UPDATE screen_names set changed=True, pk=123 where screen_name="asdasdasd" or changed=0'
+        result = 'UPDATE screen_names set changed=True, pk=123 where screen_name="asdasdasd" or changed=NULL'
         self.assertEqual(self.db._construct_update(table, set_param, where_update, operator), result)
 
     def test_construct_delete(self):
