@@ -12,7 +12,8 @@ REGEXP_CHEATER = {
     'vk_id': r'((https://|http://)?(m\.)?vk.com/|^){1}id(?P<vk_id>\d+(\s\n)?)',
     'group_id': r'((https://|http://)?(m\.)?vk.com/|^){1}(club|public|event)(?P<group_id>\d+(\s\n)?)',
     'proof_link':  r'((https://|http://)?(m\.)?vk.com/){1}(?P<proof_link>wall-\d*_\d*)',
-    'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_)+(\s\n)?)',
+     #  'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>([a-z]|[A-Z]|[0-9]|_|.)+(\s\n)?)',
+    'screen_name': r'((https://|http://)?(m\.)?vk.com/){1}(?P<screen_name>(\S+))',
     'card': r'(?P<card>\d{4}\s?\d{4}\s?\d{4}\s?\d{4}(\s\n)?)',
     'telephone': r'\+?(?P<telephone>\d{10,15}(\s\n)?)',
     'fifty': r'(?P<fifty>50|fifty)'
@@ -66,19 +67,19 @@ def get_regexp(*args: 'str') -> str:
     if args[0] == 'all':
         request_group_list = tuple(REGEXP_CHEATER.keys())
     elif args[0] in ('main', 'search'):
-        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone'])
+        request_group_list = tuple(['vk_id', 'group_id', 'proof_link', 'screen_name', 'card', 'telephone'])
     elif args[0] == 'add':
-        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone', 'proof_link', 'fifty'])
+        request_group_list = tuple(['vk_id', 'group_id', 'proof_link', 'screen_name', 'card', 'telephone', 'fifty'])
     elif args[0] == 'del':
-        request_group_list = tuple(['vk_id', 'group_id', 'screen_name', 'card', 'telephone', 'proof_link'])
+        request_group_list = tuple(['vk_id', 'group_id', 'proof_link', 'screen_name', 'card', 'telephone'])
     elif args:
         request_group_list = args
     else:
         request_group_list = tuple(REGEXP_CHEATER.keys())
     # Собираем регулярку
     result = ''
-    for group in request_group_list:
-        if group in regexp_group_list:
+    for group in regexp_group_list:
+        if group in request_group_list:
             if result:
                 # Если регулярка уже есть, добавляем или |
                 result += r'|'
