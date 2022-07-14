@@ -74,6 +74,8 @@ class VKBot(Bot):
         self.group_info = self.api.groups.get_by_id
         self.group_id = ''
         self.group_admins = []
+        # TODO Сделать на старте проверку
+        #  дублей, приведение типов True/False
 
     async def get_async_params(self):
         """
