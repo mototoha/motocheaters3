@@ -303,66 +303,6 @@ class DBCheaters:
                 raise FileExistsError('Уже есть каталог с таким именем!!!')
         return result
 
-    def backup_db_file(self, backup_name: str = None):
-        """
-        Делает копию файла БД с добавлением текущей даты.
-        Если передано имя - делает с этим именем.
-
-        :param backup_name: Имя резервной БД.
-        """
-        if backup_name:
-            new_name = backup_name
-        else:
-            nowtime = datetime.datetime.now().isoformat(timespec='minutes')
-            new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
-        shutil.copyfile(self.db_filename, new_name)
-
-    def get_param(self, param: str) -> Optional[str]:
-        """
-        Return parameter from table 'parameters'.
-        """
-        sql_query = self._construct_select('parameters', ['value'], {'parameter': param})
-        self._cursor.execute(sql_query)
-        result = self._cursor.fetchone()
-        if not result:
-            return None
-        else:
-            result = str(result[0])
-            return result
-
-    def add_param(self, dict_params):
-        """
-        Set parameter to table 'parameters'
-        """
-        for param in dict_params:
-            sql_query = self._construct_insert('parameters', {'parameter': param, 'value': dict_params[param]})
-            self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
-
-    def del_param(self, param: str):
-        """
-        Метод удаляет параметр из одноименной таблицы.
-
-        :param param: параметр для удаления.
-        """
-        sql_query = self._construct_delete('parameters', {'parameter': param})
-        self._cursor.execute(sql_query)
-        self._connection.commit()
-
-    def check_the_existence(self, table: str, parameter_list: dict) -> bool:
-        """
-        Проверяем наличие строки в таблице table по условию ключ=значение.
-
-        :param table: таблица, где ищем.
-        :param parameter_list: Словарь со значениями.
-        :return: True or False
-        """
-        sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
-        self._cursor.execute(sql_query)
-        result = bool(self._cursor.fetchall())
-        return result
-
     def _update_table(self, table: str, set_params: dict, where: dict):
         """
         Апдейтим БД
@@ -468,6 +408,66 @@ class DBCheaters:
             sql_query = self._construct_delete(table, where_delete)
             self._cursor.execute(sql_query)
             self._connection.commit()
+
+    def backup_db_file(self, backup_name: str = None):
+        """
+        Делает копию файла БД с добавлением текущей даты.
+        Если передано имя - делает с этим именем.
+
+        :param backup_name: Имя резервной БД.
+        """
+        if backup_name:
+            new_name = backup_name
+        else:
+            nowtime = datetime.datetime.now().isoformat(timespec='minutes')
+            new_name = (self.db_filename.rstrip('.db') + '_' + nowtime + '.db').replace(':', '-')
+        shutil.copyfile(self.db_filename, new_name)
+
+    def get_param(self, param: str) -> Optional[str]:
+        """
+        Return parameter from table 'parameters'.
+        """
+        sql_query = self._construct_select('parameters', ['value'], {'parameter': param})
+        self._cursor.execute(sql_query)
+        result = self._cursor.fetchone()
+        if not result:
+            return None
+        else:
+            result = str(result[0])
+            return result
+
+    def add_param(self, dict_params):
+        """
+        Set parameter to table 'parameters'
+        """
+        for param in dict_params:
+            sql_query = self._construct_insert('parameters', {'parameter': param, 'value': dict_params[param]})
+            self._cursor.execute(sql_query)
+        self._connection.commit()
+        return None
+
+    def del_param(self, param: str):
+        """
+        Метод удаляет параметр из одноименной таблицы.
+
+        :param param: параметр для удаления.
+        """
+        sql_query = self._construct_delete('parameters', {'parameter': param})
+        self._cursor.execute(sql_query)
+        self._connection.commit()
+
+    def check_the_existence(self, table: str, parameter_list: dict) -> bool:
+        """
+        Проверяем наличие строки в таблице table по условию ключ=значение.
+
+        :param table: таблица, где ищем.
+        :param parameter_list: Словарь со значениями.
+        :return: True or False
+        """
+        sql_query = self._construct_select(table=table, what_select=list(parameter_list), where_select=parameter_list)
+        self._cursor.execute(sql_query)
+        result = bool(self._cursor.fetchall())
+        return result
 
     def add_vk_id(self, vk_id: str, fifty: bool = False):
         """
