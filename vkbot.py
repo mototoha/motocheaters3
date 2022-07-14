@@ -565,7 +565,7 @@ class VKBot(Bot):
         if not vk_id:
             return None
         cheater_info = Cheater()
-
+        # TODO Переделать без упоминания про таблицы
         # VK_IDS
         sql_result = self.db.get_dict_from_table(table='vk_ids',
                                                  columns=['vk_id', 'fifty'],
