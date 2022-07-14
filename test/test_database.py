@@ -273,9 +273,32 @@ class TestDatabaseAddingCheater(unittest.TestCase):
         self.assertEqual(self.db.get_cheater_id('cards', {'card': '4476246177018575'}), 'id8292913')
         self.assertEqual(self.db.get_cheater_id('cards', {'card': '123'}), None)
 
-    def test_add_cheater(self):
-        vk_id = 'club3322'
-        screen_name = 'poor_club'
+    def test_add_cheater_params(self):
+        cheater = {
+            'vk_id': 'club3322',
+            'fifty': True,
+            'screen_name': 'poor_club',
+            'telephone': ['123', '456', '567'],
+            'card': ['1234', '5678', '1212'],
+            'proof_link': ['wall-123'],
+        }
+
+        self.db.add_vk_id(cheater['vk_id'], cheater['fifty'])
+        self.assertEqual(self.db._select_list_from_table('vk_ids', ['vk_id', 'fifty'], {'vk_id': cheater['vk_id']}),
+                         [[cheater['vk_id'], cheater['fifty']]])
+
+        self.db.add_screen_name(cheater['screen_name'], cheater['vk_id'], True)
+        self.assertEqual(
+            self.db._select_list_from_table('screen_names',
+                                            ['screen_name', 'vk_id', 'changed'],
+                                            {'vk_id': cheater['vk_id']},
+                                            ),
+            [[cheater['screen_name'], cheater['vk_id'], 'True']]
+        )
+
+        self.db.add_cards(cheater)
+
+
 
 
 

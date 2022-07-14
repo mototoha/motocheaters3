@@ -490,10 +490,12 @@ class DBCheaters:
                                     'changed': str(changed),
                                 })
 
-    def add_telephones(self, telephones: List[str], vk_id: str = ''):
+    def add_telephones(self, telephones: str | List[str], vk_id: str = ''):
         """
         Добавляем телефоны.
         """
+        if isinstance(telephones, str):
+            cards = [telephones]
         for tel in telephones:
             self._insert_into_table(table='telephones',
                                     values={
@@ -501,10 +503,12 @@ class DBCheaters:
                                         'vk_id': vk_id,
                                     })
 
-    def add_cards(self, cards: List[str], vk_id: str = ''):
+    def add_cards(self, cards: str | List[str], vk_id: str = ''):
         """
         Добавляем телефоны.
         """
+        if isinstance(cards, str):
+            cards = [cards]
         for card in cards:
             self._insert_into_table(table='cards',
                                     values={
@@ -512,13 +516,15 @@ class DBCheaters:
                                         'vk_id': vk_id,
                                     })
 
-    def add_proof_links(self, proof_links: List[str], vk_id: str) -> None:
+    def add_proof_links(self, proof_links:str | List[str], vk_id: str) -> None:
         """
         Добавляет в БД пруфлинк на кидалу.
 
         :param proof_links: Список ссылок https://vk.com/wall-####.
         :param vk_id: На кого ссылается.
         """
+        if isinstance(proof_links, str):
+            cards = [proof_links]
         for link in proof_links:
             self._insert_into_table(table='proof_links',
                                     values={
