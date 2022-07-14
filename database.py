@@ -454,6 +454,20 @@ class DBCheaters:
         self._cursor.execute(sql_query)
         self._connection.commit()
 
+    def _delete_from_table(self, table: str, where_delete: {}):
+        """
+        Метод удаляет строки из таблицы.
+        Если условия не переданы, ничего не удалит.
+
+        :param table: таблица
+        :param where_delete: условия.
+        :return:
+        """
+        if isinstance(where_delete, dict):
+            sql_query = self._construct_delete(table, where_delete)
+            self._cursor.execute(sql_query)
+            self._connection.commit()
+
     def get_admins(self) -> List[int]:
         """
         Return all users from table admins
