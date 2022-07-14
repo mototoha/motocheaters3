@@ -1,7 +1,7 @@
 """
 тут находятся уровни диалога
 """
-from vkbot import BaseStateGroup
+from vkbottle import BaseStateGroup
 
 
 class DialogStates(BaseStateGroup):
