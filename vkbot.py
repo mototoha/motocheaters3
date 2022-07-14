@@ -587,7 +587,7 @@ class VKBot(Bot):
                 sql_result = self.db.get_cheater_id_list_by_param(proof_link=value)
         if sql_result:
             for item in sql_result:
-                vk_id_list.append(item['vk_id'])
+                vk_id_list.append(item)
         result = []
         for vk_id in vk_id_list:
             db_found = self.get_cheater_by_id(vk_id)

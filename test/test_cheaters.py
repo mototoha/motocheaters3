@@ -5,6 +5,8 @@ import unittest
 import cheaters
 import re
 
+TEST_DB = 'test-cheaters.db'
+
 
 class TestCheater(unittest.TestCase):
     def test_check_regexp_search(self):
