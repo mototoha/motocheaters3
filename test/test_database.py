@@ -27,6 +27,22 @@ class TestDatabase(unittest.TestCase):
         del self.db
         os.remove(TEST_DB)
 
+    def test_type_conversion_sql(self):
+        value1 = 'asd'
+        result1 = '"asd"'
+        value2 = None
+        result2 = 'NULL'
+        value3 = 123
+        result3 = '123'
+        value4 = False
+        result4 = 'False'
+
+        self.assertEqual(self.db._type_conversion_sql(value1), result1)
+        self.assertEqual(self.db._type_conversion_sql(value2), result2)
+        self.assertEqual(self.db._type_conversion_sql(value3), result3)
+        self.assertEqual(self.db._type_conversion_sql(value4), result4)
+
+
     def test_tuple_list_to_list(self):
         tl1 = [('pk',), ('vk_id',), ('fifty',)]
         l1 = ['pk', 'vk_id', 'fifty']
@@ -42,16 +58,17 @@ class TestDatabase(unittest.TestCase):
 
         test_table = 'vk_ids'
         values_dict = {'vk_id': 'id123',
-                       'fifty': True}
-        result = 'INSERT into vk_ids (vk_id, fifty) values ("id123", True)'
+                       'fifty': True,
+                       'pk': None}
+        result = 'INSERT into vk_ids (vk_id, fifty, pk) values ("id123", True, NULL)'
         self.assertEqual(self.db._construct_insert(test_table, values_dict), result)
 
     def test_construct_select(self):
         test_table = 'vk_ids'
         what_select = '*'
         where_select = {'vk_id': 'club111',
-                        'fifty': False}
-        result = 'SELECT * from vk_ids where vk_id="club111" and fifty=False'
+                        'fifty': None}
+        result = 'SELECT * from vk_ids where vk_id="club111" and fifty=NULL'
         self.assertEqual(self.db._construct_select(test_table, what_select, where_select), result)
 
         test_table = 'screen_names'
@@ -75,8 +92,8 @@ class TestDatabase(unittest.TestCase):
     def test_construct_update(self):
         table = 'telephones'
         set_param = {'telephone': '+8789665544'}
-        where_update = None
-        result = 'UPDATE telephones set telephone="+8789665544"'
+        where_update = {'pk': None}
+        result = 'UPDATE telephones set telephone="+8789665544" where pk=NULL'
         self.assertEqual(self.db._construct_update(table, set_param), result)
 
         table = 'screen_names'
@@ -92,9 +109,9 @@ class TestDatabase(unittest.TestCase):
         table = 'vk_ids'
         where_delete = {'pk': 123,
                         '!vk_id': 'club888',
-                        'fifty': False}
-        result = 'DELETE from vk_ids where pk=123 and vk_id!="club888" and fifty=False'
-        self.assertEqual(self.db._construct_delete(table,where_delete), result)
+                        'fifty': None}
+        result = 'DELETE from vk_ids where pk=123 and vk_id!="club888" and fifty=NULL'
+        self.assertEqual(self.db._construct_delete(table, where_delete), result)
 
         table = 'screen_names'
         where_delete = {'pk': 123,
