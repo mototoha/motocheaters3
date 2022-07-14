@@ -495,7 +495,7 @@ class DBCheaters:
         Добавляем телефоны.
         """
         if isinstance(telephones, str):
-            cards = [telephones]
+            telephones = [telephones]
         for tel in telephones:
             self._insert_into_table(table='telephones',
                                     values={
@@ -524,7 +524,7 @@ class DBCheaters:
         :param vk_id: На кого ссылается.
         """
         if isinstance(proof_links, str):
-            cards = [proof_links]
+            proof_links = [proof_links]
         for link in proof_links:
             self._insert_into_table(table='proof_links',
                                     values={

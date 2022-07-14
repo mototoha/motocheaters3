@@ -1,4 +1,4 @@
-""""
+"""
 Тут будем проводить тестирование проекта.
 """
 import datetime
@@ -11,11 +11,6 @@ import database
 
 TEMPLATE_DB = 'cheaters.db'
 TEST_DB = 'test-cheaters.db'
-
-
-def select_suite():
-    suite = unittest.TestSuite()
-    suite.addTest()
 
 
 class TestDatabaseBasic(unittest.TestCase):
@@ -260,7 +255,7 @@ class TestDatabaseBasic(unittest.TestCase):
         self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': 'qqq'}), [])
 
 
-class TestDatabaseAddingCheater(unittest.TestCase):
+class TestDatabaseMakeCheater(unittest.TestCase):
     def setUp(self) -> None:
         shutil.copyfile(TEMPLATE_DB, TEST_DB)
         self.db = database.DBCheaters(TEST_DB)
@@ -273,7 +268,7 @@ class TestDatabaseAddingCheater(unittest.TestCase):
         self.assertEqual(self.db.get_cheater_id('cards', {'card': '4476246177018575'}), 'id8292913')
         self.assertEqual(self.db.get_cheater_id('cards', {'card': '123'}), None)
 
-    def test_add_cheater_params(self):
+    def test_add_vk_id(self):
         cheater = {
             'vk_id': 'club3322',
             'fifty': True,
@@ -287,6 +282,15 @@ class TestDatabaseAddingCheater(unittest.TestCase):
         self.assertEqual(self.db._select_list_from_table('vk_ids', ['vk_id', 'fifty'], {'vk_id': cheater['vk_id']}),
                          [[cheater['vk_id'], cheater['fifty']]])
 
+    def test_add_screen_name(self):
+        cheater = {
+            'vk_id': 'club3322',
+            'fifty': True,
+            'screen_name': 'poor_club',
+            'telephone': ['123', '456', '567'],
+            'card': ['1234', '5678', '1212'],
+            'proof_link': ['wall-123'],
+        }
         self.db.add_screen_name(cheater['screen_name'], cheater['vk_id'], True)
         self.assertEqual(
             self.db._select_list_from_table('screen_names',
@@ -296,11 +300,86 @@ class TestDatabaseAddingCheater(unittest.TestCase):
             [[cheater['screen_name'], cheater['vk_id'], 'True']]
         )
 
-        self.db.add_cards(cheater)
+    def test_add_cards(self):
+        cheater = {
+            'vk_id': 'club3322',
+            'fifty': True,
+            'screen_name': 'poor_club',
+            'telephone': ['123', '456', '567'],
+            'card': ['1234', '5678', '1212'],
+            'proof_link': ['wall-123'],
+        }
+        self.db.add_cards(cheater['card'], cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('cards',
+                                            ['vk_id', 'card'],
+                                            {'vk_id': cheater['vk_id']},
+                                            ),
+            [['club3322', '1234'], ['club3322', '5678'], ['club3322', '1212']]
+        )
 
+        self.db.add_cards('1111', cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('cards',
+                                            ['vk_id', 'card'],
+                                            {'card': '1111'},
+                                            ),
+            [['club3322', '1111']]
+        )
 
+    def test_add_telephones(self):
+        cheater = {
+            'vk_id': 'club3322',
+            'fifty': True,
+            'screen_name': 'poor_club',
+            'telephone': ['123', '456', '567'],
+            'card': ['1234', '5678', '1212'],
+            'proof_link': ['wall-123'],
+        }
+        self.db.add_telephones(cheater['telephone'], cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('telephones',
+                                            ['vk_id', 'telephone'],
+                                            {'vk_id': cheater['vk_id']},
+                                            ),
+            [['club3322', '123'], ['club3322', '456'], ['club3322', '567']]
+        )
 
+        self.db.add_telephones('12111', cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('telephones',
+                                            ['vk_id', 'telephone'],
+                                            {'telephone': '12111'},
+                                            ),
+            [['club3322', '12111']]
+        )
 
+    def test_add_proof_links(self):
+        cheater = {
+            'vk_id': 'club3322',
+            'fifty': True,
+            'screen_name': 'poor_club',
+            'telephone': ['123', '456', '567'],
+            'card': ['1234', '5678', '1212'],
+            'proof_link': ['wall-123', 'wall3322'],
+        }
+        self.db.add_proof_links(cheater['proof_link'], cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('proof_links',
+                                            ['vk_id', 'proof_link'],
+                                            {'vk_id': cheater['vk_id']},
+                                            ),
+            [['club3322', 'wall-123'], ['club3322', 'wall3322']]
+        )
+
+        self.db.add_proof_links('wall-12333', cheater['vk_id'])
+        self.assertEqual(
+            self.db._select_list_from_table('proof_links',
+                                            ['vk_id', 'proof_link'],
+                                            {'proof_link': 'wall-12333'},
+                                            ),
+            [['club3322', 'wall-12333']]
+        )
 
 
 if __name__ == '__main__':
