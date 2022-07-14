@@ -104,7 +104,8 @@ class DBCheaters:
                 result.append(val)
         return result
 
-    def _construct_insert(self, table: str, values_dict: dict) -> str:
+    @staticmethod
+    def _construct_insert(table: str, values_dict: dict) -> str:
         """
         Construct INSERT queue.
         INSERT into {table} ({values.keys}) values ({values.values})
@@ -121,12 +122,12 @@ class DBCheaters:
                 columns += ', '
                 values += ', '
             columns += value
-            values += self._type_conversion_sql(values_dict[value])
+            values += DBCheaters._type_conversion_sql(values_dict[value])
         result += '(' + columns + ') values (' + values + ')'
         return result
 
-    def _construct_select(self,
-                          table: str,
+    @staticmethod
+    def _construct_select(table: str,
                           what_select: str | List[str],
                           where_select: dict = None,
                           operator: str = 'and'
@@ -161,10 +162,11 @@ class DBCheaters:
                 if count:
                     result += ' ' + operator + ' '
                 result += value + '='
-                result += self._type_conversion_sql(where_select[value])
+                result += DBCheaters._type_conversion_sql(where_select[value])
         return result
 
-    def _construct_update(self, table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
+    @staticmethod
+    def _construct_update(table: str, set_params: dict, where_update: dict = None, operator: str = 'and') -> str:
         """
         Construct update query.
         UPDATE {table} set {set_param} = "{set_value}" where {where_param} = "{where_value}"
@@ -195,10 +197,11 @@ class DBCheaters:
                 if count:
                     result += ' ' + operator + ' '
                 result += value + '='
-                result += self._type_conversion_sql(where_update[value])
+                result += DBCheaters._type_conversion_sql(where_update[value])
         return result
 
-    def _construct_delete(self, table: str, where_delete: dict, operator: str = 'and') -> str:
+    @staticmethod
+    def _construct_delete(table: str, where_delete: dict, operator: str = 'and') -> str:
         """
         Construct delete query.
         DELETE from {table} where {where_param} = "{where_value}"
@@ -219,7 +222,7 @@ class DBCheaters:
                 result += not_value + '!='
             else:
                 result += value + '='
-            result += self._type_conversion_sql(where_delete[value])
+            result += DBCheaters._type_conversion_sql(where_delete[value])
         return result
 
     @staticmethod
@@ -523,49 +526,6 @@ class DBCheaters:
                                         'vk_id': vk_id,
                                     })
 
-    def get_cheater_id(self, table: str, params: dict) -> str | None:
-        """
-        Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
-        vk_id есть во всех таблицах про кидал.
-        Словарь должен быть вида:
-        {параметр: значение}.
-        Найти в таблице table, где параметр=значение.
-        Если найдется несколько - вернется только первый.
-
-        :return: ID или None, если ничего не найдено.
-        """
-        sql_query = self._construct_select(
-            table=table,
-            what_select=['vk_id'],
-            where_select=params
-        )
-        sql_result = self._cursor.execute(sql_query).fetchone()
-        if sql_result:
-            return sql_result[0]
-        else:
-            return None
-
-    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[List[dict]]:
-        """
-        Возвращаем значения из таблицы.
-        Из списка rows делаем словарь.
-
-        :return: Список словарей с результатами or None.
-        """
-        sql_query = self._construct_select(table=table, what_select=columns, where_select=condition_dict)
-        self._cursor.execute(sql_query)
-        query_result = self._cursor.fetchall()
-        if query_result:
-            result = []
-            for count_row, row in enumerate(query_result):
-                one_row = {}
-                for count, value in enumerate(columns):
-                    one_row[value] = query_result[count_row][count]
-                result.append(one_row)
-        else:
-            result = None
-        return result
-
     def add_cheater(self, cheater: dict) -> None:
         """
         Метод добавляет кидалу в БД. На вход должен придти словарь с кидалой:
@@ -593,7 +553,27 @@ class DBCheaters:
         if cheater.get('proof_link'):
             self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
 
+    def get_cheater_id(self, table: str, params: dict) -> str | None:
+        """
+        Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
+        vk_id есть во всех таблицах про кидал.
+        Словарь должен быть вида:
+        {параметр: значение}.
+        Найти в таблице table, где параметр=значение.
+        Если найдется несколько - вернется только первый.
 
+        :return: ID или None, если ничего не найдено.
+        """
+        sql_query = self._construct_select(
+            table=table,
+            what_select=['vk_id'],
+            where_select=params
+        )
+        sql_result = self._cursor.execute(sql_query).fetchone()
+        if sql_result:
+            return sql_result[0]
+        else:
+            return None
 
     def get_cheaters_full_list(self) -> List[cheaters.Cheater]:
         """
@@ -629,6 +609,27 @@ class DBCheaters:
                     one_cheater.__getattribute__(db_dict[str(i)]).append(cheater_record[i])
 
         result.append(one_cheater)
+        return result
+
+    def get_dict_from_table(self, table: str, columns: list, condition_dict: dict = None) -> Optional[List[dict]]:
+        """
+        Возвращаем значения из таблицы.
+        Из списка rows делаем словарь.
+
+        :return: Список словарей с результатами or None.
+        """
+        sql_query = self._construct_select(table=table, what_select=columns, where_select=condition_dict)
+        self._cursor.execute(sql_query)
+        query_result = self._cursor.fetchall()
+        if query_result:
+            result = []
+            for count_row, row in enumerate(query_result):
+                one_row = {}
+                for count, value in enumerate(columns):
+                    one_row[value] = query_result[count_row][count]
+                result.append(one_row)
+        else:
+            result = None
         return result
 
     def get_vk_publics(self) -> List[str]:
