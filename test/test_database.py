@@ -264,10 +264,6 @@ class TestDatabaseMakeCheater(unittest.TestCase):
         del self.db
         os.remove(TEST_DB)
 
-    def test_get_cheater_id(self):
-        self.assertEqual(self.db.get_cheater_id('cards', {'card': '4476246177018575'}), 'id8292913')
-        self.assertEqual(self.db.get_cheater_id('cards', {'card': '123'}), None)
-
     def test_add_vk_id(self):
         cheater = {
             'vk_id': 'club3322',
@@ -421,6 +417,18 @@ class TestDatabaseMakeCheater(unittest.TestCase):
             [{'proof_link': 'wall-123', 'vk_id': 'club332211'},
              {'proof_link': 'wall12345', 'vk_id': 'club332211'}]
         )
+
+    def test_get_cheater_id_list_by_param(self):
+        proof_link = 'wall-132185757_189815'
+        screen_name = 'sederikstark'
+        vk_id = 'id267462630'
+        fifty = False
+
+        self.assertEqual(self.db.get_cheater_id_list_by_param(card='4476246177018575'), ['id8292913', 'id123'])
+        self.assertEqual(self.db.get_cheater_id_list_by_param(card='123'), [])
+        self.assertEqual(self.db.get_cheater_id_list_by_param(screen_name=screen_name,
+                                                              proof_link=proof_link),
+                         ['id267462630'])
 
 
 if __name__ == '__main__':

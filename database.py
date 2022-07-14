@@ -92,9 +92,9 @@ class DBCheaters:
         return result
 
     @staticmethod
-    def _tuple_list_to_list(tl: List[tuple]) -> list:
+    def _tuple_list_to_list(tl: List[tuple] | List[list]) -> list:
         """
-        Метод принимает список кортежей (как при fetchall()) и возвращает просто список из всех элементов.
+        Метод принимает список кортежей (или список списков) (как при fetchall()) и возвращает просто список из всех элементов.
 
         :param tl: Список кортежей.
         :return: Список из всех элементов.
@@ -560,27 +560,54 @@ class DBCheaters:
         if cheater.get('proof_link'):
             self.add_proof_links(cheater['proof_link'], cheater['vk_id'])
 
-    def get_cheater_id(self, table: str, params: dict) -> str | None:
+    def get_cheater_id_list_by_param(self,
+                                     screen_name: str = None,
+                                     telephone: str | List[str] = None,
+                                     card: str | List[str] = None,
+                                     proof_link: str | List[str] = None,
+                                     ) -> list:
         """
-        Ищет vk_id в какой-нибудь таблице по заданным параметрам в словаре.
+        Ищет vk_id по заданным параметрам в словаре.
         vk_id есть во всех таблицах про кидал.
         Словарь должен быть вида:
         {параметр: значение}.
-        Найти в таблице table, где параметр=значение.
-        Если найдется несколько - вернется только первый.
 
-        :return: ID или None, если ничего не найдено.
+        :return: Список найденных ID (или пустой).
         """
-        sql_query = self._construct_select(
-            table=table,
-            what_select=['vk_id'],
-            where_select=params
-        )
-        sql_result = self._cursor.execute(sql_query).fetchone()
-        if sql_result:
-            return sql_result[0]
-        else:
-            return None
+        result = set()
+
+        # Поиск по всем значениям, втч пустым
+        if isinstance(screen_name, str):
+            sql_result = self._select_list_from_table(table='screen_names',
+                                                      what_select='vk_id',
+                                                      where_select={'screen_name': screen_name})
+            result = set(self._tuple_list_to_list(sql_result))
+        dict_attr = {
+            'telephone': telephone,
+            'card': card,
+            'proof_link': proof_link,
+        }
+        for value in dict_attr:
+            if dict_attr[value]:
+                table = value + 's'
+                if isinstance(dict_attr[value], str):
+                    items = [dict_attr[value]]
+                else:
+                    items = dict_attr[value]
+                temp_res = set()
+                for item in items:
+                    sql_result = self._select_list_from_table(table=table,
+                                                              what_select='vk_id',
+                                                              where_select={value: item})
+                    if temp_res:
+                        temp_res &= set(self._tuple_list_to_list(sql_result))
+                    else:
+                        temp_res = set(self._tuple_list_to_list(sql_result))
+                if result:
+                    result &= temp_res
+                else:
+                    result = temp_res
+        return list(result)
 
     def get_cheaters_full_list(self) -> List[cheaters.Cheater]:
         """
