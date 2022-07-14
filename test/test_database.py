@@ -297,7 +297,7 @@ class TestDatabaseMakeCheater(unittest.TestCase):
                                             ['screen_name', 'vk_id', 'changed'],
                                             {'vk_id': cheater['vk_id']},
                                             ),
-            [[cheater['screen_name'], cheater['vk_id'], 'True']]
+            [[cheater['screen_name'], cheater['vk_id'], 1]]
         )
 
     def test_add_cards(self):
@@ -394,7 +394,7 @@ class TestDatabaseMakeCheater(unittest.TestCase):
         self.db.add_cheater(cheater)
         self.assertEqual(
             self.db._select_list_from_table('vk_ids', ['vk_id', 'fifty'], {'vk_id': cheater['vk_id']}),
-            [['club332211', 'False']]
+            [['club332211', 0]]
         )
 
 
