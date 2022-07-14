@@ -55,7 +55,8 @@ async def bot_load(bot: vkbot.VKBot):
             await bot.update_db_screen_name(vk_id)
         else:
             wrong_id['vk_id'].append(vk_id)
-    await bot.send_message_to_admins(dialogs.wrong_id + str(wrong_id['vk_id']))
+    if wrong_id['vk_id']:
+        await bot.send_message_to_admins(dialogs.wrong_id + str(wrong_id['vk_id']))
 
 
 def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
@@ -300,18 +301,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         bot.backup_db('cheaters_public_bak.db')
         bot.public_to_club()
         return 'Обновил'
-
-    @bot.on.message(
-        AdminUserRule(bot),
-        CommandRule('delete_duplicate'),
-    )
-    async def delete_duplicate_handler(message: Message):
-        """
-        Метод удаляет дубликаты в таблицах vk_ids и screen_names.
-        """
-        shutil.copyfile('cheaters.db', 'cheaters_bak.db')
-        bot.delete_duplicate()
-        return 'Удалил'
 
     # Админское меню ------------------------------------------------------------------------------------------------
     @bot.on.message(
