@@ -552,7 +552,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 api_vk_id, api_screen_name, is_banned, vk_name = await bot.get_from_api_id_screen_name_banned(
                     search_name)
                 # Если пользователь/группа забанены - выводим предупреждение, чтоб не пугаться пустого screen_name.
-                if reg_match.lastgroup == 'screen_name':
+                if reg_match.lastgroup == 'screen_name' and api_screen_name:
                     await message.answer(f'Это имя @{api_screen_name} принадлежит пользователю(сообществу) @{api_vk_id}.'
                                          f'Если нужен другой - придется найти его старый id.')
                 if is_banned:
