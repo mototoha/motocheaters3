@@ -211,17 +211,17 @@ class Cheater:
             if isinstance(telephone, str):
                 self.telephone.append(telephone)
             else:
-                merge_list(self.telephone, telephone)
+                self.telephone = list(set(self.telephone) | set(telephone))
         if card:
             if isinstance(card, str):
-                self.card.append(telephone)
+                self.card.append(card)
             else:
-                merge_list(self.card, card)
+                self.card = list(set(self.card) | set(card))
         if proof_link:
             if isinstance(proof_link, str):
-                self.telephone.append(proof_link)
+                self.proof_link.append(proof_link)
             else:
-                merge_list(self.proof_link, proof_link)
+                self.proof_link = list(set(self.proof_link) | set(proof_link))
 
     def update2(self, param_to_update, value):
         """
