@@ -468,18 +468,13 @@ class DBCheaters:
 
     def add_vk_id(self, vk_id: str, fifty: bool = False):
         """
-        Добавляем нового кидалу.
+        Добавляем новый ID.
         """
-        sql_query = self._construct_insert(
-            table='vk_ids',
-            values_dict={
-                'vk_id': vk_id,
-                'fifty': fifty,
-            }
-        )
-        self._cursor.execute(sql_query)
-        self._connection.commit()
-        return None
+        self._insert_into_table(table='vk_ids',
+                                values={
+                                    'vk_id': vk_id,
+                                    'fifty': fifty
+                                })
 
     def add_screen_name(self, screen_name: str, vk_id='', changed: bool = False):
         """
