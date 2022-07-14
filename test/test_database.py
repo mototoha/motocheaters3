@@ -381,6 +381,23 @@ class TestDatabaseMakeCheater(unittest.TestCase):
             [['club3322', 'wall-12333']]
         )
 
+    def test_add_cheater(self):
+        cheater = {
+            'vk_id': 'club332211',
+            'fifty': False,
+            'screen_name': 'very_poor_club',
+            'telephone': ['1234', '4567', '567'],
+            'card': ['1234', '5678', '121212'],
+            'proof_link': ['wall-123', 'wall12345'],
+        }
+
+        self.db.add_cheater(cheater)
+        self.assertEqual(
+            self.db._select_list_from_table('vk_ids', ['vk_id', 'fifty'], {'vk_id': cheater['vk_id']}),
+            [['club332211', 'False']]
+        )
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+

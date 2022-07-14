@@ -487,7 +487,7 @@ class DBCheaters:
                                 values={
                                     'screen_name': screen_name,
                                     'vk_id': vk_id,
-                                    'changed': str(changed),
+                                    'changed': changed,
                                 })
 
     def add_telephones(self, telephones: str | List[str], vk_id: str = ''):
