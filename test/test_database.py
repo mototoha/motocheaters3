@@ -241,8 +241,9 @@ class TestDatabaseBasic(unittest.TestCase):
         self.assertEqual(self.db._select_dict_from_table('screen_names', 'screen_name', {'vk_id': vk_id1}),
                          [{'screen_name': 'abracadabra'}])
 
-        self.db._update_table('screen_names', {'screen_name': '123'}, None)
-        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': 123}), [])
+        self.db._update_table('screen_names', {'screen_name': '123'}, {'screen_name': 'asdasd', 'changed': True})
+        self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'screen_name': '123'}),
+                         [['123']])
 
     def test_insert_update(self):
         self.assertEqual(self.db._select_list_from_table('screen_names', ['screen_name'], {'vk_id': 'id009988'}), [])
@@ -429,6 +430,68 @@ class TestDatabaseMakeCheater(unittest.TestCase):
         self.assertEqual(self.db.get_cheater_id_list_by_param(screen_name=screen_name,
                                                               proof_link=proof_link),
                          ['id267462630'])
+
+
+class TestCheckDatabase(unittest.TestCase):
+    def setUp(self) -> None:
+        shutil.copyfile(TEMPLATE_DB, TEST_DB)
+        self.db = database.DBCheaters(TEST_DB)
+
+    def tearDown(self) -> None:
+        del self.db
+        os.remove(TEST_DB)
+
+    def test_rename_bool_to_int(self):
+        self.db._cursor.execute('update vk_ids set fifty="True" where pk < 101')
+        self.db._cursor.execute('update screen_names set changed="False" where pk < 10')
+        self.db._connection.commit()
+
+        count_true = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 'True'}))
+        count_false = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 'False'}))
+        count_bool = count_false + count_true
+        count_1 = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 1}))
+        count_0 = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 0}))
+        count_int = count_1 + count_0
+
+        self.db._rename_bool_to_int()
+
+        count_true = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 'True'}))
+        count_false = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 'False'}))
+        count_bool_new = count_false + count_true
+        count_1 = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 1}))
+        count_0 = len(self.db._select_list_from_table('vk_ids', 'fifty', {'fifty': 0}))
+        count_int_new = count_1 + count_0
+
+        self.assertEqual(count_bool_new, 0)
+        self.assertEqual(count_int_new, count_bool+count_int)
+
+    def test_delete_duplicates(self):
+        for i in range(3):
+            self.db._cursor.execute('insert into cards (card, vk_id) values ("1234", "id123a")')
+            self.db._cursor.execute('insert into telephones (telephone, vk_id) values ("+7999", "id123b")')
+            self.db._cursor.execute('insert into proof_links (proof_link, vk_id) values ("link1", "id123l")')
+            self.db._cursor.execute('insert into vk_ids (vk_id, fifty) values ("id55a", 0)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ad55a", "id0", 1)')
+            self.db._cursor.execute('insert into vk_ids (vk_id, fifty) values ("id55aaa", 0)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ada", "id0", 1)')
+        for i in range(4):
+            self.db._cursor.execute('insert into vk_ids (vk_id, fifty) values ("id55a", 1)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ad55a", "id0", 0)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ad55a", "i12", 0)')
+            self.db._cursor.execute('insert into vk_ids (vk_id, fifty) values ("id55aaa", 1)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ada", "id0", 0)')
+            self.db._cursor.execute('insert into screen_names (screen_name, vk_id, changed) values ("ada", "id01", 0)')
+        self.db._connection.commit()
+
+        result = {
+            'vk_id': ['id000', 'id55a', 'id55aaa'],
+            'screen_name': ['id0', 'id0', '', 'id0', 'id01'],
+        }
+        for item in result:
+            result[item].sort()
+        self.assertEqual(self.db.delete_duplicates(), result)
+
+
 
 
 if __name__ == '__main__':

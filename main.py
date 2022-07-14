@@ -49,6 +49,13 @@ async def bot_load(bot: vkbot.VKBot):
     Метод стартует при начале работы бота.
     """
     await bot.get_async_params()
+    wrong_id = bot.db.delete_duplicates()
+    for vk_id in wrong_id['screen_name']:
+        if vk_id:
+            await bot.update_db_screen_name(vk_id)
+        else:
+            wrong_id['vk_id'].append(vk_id)
+    await bot.send_message_to_admins(dialogs.wrong_id + str(wrong_id['vk_id']))
 
 
 def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):

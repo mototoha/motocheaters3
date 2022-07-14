@@ -66,6 +66,7 @@ class DBCheaters:
 
         self._connection = sqlite3.connect(self.db_filename)
         self._cursor = self._connection.cursor()
+        self._rename_bool_to_int()
 
     def __del__(self):
         self._cursor.close()
@@ -304,7 +305,7 @@ class DBCheaters:
                 raise FileExistsError('Уже есть каталог с таким именем!!!')
         return result
 
-    def _update_table(self, table: str, set_params: dict, where: dict):
+    def _update_table(self, table: str, set_params: dict, where: dict, operate: Literal['and', 'or'] = 'and'):
         """
         Апдейтим БД
         update {table } set {set_param} = {set_value} where {where_param} = {where_value}
@@ -317,7 +318,8 @@ class DBCheaters:
         if isinstance(where, dict):
             sql_query = self._construct_update(table=table,
                                                set_params=set_params,
-                                               where_update=where)
+                                               where_update=where,
+                                               operator=operate)
             self._cursor.execute(sql_query)
             self._connection.commit()
 
@@ -325,7 +327,7 @@ class DBCheaters:
                                 table: str,
                                 what_select: str | List[str] = '*',
                                 where_select: dict = None,
-                                operate: str = 'and') -> List[dict]:
+                                operate: Literal['and', 'or'] = 'and') -> List[dict]:
         """
         Выбор из таблицы.
 
@@ -356,7 +358,7 @@ class DBCheaters:
                                 table: str,
                                 what_select: str | List[str] = '*',
                                 where_select: dict = None,
-                                operate: str = 'and') -> List[list]:
+                                operate: Literal['and', 'or'] = 'and') -> List[list]:
         """
         Выбор из таблицы.
         Вернется список списков значений.
@@ -409,6 +411,81 @@ class DBCheaters:
             sql_query = self._construct_delete(table, where_delete)
             self._cursor.execute(sql_query)
             self._connection.commit()
+
+    def _rename_bool_to_int(self):
+        """
+        Метод смотрит в таблицы vk_ids и screen_names и меняет True и False на 1 и 0 соответственно.
+        """
+        self._update_table('vk_ids', {'fifty': True}, {'fifty': 'True'})
+        self._update_table('vk_ids', {'fifty': False}, {'fifty': 'False'})
+        self._update_table('screen_names', {'changed': True}, {'changed': 'True'})
+        self._update_table('screen_names', {'changed': False}, {'changed': 'False'})
+
+    def delete_duplicates(self) -> dict:
+        """
+        Метод автоматически удаляет дубликаты из БД.
+        Таблица vk_ids:
+          - не должно быть двух одинаковых vk_id, fifty.
+          - если есть одинаковые vk_id и разные fifty - отдавать в словарь return
+        Таблица screen_names:
+          - не должно быть одинаковых screen_name, changed=0, vk_id.
+          - если есть одинаковые screen_name для разных vk_id - отдавать в словарь return
+        Таблица cards, telephones, proof_links:
+          - просто убить дубликаты.
+        Возвращает словарь с vk_id, которые сам не смог обработать.
+
+        :return {vk_id: [], screen_name: []}:
+        """
+        # vk_ids
+        # Убиваем полные дубликаты
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_vk_id).fetchall()
+        for row in sql_result:
+            # pk | vk_id | fifty | count
+            first_pk = row[0]
+            duplicate_id = row[1]
+            fifty = row[2]
+            sql_query = self._construct_delete('vk_ids', {'vk_id': duplicate_id,
+                                                          '!pk': first_pk,
+                                                          'fifty': fifty})
+            self._cursor.execute(sql_query)
+
+        # screen_names
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names).fetchall()
+        for row in sql_result:
+            # pk | screen_name | vk_id | changed | count
+            first_pk = row[0]
+            duplicate_name = row[1]
+            vk_id = row[2]
+            changed = row[3]
+            self._delete_from_table('screen_names', {'screen_name': duplicate_name,
+                                                     '!pk': first_pk,
+                                                     'vk_id': vk_id,
+                                                     'changed': changed})
+
+        for attr in ('card', 'telephone', 'proof_link'):
+            sql_result = self._cursor.execute(sql_requests.select_duplicate_attr.format(attr=attr)).fetchall()
+            for row in sql_result:
+                # pk | attr | vk_id | count
+                first_pk = row[0]
+                duplicate_name = row[1]
+                sql_query = self._construct_delete(attr+'s', {attr: duplicate_name,
+                                                              '!pk': first_pk})
+                self._cursor.execute(sql_query)
+        self._connection.commit()
+
+        result = {}
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_vk_id2).fetchall()
+        result['vk_id'] = []
+        for row in sql_result:
+            result['vk_id'].append(row[1])
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names2).fetchall()
+        result['screen_name'] = []
+        for row in sql_result:
+            result['screen_name'].append(row[2])
+        sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names3).fetchall()
+        for row in sql_result:
+            result['screen_name'].append(row[2])
+        return result
 
     def backup_db_file(self, backup_name: str = None):
         """

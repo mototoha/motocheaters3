@@ -305,7 +305,8 @@ class VKBot(Bot):
         if not screen_name:
             # Если имя не предано, берём из API.
             user_info = await self.api.users.get([vk_id], fields=['screen_name'])
-            screen_name = user_info[0].screen_name
+            if user_info:
+                screen_name = user_info[0].screen_name
 
         self.db.update_db_screen_name(vk_id=vk_id, screen_name=screen_name)
 

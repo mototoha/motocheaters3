@@ -64,13 +64,39 @@ select_publics_from_table = 'select vk_id from {}  where vk_id like "public%"'
 
 select_duplicate_vk_id = """
 select *, count(vk_id) as count  from vk_ids
+group by vk_id, fifty
+having count(*) > 1
+"""
+
+select_duplicate_vk_id2 = """
+select *, count(vk_id) as count  from vk_ids
 group by vk_id
 having count(*) > 1
 """
 
 select_duplicate_screen_names = """
-select *, count(vk_id) as count  from screen_names
+select *, count(screen_name) as count  from screen_names
+group by screen_name, vk_id, changed
+having count(*) > 1
+"""
+
+select_duplicate_screen_names2 = """
+select *, count(screen_name) as count  from screen_names
+where changed=0
+group by screen_name
+having count(*) > 1
+"""
+
+select_duplicate_screen_names3 = """
+select *, count(vk_id) as count from screen_names
+where changed = 0
 group by vk_id
+having count(*)>1
+"""
+
+select_duplicate_attr = """
+select *, count(vk_id) as count  from {attr}s
+group by vk_id, {attr}
 having count(*) > 1
 """
 
