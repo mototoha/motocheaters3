@@ -485,6 +485,15 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             return dialogs.del_cheater_not_found
 
     @bot.on.message(
+        StateRule(AdminStates.DEL_CHEATER_CHOICE),
+    )
+    async def admin_del_choice_handler(message: Message):
+        """
+        Получаем айдишник от пользователя и отправляем на подтверждение.
+        """
+        print(message.payload)
+
+    @bot.on.message(
         StateRule(AdminStates.DEL_CHEATER_COMMIT),
         PayloadRule({"del_cheater": "yes"})
     )
