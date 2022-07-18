@@ -174,7 +174,7 @@ class TestDatabaseBasic(unittest.TestCase):
     def test_check_the_existence(self):
         self.assertTrue(self.db.check_the_existence('vk_ids', {'vk_id': 'id5683273'}))
         self.assertTrue(self.db.check_the_existence('screen_names', {'vk_id': 'id5683273', 'screen_name': 'k262kk'}))
-        self.assertFalse(self.db.check_the_existence('cards', {'card': 1234}))
+        self.assertFalse(self.db.check_the_existence('cards', {'card': '123454321'}))
 
     @unittest.skip("Доделать создание и проверку БД")
     def test_create_new_database(self):
@@ -225,11 +225,13 @@ class TestDatabaseBasic(unittest.TestCase):
                                                          where_select={'fifty': True}),
                          [{'pk': 8, 'vk_id': 'id225692215', 'fifty': 1},
                           {'pk': 318, 'vk_id': 'id212339925', 'fifty': 1},
-                          {'pk': 319, 'vk_id': 'id408341851', 'fifty': 1}])
+                          {'pk': 319, 'vk_id': 'id408341851', 'fifty': 1},
+                          {'fifty': 1, 'pk': 354, 'vk_id': 'id000'},
+                          {'fifty': 1, 'pk': 355, 'vk_id': 'id000'}])
         self.assertEqual(self.db._select_list_from_table(table='vk_ids',
                                                          what_select='vk_id',
                                                          where_select={'fifty': 1}),
-                         [['id225692215'], ['id212339925'], ['id408341851']])
+                         [['id225692215'], ['id212339925'], ['id408341851'], ['id000'], ['id000']])
 
     def test_update_table(self):
         vk_id1 = 'id406387506'
@@ -491,7 +493,35 @@ class TestCheckDatabase(unittest.TestCase):
             result[item].sort()
         self.assertEqual(self.db.delete_duplicates(), result)
 
+    def test_del_vk_id(self):
+        vk_id = 'id406387506'
+        self.assertTrue(self.db._select_list_from_table('vk_ids', '*', {'vk_id': vk_id}))
+        self.db._del_vk_id(vk_id)
+        self.assertFalse(self.db._select_list_from_table('vk_ids', '*', {'vk_id': vk_id}))
 
+    def test_del_screen_name(self):
+        vk_id = 'id406387506'
+        self.assertTrue(self.db._select_list_from_table('screen_names', '*', {'vk_id': vk_id}))
+        self.db._del_screen_name(vk_id)
+        self.assertFalse(self.db._select_list_from_table('screen_names', '*', {'vk_id': vk_id}))
+
+    def test_del_card(self):
+        vk_id = 'id406387506'
+        self.assertTrue(self.db._select_list_from_table('cards', '*', {'vk_id': vk_id}))
+        self.db._del_card(vk_id)
+        self.assertFalse(self.db._select_list_from_table('cards', '*', {'vk_id': vk_id}))
+
+    def test_del_telephone(self):
+        vk_id = 'id406387506'
+        self.assertTrue(self.db._select_list_from_table('telephones', '*', {'vk_id': vk_id}))
+        self.db._del_telephone(vk_id)
+        self.assertFalse(self.db._select_list_from_table('telephones', '*', {'vk_id': vk_id}))
+
+    def test_del_proof_link(self):
+        vk_id = 'id406387506'
+        self.assertTrue(self.db._select_list_from_table('proof_links', '*', {'vk_id': vk_id}))
+        self.db._del_proof_link(vk_id)
+        self.assertFalse(self.db._select_list_from_table('proof_links', '*', {'vk_id': vk_id}))
 
 
 if __name__ == '__main__':

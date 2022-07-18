@@ -95,7 +95,8 @@ class DBCheaters:
     @staticmethod
     def _tuple_list_to_list(tl: List[tuple] | List[list]) -> list:
         """
-        Метод принимает список кортежей (или список списков) (как при fetchall()) и возвращает просто список из всех элементов.
+        Метод принимает список кортежей (или список списков) (как при fetchall()) и возвращает
+        просто список из всех элементов.
 
         :param tl: Список кортежей.
         :return: Список из всех элементов.
@@ -421,6 +422,50 @@ class DBCheaters:
         self._update_table('screen_names', {'changed': True}, {'changed': 'True'})
         self._update_table('screen_names', {'changed': False}, {'changed': 'False'})
 
+    def _del_vk_id(self, vk_id):
+        """
+        Метод удаляет из таблицы vk_ids строчки с vk_id.
+
+        :param vk_id: id/club
+        """
+        self._delete_from_table(table='vk_ids',
+                                where_delete={'vk_id': vk_id})
+
+    def _del_screen_name(self, vk_id):
+        """
+        Метод удаляет из таблицы screen_names все упоминания о vk_id.
+        :param vk_id: id/club
+        """
+        self._delete_from_table(table='screen_names',
+                                where_delete={'vk_id': vk_id})
+
+    def _del_card(self, vk_id):
+        """
+        Метод удаляет из таблицы cards все упоминания о vk_id.
+
+        :param vk_id: id/club
+        """
+        self._delete_from_table(table='cards',
+                                where_delete={'vk_id': vk_id})
+
+    def _del_telephone(self, vk_id):
+        """
+        Метод удаляет из таблицы telephones все упоминания о vk_id.
+
+        :param vk_id: id/club
+        """
+        self._delete_from_table(table='telephones',
+                                where_delete={'vk_id': vk_id})
+
+    def _del_proof_link(self, vk_id):
+        """
+        Метод удаляет из таблицы proof_links все упоминания о vk_id.
+
+        :param vk_id: id/club
+        """
+        self._delete_from_table(table='proof_links',
+                                where_delete={'vk_id': vk_id})
+
     def delete_duplicates(self) -> dict:
         """
         Метод автоматически удаляет дубликаты из БД.
@@ -485,6 +530,8 @@ class DBCheaters:
         sql_result = self._cursor.execute(sql_requests.select_duplicate_screen_names3).fetchall()
         for row in sql_result:
             result['screen_name'].append(row[2])
+        for item in result:
+            result[item].sort()
         return result
 
     def backup_db_file(self, backup_name: str = None):
@@ -594,7 +641,7 @@ class DBCheaters:
                                         'vk_id': vk_id,
                                     })
 
-    def add_proof_links(self, proof_links:str | List[str], vk_id: str) -> None:
+    def add_proof_links(self, proof_links: str | List[str], vk_id: str) -> None:
         """
         Добавляет в БД пруфлинк на кидалу.
 
@@ -810,16 +857,28 @@ class DBCheaters:
         Метод удаляет все записи из всех таблиц с данным vk_id.
         :param vk_id: идентификатор страницы
         """
-        pass
+        self._del_vk_id(vk_id)
+        self._del_screen_name(vk_id)
+        self._del_card(vk_id)
+        self._del_telephone(vk_id)
+        self._del_proof_link(vk_id)
 
     def delete_cheater_item(self, item: str, value: str, vk_id: str):
         """
         Метод удаляет записи про параметр из БД для определенного vk_id.
+
         :param item: что удалить.
         :param value: значение.
         :param vk_id: у кого удалить.
         """
-        pass
+        match item:
+            case 'screen_name':
+                table = 'screen_names'
+            case 'card' | 'telephone' | 'proof_link':
+                table = item + 's'
+            case _:
+                return None
+        self._delete_from_table(table, {item: value, 'vk_id': vk_id})
 
     def update_db_screen_name(self, vk_id: str, screen_name: str = None):
         """
