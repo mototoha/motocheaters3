@@ -344,8 +344,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = dialogs.spam_header
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
+    # Кнопка "Передумал".
     @bot.on.message(
         AdminUserRule(bot),
+        StateGroupRule(AdminStates),
         PayloadRule({"admin": "main"}),
     )
     async def admin_return_to_admin_menu_handler(message: Message):
@@ -376,6 +378,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = dialogs.spam_send + message.text
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
+    # Кнопка "Добавить кидалу" - переход в добавление
     @bot.on.message(
         AdminUserRule(bot),
         StateRule(AdminStates.MAIN),
@@ -389,6 +392,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = dialogs.add_cheater_id
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
+    # Кнопка "Удалить кидалу" - переход в удаление
     @bot.on.message(
         AdminUserRule(bot),
         StateRule(AdminStates.MAIN),
@@ -402,6 +406,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         answer_message = dialogs.del_cheater_start
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
+    # Добавление кидалы. Кнопка "Добавить"
     @bot.on.message(
         AdminUserRule(bot),
         StateRule(AdminStates.ADD_CHEATER),
@@ -428,6 +433,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         else:
             return 'Введи параметры кидалы.'
 
+    # Удаление кидалы. Парсим текст.
     @bot.on.message(
         AdminUserRule(bot),
         StateRule(AdminStates.DEL_CHEATER),
@@ -448,16 +454,18 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 match reg_match.lastgroup:
                     case 'vk_id' | 'group_id' | 'screen_name':
                         answer_message = dialogs.del_cheater_user_commit.format(str(cheaters_to_del[0]))
+                        item_to_del = 'vk_id'
                     case 'card' | 'telephone' | 'proof_link':
                         answer_message = dialogs.del_cheater_item_commit.format(reg_match.lastgroup,
                                                                                 str(cheaters_to_del[0]))
+                        item_to_del = reg_match.lastgroup
                     case _:
                         return dialogs.dont_understand
                 new_state = AdminStates.DEL_CHEATER_COMMIT
-                bot.state_dispenser.set(message.from_id,
-                                        new_state,
-                                        cheaters_to_del=cheaters_to_del,
-                                        item_to_del={reg_match.lastgroup: reg_match})
+                await bot.state_dispenser.set(message.from_id,
+                                              new_state,
+                                              cheaters_to_del=cheaters_to_del,
+                                              item_to_del=item_to_del)
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
             elif len(cheaters_to_del) > 1:
                 new_state = AdminStates.DEL_CHEATER_CHOICE
@@ -480,18 +488,15 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         cheaters_to_del = message.state_peer.payload.get('cheaters_to_del')
         item_to_del = message.state_peer.payload.get('item_to_del')
-        match list(item_to_del.keys())[0]:
-            case 'vk_id' | 'group_id' | 'screen_name':
-                for cheater in cheaters_to_del:
-                    bot.delete_cheater(list(item_to_del.keys())[0])
-            case 'card' | 'telephone' | 'proof_link':
-                for cheater in cheaters_to_del:
-                    bot.delete_cheater_item(list(item_to_del.keys())[0], list(item_to_del.keys())[0], cheater.vk_id)
         new_state = AdminStates.DEL_CHEATER
-        bot.state_dispenser.set(message.from_id, new_state)
-        message.state_peer.payload.clear()
-        answer_message = 'Удалили (нет)'
-        await bot.answer_to_peer(answer_message, message.from_id, new_state)
+        if cheaters_to_del and item_to_del:
+            bot.delete_cheater(item_to_del, cheaters_to_del)
+            message.state_peer.payload.clear()
+            await bot.state_dispenser.set(message.from_id, new_state)
+            answer_message = 'Удалили (нет)'
+            await bot.answer_to_peer(answer_message, message.from_id, new_state)
+        else:
+            await bot.answer_to_peer(dialogs.del_wrong, message.peer_id, new_state)
 
     @bot.on.message(
         StateRule(AdminStates.DEL_CHEATER_COMMIT),

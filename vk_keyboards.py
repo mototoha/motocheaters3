@@ -51,7 +51,7 @@ def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> s
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
     elif menu_level == AdminStates.DEL_CHEATER_COMMIT:
-        keyboard = Keyboard(one_time=False, inline=True)
+        keyboard = Keyboard(one_time=True, inline=True)
         keyboard.add(Text("Да", payload='{"del_cheater": "yes"}'),
                      color=KeyboardButtonColor.NEGATIVE)
         keyboard.add(Text("Нет", payload='{"del_cheater": "no"}'),

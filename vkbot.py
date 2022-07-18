@@ -651,25 +651,19 @@ class VKBot(Bot):
 
         return cheater_update
 
-    def delete_cheater(self, vk_id: str):
+    def delete_cheater(self, item_to_del: str, cheater: cheaters.Cheater):
         """
         Метод удаляет из БД запись о кидале.
         Возвращает True, если удалился и False, если не нашел запись.
 
-        :param vk_id: идентификатор страницы.
-        :return: успех.
+        :param cheater: Объект читера.
+        :param item_to_del: Что удалить
         """
-        self.db.delete_cheater(vk_id=vk_id)
-
-    def delete_cheater_item(self, param: str, value: str, vk_id: str):
-        """
-        Метод удаляет из БД все упоминания параметра param для определенного vk_id.
-
-        :param param: какой параметр удалить,
-        :param value: значение параметра,
-        :param vk_id: у кого удалить.
-        """
-        self.db.delete_cheater_item(param, value, vk_id)
+        match item_to_del:
+            case 'vk_id':
+                self.db.delete_cheater(vk_id=cheater.vk_id)
+            case 'screen_name', 'telephone', 'card', 'proof_link':
+                self.db.delete_cheater_item(item_to_del, cheater.get(item_to_del), cheater.vk_id)
 
     def public_to_club(self):
         """
