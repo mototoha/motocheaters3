@@ -51,7 +51,7 @@ def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> s
         keyboard.add(Text("Передумал", payload='{"admin": "main"}'),
                      color=KeyboardButtonColor.NEGATIVE)
     elif menu_level == AdminStates.DEL_CHEATER_COMMIT:
-        keyboard = Keyboard(one_time=True, inline=True)
+        keyboard = Keyboard(one_time=False, inline=True)
         keyboard.add(Text("Да", payload='{"del_cheater": "yes"}'),
                      color=KeyboardButtonColor.NEGATIVE)
         keyboard.add(Text("Нет", payload='{"del_cheater": "no"}'),
@@ -71,4 +71,23 @@ def get_keyboard(menu_level: BaseStateGroup = None, is_admin: bool = False) -> s
             keyboard.add(Text("Админ меню", payload='{"main": "admin"}'),
                          color=KeyboardButtonColor.NEGATIVE)
 
+    return keyboard.get_json()
+
+
+def get_kb_list_of_cheaters(id_list: list) -> str | None:
+    """
+    Метод возвращает встроенную клавиатуру со списком кидал.
+
+    :param id_list: Список id кидал.
+    :return: json клавиатуры.
+    """
+    if not isinstance(id_list, list):
+        return None
+    keyboard = Keyboard(inline=True)
+    first_line = True
+    for vk_id in id_list:
+        if not first_line:
+            keyboard.row()
+        # Поскольку vk_id может передаться None, нужен str(vk_id)
+        keyboard.add(Text('Кидала @' + str(vk_id), payload='{"del_cheater": "yes"}'))
     return keyboard.get_json()

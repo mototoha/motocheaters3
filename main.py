@@ -5,6 +5,7 @@ python3 main.py [config_filename.json]
 import re
 import shutil
 
+import vkbottle
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
@@ -14,7 +15,7 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
     FromPeerRule,
 )
-from vkbottle import DocMessagesUploader
+from vkbottle import DocMessagesUploader, template_gen, TemplateElement
 from dialogstates import DialogStates, AdminStates
 
 import cheaters
@@ -468,13 +469,18 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                                               item_to_del=item_to_del)
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
             elif len(cheaters_to_del) > 1:
+
                 new_state = AdminStates.DEL_CHEATER_CHOICE
                 answer_message = dialogs.del_cheater_choice
-                bot.state_dispenser.set(message.from_id,
-                                        new_state,
-                                        cheaters_to_del=cheaters_to_del,
-                                        item_to_del={reg_match.lastgroup: reg_match})
-                await bot.answer_to_peer(answer_message, message.from_id, new_state)
+                await bot.state_dispenser.set(message.from_id,
+                                              new_state,
+                                              cheaters_to_del=cheaters_to_del,
+                                              item_to_del={reg_match.lastgroup: reg_match})
+                id_list = []
+                for cheater in cheaters_to_del:
+                    id_list.append(cheater.vk_id)
+                kb = vk_keyboards.get_kb_list_of_cheaters(id_list)
+                await message.answer(answer_message, keyboard=kb)
         else:
             return dialogs.del_cheater_not_found
 
