@@ -90,5 +90,5 @@ def get_kb_list_of_cheaters(id_list: list) -> str | None:
             keyboard.row()
         # Поскольку vk_id может передаться None, нужен str(vk_id)
         payload = f'{{"vk_id": "{str(vk_id)}" }}'
-        keyboard.add(Text('Кидала @' + str(vk_id), payload=payload))
+        keyboard.add(Text(str(vk_id), payload=payload))
     return keyboard.get_json()

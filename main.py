@@ -2,6 +2,7 @@
 Main bot file.
 python3 main.py [config_filename.json]
 """
+import json
 import re
 import shutil
 
@@ -491,7 +492,28 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Получаем айдишник от пользователя и отправляем на подтверждение.
         """
-        print(message.payload)
+        cheaters_to_del = message.state_peer.payload.get('cheaters_to_del')
+        item_to_del = message.state_peer.payload.get('item_to_del')
+        payload = json.loads(message.payload)
+        vk_id = payload.get('vk_id')
+        for cheater in cheaters_to_del:
+            if cheater.vk_id == vk_id:
+                new_state = AdminStates.DEL_CHEATER_COMMIT
+                match item_to_del:
+                    case 'vk_id' | 'group_id' | 'screen_name':
+                        answer_message = dialogs.del_cheater_user_commit.format(str(cheaters_to_del[0]))
+                        item_to_del = 'vk_id'
+                    case 'card' | 'telephone' | 'proof_link':
+                        answer_message = dialogs.del_cheater_item_commit.format(item_to_del,
+                                                                                str(cheaters_to_del[0]))
+                        item_to_del = item_to_del
+                    case _:
+                        answer_message = 'Что-то не так. Начни заново.'
+                await bot.state_dispenser.set(message.from_id,
+                                              new_state,
+                                              cheaters_to_del=cheaters_to_del,
+                                              item_to_del=item_to_del)
+                await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
     @bot.on.message(
         StateRule(AdminStates.DEL_CHEATER_COMMIT),
@@ -522,7 +544,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Не удаляем.
         """
         new_state = AdminStates.DEL_CHEATER
-        bot.state_dispenser.set(message.from_id, new_state)
+        await bot.state_dispenser.set(message.from_id, new_state)
         message.state_peer.payload.clear()
         answer_message = 'Ок, не удаляем.'
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
