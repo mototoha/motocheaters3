@@ -863,7 +863,7 @@ class DBCheaters:
         self._del_telephone(vk_id)
         self._del_proof_link(vk_id)
 
-    def delete_cheater_item(self, item: str, value: str, vk_id: str):
+    def delete_cheater_item(self, vk_id: str, item: str, value: str = None):
         """
         Метод удаляет записи про параметр из БД для определенного vk_id.
 
@@ -872,13 +872,14 @@ class DBCheaters:
         :param vk_id: у кого удалить.
         """
         match item:
-            case 'screen_name':
-                table = 'screen_names'
-            case 'card' | 'telephone' | 'proof_link':
+            case 'screen_name' | 'card' | 'telephone' | 'proof_link':
                 table = item + 's'
             case _:
                 return None
-        self._delete_from_table(table, {item: value, 'vk_id': vk_id})
+        if value:
+            self._delete_from_table(table, {item: value, 'vk_id': vk_id})
+        else:
+            self._delete_from_table(table, {'vk_id': vk_id})
 
     def update_db_screen_name(self, vk_id: str, screen_name: str = None):
         """

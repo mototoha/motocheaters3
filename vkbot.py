@@ -638,19 +638,21 @@ class VKBot(Bot):
 
         return cheater_update
 
-    def delete_cheater(self, item_to_del: str, cheater: cheaters.Cheater):
+    def delete_cheater(self, cheater: cheaters.Cheater, item_to_del: str, value: str = None):
         """
         Метод удаляет из БД запись о кидале.
-        Возвращает True, если удалился и False, если не нашел запись.
+        Если value не передать, удалятся все записи о картах, телефонах и пр.
+        Если передать, удалится только одна.
 
         :param cheater: Объект читера.
-        :param item_to_del: Что удалить
+        :param item_to_del: Что удалить.
+        :param value: Значение для удаления.
         """
         match item_to_del:
             case 'vk_id':
                 self.db.delete_cheater(vk_id=cheater.vk_id)
             case 'screen_name', 'telephone', 'card', 'proof_link':
-                self.db.delete_cheater_item(item_to_del, cheater.get(item_to_del), cheater.vk_id)
+                self.db.delete_cheater_item(item_to_del, value, cheater.vk_id)
 
     def public_to_club(self):
         """
