@@ -196,9 +196,9 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
     # Ловим кидалу.
     @bot.on.message(
+        StateRule(),
         func=lambda message: bool(re.match(cheaters.get_regexp('search'),
                                            message.text.lower().lstrip('+').replace(' ', ''))),
-        state=None
     )
     async def check_cheater_handler(message: Message):
         """
