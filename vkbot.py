@@ -27,19 +27,6 @@ GROUP_TYPES = {
 }
 
 
-class IsUserAdminMiddleware(vkbottle.BaseMiddleware):
-    """
-    Класс для обработки сообщения до поиска хендлеров.
-    """
-
-    async def pre(self):
-        """
-        Метод проверяет, что пользователь является админом группы.
-        :return:
-        """
-        self.view = None
-
-
 class VKBot(Bot):
     """
     Main bot class.
