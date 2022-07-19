@@ -66,7 +66,7 @@ del_cheater_start = '''Введи ID, Screen_name, телефон, карту и
                     '''
 del_cheater_error_value = 'Не распознал, введи еще раз.'
 del_cheater_user_commit = 'Ты хочешь удалить запись целиком? \n {}'
-del_cheater_item_commit = 'Ты хочешь удалить параметр {}? \n {}'
+del_cheater_item_commit = 'Ты хочешь удалить параметр {}: {}? \n {}'
 del_cheater_choice = 'Этому параметру соответствуют несколько записей. Выбери, что удалить.'
 del_cheater_not_found = 'Таких записей в БД нет. Попробуй еще раз.'
 del_success = 'Удалили(нет)'
@@ -103,3 +103,21 @@ cheaters_group = 'Группа vk.com/{group} есть в наших базах.
 update_db_from_file = 'Ты решил обновить БД через файл. Жди, пожалуйста.'
 no_data_in_file = 'В файле нет нужных данных.'
 file_update_success = 'БД обновлена!'
+
+
+def del_cheaters_commit(item: str = '', value: str = '', cheater_info: str = '') -> str:
+    """
+    Метод возвращает строку для ответа админу при подтверждении удаления.
+
+    :param item: Что удаляем.
+    :param value: Удаляемое значение.
+    :param cheater_info: Полное инфо о кидале.
+    :return: Строка для ответа.
+    """
+    match item:
+        case 'vk_id' | 'group_id' | 'screen_name':
+            return del_cheater_user_commit.format(cheater_info)
+        case 'card' | 'telephone' | 'proof_link':
+            return del_cheater_item_commit.format(item, value, cheater_info)
+        case _:
+            return del_wrong

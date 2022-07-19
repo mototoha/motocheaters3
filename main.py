@@ -453,24 +453,18 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         if cheaters_to_del:
             if len(cheaters_to_del) == 1:
-                match reg_match.lastgroup:
-                    case 'vk_id' | 'group_id' | 'screen_name':
-                        answer_message = dialogs.del_cheater_user_commit.format(str(cheaters_to_del[0]))
-                        item_to_del = 'vk_id'
-                    case 'card' | 'telephone' | 'proof_link':
-                        answer_message = dialogs.del_cheater_item_commit.format(reg_match.lastgroup,
-                                                                                str(cheaters_to_del[0]))
-                        item_to_del = reg_match.lastgroup
-                    case _:
-                        return dialogs.dont_understand
+                answer_message = dialogs.del_cheaters_commit(reg_match.lastgroup,
+                                                             reg_match[reg_match.lastgroup],
+                                                             str(cheaters_to_del[0]),
+                                                             )
                 new_state = AdminStates.DEL_CHEATER_COMMIT
+                item_to_del = {reg_match.lastgroup: reg_match[reg_match.lastgroup]}
                 await bot.state_dispenser.set(message.from_id,
                                               new_state,
-                                              cheaters_to_del=cheaters_to_del,
+                                              cheater_to_del=cheaters_to_del[0],
                                               item_to_del=item_to_del)
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
             elif len(cheaters_to_del) > 1:
-
                 new_state = AdminStates.DEL_CHEATER_CHOICE
                 answer_message = dialogs.del_cheater_choice
                 await bot.state_dispenser.set(message.from_id,
@@ -499,19 +493,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         for cheater in cheaters_to_del:
             if cheater.vk_id == vk_id:
                 new_state = AdminStates.DEL_CHEATER_COMMIT
-                match item_to_del:
-                    case 'vk_id' | 'group_id' | 'screen_name':
-                        answer_message = dialogs.del_cheater_user_commit.format(str(cheaters_to_del[0]))
-                        item_to_del = 'vk_id'
-                    case 'card' | 'telephone' | 'proof_link':
-                        answer_message = dialogs.del_cheater_item_commit.format(item_to_del,
-                                                                                str(cheaters_to_del[0]))
-                        item_to_del = item_to_del
-                    case _:
-                        answer_message = 'Что-то не так. Начни заново.'
+                answer_message = dialogs.del_cheaters_commit(item_to_del,
+                                                             cheaters_to_del[0].get(item_to_del),
+                                                             str(cheaters_to_del[0]),
+                                                             )
                 await bot.state_dispenser.set(message.from_id,
                                               new_state,
-                                              cheaters_to_del=cheaters_to_del,
+                                              cheater_to_del=cheaters_to_del[0],
                                               item_to_del=item_to_del)
                 await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
@@ -523,11 +511,11 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Удаляем из БД
         """
-        cheaters_to_del = message.state_peer.payload.get('cheaters_to_del')
+        cheater_to_del = message.state_peer.payload.get('cheater_to_del')
         item_to_del = message.state_peer.payload.get('item_to_del')
         new_state = AdminStates.DEL_CHEATER
-        if cheaters_to_del and item_to_del:
-            bot.delete_cheater(item_to_del, cheaters_to_del)
+        if cheater_to_del and item_to_del:
+            bot.delete_cheater(item_to_del, cheater_to_del)
             message.state_peer.payload.clear()
             await bot.state_dispenser.set(message.from_id, new_state)
             answer_message = 'Удалили (нет)'
