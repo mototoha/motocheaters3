@@ -660,6 +660,24 @@ class VKBot(Bot):
         """
         self.db.publics_to_clubs()
 
+    @staticmethod
+    def text_del_cheaters_commit(item: str = '', value: str = '', cheater_info: str = '') -> str:
+        """
+        Метод возвращает строку для ответа админу при подтверждении удаления.
+
+        :param item: Что удаляем.
+        :param value: Удаляемое значение.
+        :param cheater_info: Полное инфо о кидале.
+        :return: Строка для ответа.
+        """
+        match item:
+            case 'vk_id' | 'group_id' | 'screen_name':
+                return dialogs.del_cheater_user_commit.format(cheater_info)
+            case 'card' | 'telephone' | 'proof_link':
+                return dialogs.del_cheater_item_commit.format(item, value, cheater_info)
+            case _:
+                return dialogs.del_wrong
+
 
 if __name__ == '__main__':
     #  Тут будет тест

@@ -4,9 +4,8 @@ python3 main.py [config_filename.json]
 """
 import json
 import re
-import shutil
 
-import vkbottle
+
 from vkbottle.bot import Message
 from vkbottle.dispatch.rules.base import (
     AttachmentTypeRule,
@@ -16,7 +15,7 @@ from vkbottle.dispatch.rules.base import (
     StateGroupRule,
     FromPeerRule,
 )
-from vkbottle import DocMessagesUploader, template_gen, TemplateElement
+from vkbottle import DocMessagesUploader
 from dialogstates import DialogStates, AdminStates
 
 import cheaters
@@ -453,10 +452,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
 
         if cheaters_to_del:
             if len(cheaters_to_del) == 1:
-                answer_message = dialogs.del_cheaters_commit(reg_match.lastgroup,
-                                                             reg_match[reg_match.lastgroup],
-                                                             str(cheaters_to_del[0]),
-                                                             )
+                answer_message = bot.text_del_cheaters_commit(reg_match.lastgroup,
+                                                              reg_match[reg_match.lastgroup],
+                                                              str(cheaters_to_del[0]),
+                                                              )
                 new_state = AdminStates.DEL_CHEATER_COMMIT
                 item_to_del = {reg_match.lastgroup: reg_match[reg_match.lastgroup]}
                 await bot.state_dispenser.set(message.from_id,
@@ -493,10 +492,10 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         for cheater in cheaters_to_del:
             if cheater.vk_id == vk_id:
                 new_state = AdminStates.DEL_CHEATER_COMMIT
-                answer_message = dialogs.del_cheaters_commit(item_to_del,
-                                                             cheaters_to_del[0].get(item_to_del),
-                                                             str(cheaters_to_del[0]),
-                                                             )
+                answer_message = bot.text_del_cheaters_commit(item_to_del,
+                                                              cheaters_to_del[0].get(item_to_del),
+                                                              str(cheaters_to_del[0]),
+                                                              )
                 await bot.state_dispenser.set(message.from_id,
                                               new_state,
                                               cheater_to_del=cheaters_to_del[0],
@@ -572,7 +571,8 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     search_name)
                 # Если пользователь/группа забанены - выводим предупреждение, чтоб не пугаться пустого screen_name.
                 if reg_match.lastgroup == 'screen_name' and api_screen_name:
-                    await message.answer(f'Это имя @{api_screen_name} принадлежит пользователю(сообществу) @{api_vk_id}.'
+                    await message.answer(f'Это имя @{api_screen_name} принадлежит пользователю(сообществу) '
+                                         f'@{api_vk_id}.'
                                          f'Если нужен другой - придется найти его старый id.')
                 if is_banned:
                     await message.answer(dialogs.add_cheater_id_delete.format(api_vk_id))
@@ -712,6 +712,5 @@ if __name__ == '__main__':
 # TODO Исключить добавление дублей
 # TODO Телефон вида +7 (961) 024-48-22
 # TODO Проверять наличие пруфлинка и актуальность пруфлинка
-# TODO проверка на дубли, отсутвие пруфлинков и True/False в БД
+# TODO проверка на дубли, отсутствие пруфлинков и True/False в БД
 # TODO Сделать webhook.
-
