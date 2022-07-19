@@ -434,6 +434,28 @@ class TestDatabaseMakeCheater(unittest.TestCase):
                          ['id267462630'])
 
 
+class TestDatabaseDeleteCheater(unittest.TestCase):
+    """
+    Удаляем кидалу и его параметры.
+    """
+    def setUp(self) -> None:
+        shutil.copyfile(TEMPLATE_DB, TEST_DB)
+        self.db = database.DBCheaters(TEST_DB)
+
+    def tearDown(self) -> None:
+        del self.db
+        os.remove(TEST_DB)
+
+    def test_delete_cheater(self):
+        vk_id = 'id353002275'
+        where = {'vk_id': vk_id}
+        for table in ('vk_ids', 'screen_names', 'cards', 'telephones', 'proof_links'):
+            self.assertTrue(self.db._select_list_from_table(table=table, where_select=where))
+        self.db.delete_cheater(vk_id)
+        for table in ('vk_ids', 'screen_names', 'cards', 'telephones', 'proof_links'):
+            self.assertFalse(self.db._select_list_from_table(table=table, where_select=where))
+
+
 class TestCheckDatabase(unittest.TestCase):
     def setUp(self) -> None:
         shutil.copyfile(TEMPLATE_DB, TEST_DB)
