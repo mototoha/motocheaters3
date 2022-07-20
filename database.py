@@ -44,10 +44,12 @@ DB_TEMPLATE = {
     'popular_screen_names': {
         'pk': 'integer',
         'screen_name': 'text',
+        'comment': 'text',
     },
     'popular_names:': {
         'pk': 'integer',
         'name': 'text',
+        'comment': 'text',
     },
 }
 
@@ -64,8 +66,7 @@ class DBCheaters:
         if file_exist:
             logger.info('DB file exist, check content')
             integrity_check = True
-            # TODO Проверка таблиц
-            # integrity_check = self.check_integrity_tables(self.db_filename)
+            integrity_check = DBCheaters.check_integrity_tables(self.db_filename)
             if not integrity_check:
                 logger.warning('БД не прошла проверку, создаю новую.')
                 shutil.move(self.db_filename, self.db_filename + '_' + datetime.date.today().isoformat())
@@ -260,6 +261,21 @@ class DBCheaters:
         return result
 
     @staticmethod
+    def _construct_add_column(table_name: str, column_name: str) -> str | None:
+        """
+        Метод возвращает строку для создания колонки в таблице.
+        Первичный ключ не создастся.
+
+        :param column_name: Какую колонку создать.
+        :return: Команду создания колонки или None
+        """
+        if table_name in DB_TEMPLATE.keys() and column_name in DB_TEMPLATE[table_name].keys():
+            result = f'ALTER table {table_name} ADD column {column_name} {DB_TEMPLATE[table_name][column_name]}'
+        else:
+            result = None
+        return result
+
+    @staticmethod
     def create_new_database(filename):
         """
         Метод создаёт таблицы в БД из шаблона.
@@ -299,8 +315,9 @@ class DBCheaters:
                         pass
                     else:
                         # Добавляем колонку в таблицу
-                        # TODO Добавление колонки в таблицу
-                        pass
+                        sql_query = DBCheaters._construct_add_column(table, column)
+                        cur.execute(sql_query)
+                        conn.commit()
             else:
                 cur.execute(DBCheaters._construct_create_table(table))
                 conn.commit()
