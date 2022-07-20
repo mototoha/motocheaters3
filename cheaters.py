@@ -147,6 +147,28 @@ class Cheater:
                 return self.__getattribute__(f.name)
         return None
 
+    def get_cheater_info(self):
+        """
+        Возвращает инфо о кидале в красивом виде.
+        """
+        result = ''
+        if self.vk_id:
+            result += 'Страница: @' + self.vk_id + '\n'
+        if self.screen_name:
+            result += 'Отображаемое имя:  @' + self.screen_name + '\n'
+        if self.card:
+            result += 'Банковские карты:\n'
+            for card in self.card:
+                result += card + '\n'
+        if self.telephone:
+            result += 'Телефоны:\n'
+            for telephone in self.telephone:
+                result += telephone + '\n'
+        if self.proof_link:
+            result += 'Пруфы:\n'
+            for link in self.proof_link:
+                result += 'vk.com/' + link + '\n'
+
     def str_csv(self, sep: str = ';') -> str:
         """
         Метод возвращает строку для вставки в csv файл. Параметр fifty опускается.
