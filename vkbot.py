@@ -371,6 +371,17 @@ class VKBot(Bot):
             random_id=0,
         )
 
+    async def suspicion(self, item, value) -> str | None:
+        """
+        Метод проверяет кидалу на характерные признаки.
+
+        :param item: Что проверяем.
+        :param value: Значение.
+        :return: Текст в ответ.
+        """
+        # проверка на характерные символы в screen_name
+        pass
+
     def backup_db(self, backup_name: str = None):
         """
         Метод делает бекап БД
