@@ -100,4 +100,4 @@ group by vk_id, {attr}
 having count(*) > 1
 """
 
-select_row_names = "select name from pragma_table_info('{}')"
+select_columns_names = "select name from pragma_table_info('{}')"

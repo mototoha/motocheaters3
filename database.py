@@ -284,15 +284,25 @@ class DBCheaters:
         conn = sqlite3.Connection(filename)
         cur = conn.cursor()
         sql_res = cur.execute(sql_requests.select_table_names)
-        sql_tables = []
-        for table in sql_res.fetchall():
-            sql_tables.append(table)
+        if sql_res:
+            sql_tables = DBCheaters._tuple_list_to_list(sql_res)
+        else:
+            sql_tables = []
         for table in template_tables:
             if table in sql_tables:
                 # Проверка колонок в таблице
-                pass
+                columns_template = DB_TEMPLATE[table].keys()
+                sql_res = cur.execute(sql_requests.select_columns_names)
+                columns_db = DBCheaters._tuple_list_to_list(sql_res)
+                for column in columns_template:
+                    if column in columns_db:
+                        pass
+                    else:
+                        # Добавляем колонку в таблицу
+                        # TODO Добавление колонки в таблицу
+                        pass
             else:
-                cur.execute(DBCheaters._construct_create_table(table[0]))
+                cur.execute(DBCheaters._construct_create_table(table))
                 conn.commit()
         return result
 
@@ -350,7 +360,7 @@ class DBCheaters:
         sql_query = self._construct_select(table, what_select, where_select, operate)
         sql_result = self._cursor.execute(sql_query).fetchall()
         if what_select == '*':
-            fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
+            fields_tuple = self._cursor.execute(sql_requests.select_columns_names.format(table)).fetchall()
             fields = self._tuple_list_to_list(fields_tuple)
         elif isinstance(what_select, str):
             fields = [what_select]
@@ -383,7 +393,7 @@ class DBCheaters:
         sql_query = self._construct_select(table, what_select, where_select, operate)
         sql_result = self._cursor.execute(sql_query).fetchall()
         if what_select == '*':
-            fields_tuple = self._cursor.execute(sql_requests.select_row_names.format(table)).fetchall()
+            fields_tuple = self._cursor.execute(sql_requests.select_columns_names.format(table)).fetchall()
             fields = self._tuple_list_to_list(fields_tuple)
         elif isinstance(what_select, str):
             fields = [what_select]
