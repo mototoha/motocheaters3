@@ -203,13 +203,22 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         """
         Главное меню. Если пользователь присылает что-то похожее на ссылку vk, карту, телефон, то пробуем ему помочь.
         """
-        answer_message = ''
         reg_match = re.search(cheaters.get_regexp('search'), message.text.lower().lstrip('+').replace(' ', ''))
         cheaters_db = bot.get_cheater_from_db2(reg_match.lastgroup, reg_match[reg_match.lastgroup])
-        if isinstance(cheaters_db, list):
+        if cheaters_db:
+            match reg_match.lastgroup:
+                case 'vk_id':
+                    answer_message = dialogs.vk_id_search.format(reg_match[reg_match.lastgroup])
+                case 'group_id':
+                    answer_message = dialogs.group_id_search.format(reg_match[reg_match.lastgroup])
+                case 'card', 'telephone', 'proof_link':
+                    answer_message = dialogs.item_search.format(item=dialogs.regexp_to_str[reg_match.lastgroup],
+                                                                value=reg_match[reg_match.lastgroup])
+            if len(cheaters_db) == 1:
+                answer_message = dialogs.is_cheater
             for cheater in cheaters_db:
-                answer_message += str(cheater)
-        if not answer_message:
+                answer_message = str(cheater)
+        else:
             answer_message = dialogs.not_cheater
 
         await bot.answer_to_peer(answer_message, message.peer_id)
