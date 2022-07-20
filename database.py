@@ -45,6 +45,10 @@ DB_TEMPLATE = {
         'pk': 'integer',
         'screen_name': 'text',
     },
+    'popular_names:': {
+        'pk': 'integer',
+        'name': 'text',
+    },
 }
 
 
