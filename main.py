@@ -220,7 +220,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
             if len(cheaters_db) > 1:
                 answer_message += "У нас больше одной записи."
             for cheater in cheaters_db:
-                answer_message += cheaters_db[0].get_cheater_info()
+                answer_message += cheater.get_cheater_info()
         else:
             answer_message = dialogs.not_cheater
 
