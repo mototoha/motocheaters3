@@ -214,10 +214,13 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                 case 'card', 'telephone', 'proof_link':
                     answer_message = dialogs.item_search.format(item=dialogs.regexp_to_str[reg_match.lastgroup],
                                                                 value=reg_match[reg_match.lastgroup])
-            if len(cheaters_db) == 1:
-                answer_message = dialogs.is_cheater
+                case _:
+                    answer_message = ''
+            answer_message += dialogs.is_cheater
+            if len(cheaters_db) > 1:
+                answer_message += "У нас больше одной записи."
             for cheater in cheaters_db:
-                answer_message = str(cheater)
+                answer_message += cheaters_db[0].get_cheater_info()
         else:
             answer_message = dialogs.not_cheater
 

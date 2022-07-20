@@ -147,7 +147,7 @@ class Cheater:
                 return self.__getattribute__(f.name)
         return None
 
-    def get_cheater_info(self):
+    def get_cheater_info(self) -> str:
         """
         Возвращает инфо о кидале в красивом виде.
         """
@@ -168,6 +168,7 @@ class Cheater:
             result += 'Пруфы:\n'
             for link in self.proof_link:
                 result += 'vk.com/' + link + '\n'
+        return result
 
     def str_csv(self, sep: str = ';') -> str:
         """
