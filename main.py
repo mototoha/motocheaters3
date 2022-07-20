@@ -14,6 +14,7 @@ from vkbottle.dispatch.rules.base import (
     StateRule,
     StateGroupRule,
     FromPeerRule,
+    RegexRule
 )
 from vkbottle import DocMessagesUploader
 from dialogstates import DialogStates, AdminStates
@@ -160,6 +161,14 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         users_info = await bot.api.users.get([message.from_id])
         answer_message = dialogs.hello.format(users_info[0].first_name)
         await bot.answer_to_peer(answer_message, message.peer_id)
+
+    # Ответ на спасибо.
+    @bot.on.message(
+        RegexRule(r'Спасибо<!>')
+    )
+    async def thanks_answer_handler(message: Message):
+        await message.answer('Пожалуйста!')
+        await message.answer(dialogs.help_us)
 
     # Кинули файл с кидалами.
     @bot.on.message(
@@ -386,11 +395,6 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
         Начало рассылки всем членам группы.
         """
         new_state = AdminStates.MAIN
-        # Выбираем всех пользователей. Я знаю, что комментировать код - плохо.
-        # Пока эта тема не в приоритете.
-        # group_info = await bot.api.groups.get_by_id()
-        # group_id = group_info[0].id
-        # members = await bot.api.groups.get_members(group_id=group_id)
         answer_message = dialogs.spam_send + message.text
         await bot.answer_to_peer(answer_message, message.from_id, new_state)
 
@@ -712,7 +716,6 @@ if __name__ == '__main__':
 # TODO Статистика:
 #  * Количество пользователей бота.
 #  * Количество запросов кидал.
-# TODO Ответ на спасибо.
 # TODO Просьба про деньги после успешного ответа.
 # TODO Удалять пустые строчки в screen_names.
 # TODO Поиск по всем значениям, а не только по адресу страницы.
