@@ -40,7 +40,11 @@ DB_TEMPLATE = {
         'pk': 'integer',
         'proof_link': 'text',
         'vk_id': 'text',
-    }
+    },
+    'popular_screen_names': {
+        'pk': 'integer',
+        'screen_name': 'text',
+    },
 }
 
 
