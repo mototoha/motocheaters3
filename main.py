@@ -218,7 +218,7 @@ def start_bot(db_filename: str, vk_token: str, cheaters_filename: str):
                     answer_message = ''
             answer_message += dialogs.is_cheater
             if len(cheaters_db) > 1:
-                answer_message += "У нас больше одной записи."
+                answer_message += dialogs.many_records
             for cheater in cheaters_db:
                 answer_message += cheater.get_cheater_info()
                 if not cheater.proof_link:
