@@ -380,7 +380,7 @@ class VKBot(Bot):
         :return: Текст в ответ.
         """
         # проверка на характерные символы в screen_name
-        pass
+        return ''
 
     def backup_db(self, backup_name: str = None):
         """
