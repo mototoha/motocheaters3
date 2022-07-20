@@ -152,6 +152,8 @@ class Cheater:
         Возвращает инфо о кидале в красивом виде.
         """
         result = ''
+        if self.fifty:
+            result += 'Иногда кидает. А иногда нет. Будь осторожен. \n'
         if self.vk_id:
             result += 'Страница: @' + self.vk_id + '\n'
         if self.screen_name:
