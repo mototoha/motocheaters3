@@ -66,7 +66,7 @@ class DBCheaters:
         if file_exist:
             logger.info('DB file exist, check content')
             integrity_check = True
-            integrity_check = DBCheaters.check_integrity_tables(self.db_filename)
+            # integrity_check = DBCheaters.check_integrity_tables(self.db_filename)
             if not integrity_check:
                 logger.warning('БД не прошла проверку, создаю новую.')
                 shutil.move(self.db_filename, self.db_filename + '_' + datetime.date.today().isoformat())
